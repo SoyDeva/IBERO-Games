@@ -23,12 +23,12 @@ Portada → historia → configuración → tutorial → mapa → misión → co
 Durante cada misión aparece una ruta de cinco pasos fáciles de recordar:
 
 1. **Entiende:** lee el problema, los objetos y la regla especial.
-2. **Imagina:** escribe tres ideas y combina las mejores partes.
+2. **Imagina:** explora tres planos y combina objetos con superpoderes.
 3. **Cambia:** adapta el invento cuando aparece una sorpresa.
 4. **Evalúa:** conversa y valora la idea del 1 al 5.
 5. **Núcleo:** recibe retroalimentación y desbloquea la siguiente zona.
 
-El laboratorio muestra una sola tarjeta a la vez: ideas, objetos, plan y dibujo.
+La fábrica de inventos muestra un solo nivel a la vez: objetos, plano, poderes y boceto opcional. El juego redacta automáticamente la descripción, los pasos, las razones y el cuidado ambiental a partir de las elecciones. Escribir queda limitado al nombre —que también puede generarse— y a un detalle opcional.
 
 ## Roles
 

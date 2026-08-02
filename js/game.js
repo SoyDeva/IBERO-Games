@@ -69,7 +69,8 @@ export function emptySolution() {
   return {
     name: '', description: '', solvedProblem: '', alternatives: '', selectedResources: [],
     resourceFunctions: {}, steps: '', reasoning: '', environment: '',
-    changes: '', changeReason: '', drawing: ''
+    changes: '', changeReason: '', drawing: '', blueprintId: '', powers: {},
+    reasonChoices: [], careChoice: '', optionalDetail: '', adaptationChoice: '', adaptedResource: ''
   };
 }
 

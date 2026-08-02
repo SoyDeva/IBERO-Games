@@ -148,10 +148,77 @@ export const RECOMMENDATIONS = {
   collaboration: 'Escuchen una propuesta de cada integrante antes de combinar y elegir.'
 };
 
+export const POWER_OPTIONS = [
+  { id: 'join', icon: '🔗', label: 'Unir', phrase: 'unir las partes' },
+  { id: 'protect', icon: '🛡️', label: 'Proteger', phrase: 'proteger lo importante' },
+  { id: 'move', icon: '➡️', label: 'Mover', phrase: 'mover algo con cuidado' },
+  { id: 'float', icon: '☁️', label: 'Flotar', phrase: 'mantener algo flotando' },
+  { id: 'signal', icon: '✨', label: 'Señalar', phrase: 'enviar una señal visible' },
+  { id: 'filter', icon: '💧', label: 'Filtrar', phrase: 'separar lo seguro de lo peligroso' },
+  { id: 'hold', icon: '✋', label: 'Sostener', phrase: 'sostener una parte sin dañarla' },
+  { id: 'transform', icon: '🔄', label: 'Transformar', phrase: 'cambiar una fuerza o material' },
+  { id: 'guide', icon: '🧭', label: 'Guiar', phrase: 'mostrar una dirección segura' },
+  { id: 'cool', icon: '❄️', label: 'Enfriar', phrase: 'reducir la temperatura' }
+];
+
+export const BLUEPRINTS = [
+  { id: 'bridge', icon: '🌉', name: 'Puente transformable', description: 'Conecta dos lugares y puede cambiar de forma.' },
+  { id: 'carrier', icon: '🛷', name: 'Transportador cuidadoso', description: 'Mueve objetos o seres vivos sin lastimarlos.' },
+  { id: 'shield', icon: '🫧', name: 'Escudo protector', description: 'Cubre algo importante y deja pasar lo necesario.' },
+  { id: 'signal', icon: '📡', name: 'Mensajero silencioso', description: 'Envía señales usando luz, movimiento o formas.' },
+  { id: 'helper', icon: '🤖', name: 'Ayudante adaptable', description: 'Realiza una tarea y se ajusta cuando algo cambia.' },
+  { id: 'station', icon: '🏕️', name: 'Estación reutilizable', description: 'Crea un lugar seguro que puede usarse varias veces.' },
+  { id: 'collector', icon: '🌀', name: 'Recolector inteligente', description: 'Reúne agua, luz, aire o energía sin desperdiciar.' },
+  { id: 'pathfinder', icon: '🔭', name: 'Explorador de caminos', description: 'Encuentra rutas, riesgos o señales que no se ven fácilmente.' }
+];
+
+export const REASON_OPTIONS = [
+  { id: 'simple', icon: '👌', label: 'Es fácil de usar', phrase: 'es fácil de usar y explicar' },
+  { id: 'strong', icon: '💪', label: 'Resiste el reto', phrase: 'puede resistir las condiciones de la misión' },
+  { id: 'repair', icon: '🔧', label: 'Se puede reparar', phrase: 'puede repararse si una parte falla' },
+  { id: 'portable', icon: '🎒', label: 'Se puede transportar', phrase: 'puede llevarse a otro lugar' },
+  { id: 'rule', icon: '✅', label: 'Cumple la regla', phrase: 'cumple la regla especial de la misión' },
+  { id: 'double', icon: '✌️', label: 'Sirve para dos cosas', phrase: 'cumple más de una función' },
+  { id: 'test', icon: '🧪', label: 'Se puede probar', phrase: 'permite hacer una prueba segura antes de usarlo' },
+  { id: 'team', icon: '🤝', label: 'El equipo puede construirlo', phrase: 'combina aportes de todo el equipo' }
+];
+
+export const CARE_OPTIONS = [
+  { id: 'reuse', icon: '♻️', label: 'Reutiliza todo', phrase: 'reutiliza sus materiales y no deja residuos' },
+  { id: 'life', icon: '🌱', label: 'Protege seres vivos', phrase: 'mantiene a salvo a los seres vivos' },
+  { id: 'trace', icon: '👣', label: 'No deja huellas', phrase: 'puede retirarse sin dejar huellas' },
+  { id: 'natural', icon: '☀️', label: 'Usa energía natural', phrase: 'funciona con energía natural' },
+  { id: 'water', icon: '💦', label: 'Cuida el agua', phrase: 'evita contaminar o desperdiciar agua' },
+  { id: 'share', icon: '🫶', label: 'Puede compartirse', phrase: 'puede ser usado por otras criaturas o tripulaciones' }
+];
+
+export const ADAPTATION_OPTIONS = [
+  { id: 'replace', icon: '🔁', label: 'Cambiar una pieza', phrase: 'reemplazar una pieza por otra que pueda cumplir su función' },
+  { id: 'resize', icon: '↔️', label: 'Cambiar el tamaño', phrase: 'cambiar el tamaño para adaptarse a la nueva condición' },
+  { id: 'portable', icon: '🎒', label: 'Hacerlo portátil', phrase: 'dividirlo en partes fáciles de transportar' },
+  { id: 'energy', icon: '🌬️', label: 'Cambiar la energía', phrase: 'usar una fuente de energía natural diferente' },
+  { id: 'protect', icon: '🛡️', label: 'Añadir protección', phrase: 'agregar una capa de protección sin dañar el entorno' },
+  { id: 'double', icon: '🧩', label: 'Dar doble uso', phrase: 'dar una segunda función a uno de sus objetos' }
+];
+
+export const EVIDENCE_OPTIONS = [
+  { id: 'mixed', icon: '🧩', label: 'Combinamos objetos de una forma nueva' },
+  { id: 'changed', icon: '🔄', label: 'Cambiamos la idea después de la sorpresa' },
+  { id: 'explained', icon: '💬', label: 'Podemos explicar cómo funciona' },
+  { id: 'tested', icon: '🧪', label: 'Pensamos cómo probarla' },
+  { id: 'cared', icon: '🌱', label: 'Pensamos en el planeta y sus criaturas' },
+  { id: 'listened', icon: '🤝', label: 'Usamos ideas de varias personas' }
+];
+
+export const NAME_PARTS = {
+  first: ['Nebula', 'Astro', 'Eco', 'Lumi', 'Órbita', 'Cosmo', 'Nova', 'Cristal'],
+  second: ['puente', 'escudo', 'móvil', 'guía', 'nido', 'rayo', 'explorador', 'guardián']
+};
+
 export const TUTORIAL_STEPS = [
   ['1. Entiende', 'Descubre qué problema debes resolver, qué objetos tienes y cuál es la regla especial.'],
-  ['2. Imagina', 'Escribe tres ideas diferentes. Luego elige una o combina sus mejores partes.'],
-  ['3. Construye', 'Cuenta qué hace cada objeto, ordena los pasos y dibuja el invento.'],
+  ['2. Imagina', 'Explora tres planos diferentes. Luego elige uno y mezcla sus objetos.'],
+  ['3. Construye', 'Dale un superpoder a cada objeto y activa las mejores razones.'],
   ['4. Cambia', 'Aparecerá una sorpresa. Modifica una parte para que la idea vuelva a funcionar.'],
   ['5. Evalúa', 'Pulsa del 1 al 5 para conversar sobre la idea. No es una nota ni hay una respuesta perfecta.']
 ];

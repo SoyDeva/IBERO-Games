@@ -1,4 +1,4 @@
-import { ZONES, ROLES, RUBRIC, TUTORIAL_STEPS } from './data.js';
+import { ZONES, ROLES, RUBRIC, TUTORIAL_STEPS, POWER_OPTIONS, BLUEPRINTS, REASON_OPTIONS, CARE_OPTIONS, ADAPTATION_OPTIONS, EVIDENCE_OPTIONS, NAME_PARTS } from './data.js';
 import { createGame, generateMission, completeMission, missionProgress, elapsedMinutes } from './game.js';
 import { loadGame, saveGame, clearGame, hasSavedGame } from './storage.js';
 import { calculateEvaluation, chooseBadge, recommendationFor, aggregateScores } from './evaluation.js';
@@ -14,15 +14,6 @@ let route = 'home';
 let sketch = null;
 
 const modeLabels = { individual: 'Individual', collaborative: 'Colaborativa', teams: 'Por equipos' };
-const fieldHelp = {
-  name: ['Nombre del invento', 'Un nombre corto que represente la idea.', 80],
-  description: ['Descripción general', '¿Qué es y cómo se ve?', 500],
-  solvedProblem: ['¿Cómo resuelve el problema?', 'Relaciona la idea directamente con la necesidad de la misión.', 500],
-  steps: ['Pasos de construcción o aplicación', 'Ordénalos con números o frases breves.', 800],
-  reasoning: ['¿Por qué consideran que funcionará?', 'Explica las razones, no solo repitas la idea.', 500],
-  environment: ['¿Cómo protege el entorno?', 'Piensa en seres vivos, materiales, residuos y uso futuro.', 400]
-};
-
 function setRoute(next) {
   route = next;
   if (sketch) { sketch.destroy(); sketch = null; }
@@ -184,22 +175,28 @@ function bindMission() {
   document.getElementById('start-building')?.addEventListener('click', () => setRoute('builder'));
 }
 
-function textField(name, value = '') {
-  const [label, help, max] = fieldHelp[name];
-  const tag = name === 'name' ? 'input' : 'textarea';
-  const attrs = ' id="' + name + '" name="' + name + '" maxlength="' + max + '" required aria-describedby="' + name + '-help ' + name + '-count"';
-  const control = tag === 'input' ? '<input type="text"' + attrs + ' value="' + escapeHtml(value) + '">' : '<textarea' + attrs + '>' + escapeHtml(value) + '</textarea>';
-  return '<div class="field"><label for="' + name + '">' + label + '</label>' + control + '<small id="' + name + '-help">' + help + '</small><span class="counter" id="' + name + '-count">' + String(value).length + '/' + max + '</span></div>';
+function blueprintOptionsFor(mission) {
+  const start = (mission.index * 2 + mission.problem.length) % BLUEPRINTS.length;
+  return [0, 1, 2].map((offset) => BLUEPRINTS[(start + offset) % BLUEPRINTS.length]);
+}
+
+function suggestedName(mission, offset = 0) {
+  const first = NAME_PARTS.first[(mission.index + offset) % NAME_PARTS.first.length];
+  const second = NAME_PARTS.second[(mission.problem.length + offset) % NAME_PARTS.second.length];
+  return first + second.charAt(0).toUpperCase() + second.slice(1);
 }
 
 function renderBuilder() {
   const mission = currentMission();
   if (!mission) return renderHome();
   const solution = mission.solution;
-  const ideas = String(solution.alternatives || '').split(/\r?\n/);
-  const resources = mission.resources.map((resource) => '<label class="resource-check"><input type="checkbox" name="resource" value="' + resource + '" ' + (solution.selectedResources.includes(resource) ? 'checked' : '') + '><span>' + resource + '</span></label>').join('');
-  const ideaFields = [0, 1, 2].map((index) => '<label class="idea-field"><span><b>Idea ' + (index + 1) + '</b> <small>' + ['la más sencilla', 'una muy diferente', 'la más atrevida'][index] + '</small></span><input id="idea-' + (index + 1) + '" name="idea" maxlength="150" required value="' + escapeHtml(ideas[index] || '') + '" placeholder="Escribe una idea breve"></label>').join('');
-  return '<section class="screen" aria-labelledby="builder-title">' + renderMissionRoadmap(2) + '<p class="eyebrow">Misión ' + (mission.index + 1) + ' · Laboratorio</p><h1 id="builder-title">Paso 2: imagina y construye</h1><div class="next-action"><span aria-hidden="true">💭</span><p><strong>Una cosa a la vez.</strong> Completa las cuatro tarjetas. Usa “Siguiente” cuando termines cada una.</p></div><div class="builder-layout"><form id="solution-form" novalidate><div id="solution-errors" aria-live="assertive"></div><ol class="builder-step-tabs" aria-label="Partes del laboratorio"><li class="active" data-builder-tab="0"><span>1</span>Ideas</li><li data-builder-tab="1"><span>2</span>Objetos</li><li data-builder-tab="2"><span>3</span>Plan</li><li data-builder-tab="3"><span>4</span>Dibujo</li></ol><section class="builder-panel card" data-builder-panel="0" aria-labelledby="ideas-title"><p class="step-command">Tarjeta 1 de 4</p><h2 id="ideas-title">Primero: piensa 3 ideas</h2><p>No elijas enseguida. Escribe tres posibilidades, aunque alguna parezca extraña.</p><div class="idea-list">' + ideaFields + '</div><hr><h3>Ahora elige o combina las mejores</h3>' + textField('name', solution.name) + textField('description', solution.description) + textField('solvedProblem', solution.solvedProblem) + '<div class="mission-actions"><button type="button" class="button ghost" data-nav="mission">Ver el reto</button><button type="button" class="button primary" data-builder-next="1">Siguiente: elegir objetos →</button></div></section><section class="builder-panel card" data-builder-panel="1" aria-labelledby="resources-title" hidden><p class="step-command">Tarjeta 2 de 4</p><h2 id="resources-title">Elige tus objetos</h2><p>Marca mínimo <strong>' + mission.minimumResources + '</strong>. Luego cuenta qué trabajo hará cada uno.</p><div class="resource-checks">' + resources + '</div><div id="resource-functions" class="resource-functions"></div><div class="mission-actions"><button type="button" class="button ghost" data-builder-back="0">← Volver a ideas</button><button type="button" class="button primary" data-builder-next="2">Siguiente: hacer el plan →</button></div></section><section class="builder-panel card" data-builder-panel="2" aria-labelledby="plan-title" hidden><p class="step-command">Tarjeta 3 de 4</p><h2 id="plan-title">Explica tu plan</h2><p>Imagina que otro equipo construirá el invento siguiendo tus palabras.</p>' + textField('steps', solution.steps) + textField('reasoning', solution.reasoning) + textField('environment', solution.environment) + '<div class="mission-actions"><button type="button" class="button ghost" data-builder-back="1">← Volver a objetos</button><button type="button" class="button primary" data-builder-next="3">Siguiente: dibujar →</button></div></section><section class="builder-panel card" data-builder-panel="3" aria-labelledby="drawing-title" hidden><p class="step-command">Tarjeta 4 de 4</p><h2 id="drawing-title">Dibuja cómo funciona</h2><p>Haz un boceto sencillo. Puedes añadir flechas, partes y movimientos.</p><div class="canvas-wrap"><canvas id="sketch-canvas" aria-label="Lienzo para dibujar el invento">Tu navegador no permite usar el lienzo de dibujo.</canvas></div><div class="canvas-tools"><label>Grosor <select id="brush-width"><option value="2">Fino</option><option value="4" selected>Medio</option><option value="8">Grueso</option></select></label><button class="button ghost small" type="button" id="undo-sketch">↶ Deshacer</button><button class="button ghost small" type="button" id="clear-sketch">Limpiar</button><button class="button ghost small" type="button" id="download-sketch">Descargar PNG</button></div><div class="mission-actions"><button type="button" class="button ghost" data-builder-back="2">← Volver al plan</button><button class="button primary" type="submit">¡Idea lista! Descubrir el giro →</button></div></section></form><aside class="card soft mission-aside"><p class="step-command">Tu misión en una frase</p><h2>Resuelve esto</h2><p>' + mission.problem + '</p><dl><dt>Regla que no puedes olvidar</dt><dd>' + mission.restriction + '</dd><dt>Para avanzar necesitas</dt><dd>3 ideas + ' + mission.minimumResources + ' objetos + un plan + un dibujo.</dd></dl><div class="kid-tip compact"><span aria-hidden="true">🤝</span><p>Pidan una idea a cada persona antes de elegir.</p></div></aside></div></section>';
+  const blueprints = blueprintOptionsFor(mission);
+  const resources = mission.resources.map((resource) => '<label class="resource-pick"><input type="checkbox" name="resource" value="' + resource + '" ' + (solution.selectedResources.includes(resource) ? 'checked' : '') + '><span class="resource-pick-card"><b class="resource-avatar" aria-hidden="true">' + resource.charAt(0) + '</b><strong>' + resource + '</strong><small>Tocar para elegir</small></span></label>').join('');
+  const blueprintCards = blueprints.map((blueprint) => '<label class="blueprint-pick"><input type="radio" name="blueprint" value="' + blueprint.id + '" ' + (solution.blueprintId === blueprint.id ? 'checked' : '') + '><span><b aria-hidden="true">' + blueprint.icon + '</b><strong>' + blueprint.name + '</strong><small>' + blueprint.description + '</small></span></label>').join('');
+  const reasons = REASON_OPTIONS.map((reason) => '<label class="chip-choice"><input type="checkbox" name="reason" value="' + reason.id + '" ' + (solution.reasonChoices?.includes(reason.id) ? 'checked' : '') + '><span>' + reason.icon + ' ' + reason.label + '</span></label>').join('');
+  const care = CARE_OPTIONS.map((option) => '<label class="chip-choice"><input type="radio" name="care" value="' + option.id + '" ' + (solution.careChoice === option.id ? 'checked' : '') + '><span>' + option.icon + ' ' + option.label + '</span></label>').join('');
+  const initialName = solution.name || suggestedName(mission);
+  return '<section class="screen" aria-labelledby="builder-title">' + renderMissionRoadmap(2) + '<p class="eyebrow">Misión ' + (mission.index + 1) + ' · Fábrica de inventos</p><h1 id="builder-title">¡Mezcla, elige y crea!</h1><div class="next-action"><span aria-hidden="true">🎮</span><p><strong>Casi no necesitas escribir.</strong> Toca tarjetas para construir tu invento. El juego preparará la explicación.</p></div><div class="builder-layout"><form id="solution-form" novalidate><div id="solution-errors" aria-live="assertive"></div><ol class="builder-step-tabs" aria-label="Partes de la fábrica"><li class="active" data-builder-tab="0"><span>1</span>Objetos</li><li data-builder-tab="1"><span>2</span>Plano</li><li data-builder-tab="2"><span>3</span>Poderes</li><li data-builder-tab="3"><span>4</span>Boceto</li></ol><section class="builder-panel card game-panel" data-builder-panel="0" aria-labelledby="resources-title"><p class="step-command">Nivel 1 de 4</p><h2 id="resources-title">Forma tu equipo de objetos</h2><p>Elige mínimo <strong>' + mission.minimumResources + '</strong>. Después dale un superpoder a cada uno.</p><div class="resource-pick-grid">' + resources + '</div><div id="power-pickers" class="power-pickers"></div><div class="mission-actions"><button type="button" class="button ghost" data-nav="mission">Ver el reto</button><button type="button" class="button primary" data-builder-next="1">¡Objetos listos! →</button></div></section><section class="builder-panel card game-panel" data-builder-panel="1" aria-labelledby="blueprint-title" hidden><p class="step-command">Nivel 2 de 4</p><h2 id="blueprint-title">Escoge un plano de invento</h2><p>Aquí tienes tres caminos posibles. Elige el que más te guste: tú decidirás cómo funciona.</p><div class="blueprint-grid">' + blueprintCards + '</div><div class="name-forge"><label for="name"><strong>Nombre del invento</strong></label><div><input id="name" name="name" maxlength="80" value="' + escapeHtml(initialName) + '" aria-describedby="name-help"><button class="button secondary small" type="button" id="generate-name">🎲 Otro nombre</button></div><small id="name-help">Puedes usar el nombre mágico o escribir uno corto.</small></div><div class="mission-actions"><button type="button" class="button ghost" data-builder-back="0">← Objetos</button><button type="button" class="button primary" data-builder-next="2">¡Plano elegido! →</button></div></section><section class="builder-panel card game-panel" data-builder-panel="2" aria-labelledby="powers-title" hidden><p class="step-command">Nivel 3 de 4</p><h2 id="powers-title">Activa la idea</h2><fieldset class="tap-field"><legend>Elige dos razones por las que funcionará</legend><div class="chip-cloud">' + reasons + '</div></fieldset><fieldset class="tap-field"><legend>Elige cómo cuidará Nébula-X</legend><div class="chip-cloud">' + care + '</div></fieldset><div class="kid-tip"><span aria-hidden="true">🎤</span><p><strong>Reto de voz:</strong> cuéntale al equipo cómo funciona en menos de 20 segundos.</p></div><label class="optional-detail"><span><strong>Detalle secreto</strong> <small>(opcional)</small></span><input id="optional-detail" name="optionalDetail" maxlength="160" value="' + escapeHtml(solution.optionalDetail || '') + '" placeholder="Ejemplo: se dobla como acordeón"></label><div class="mission-actions"><button type="button" class="button ghost" data-builder-back="1">← Plano</button><button type="button" class="button primary" data-builder-next="3">¡Activado! →</button></div></section><section class="builder-panel card game-panel" data-builder-panel="3" aria-labelledby="drawing-title" hidden><p class="step-command">Nivel extra</p><h2 id="drawing-title">Dibuja si te provoca</h2><p>El boceto es opcional. Puedes hacer líneas, flechas o partes; no tiene que quedar perfecto.</p><div class="canvas-wrap playful-canvas"><canvas id="sketch-canvas" aria-label="Lienzo opcional para dibujar el invento">Tu navegador no permite usar el lienzo de dibujo.</canvas></div><div class="canvas-tools"><label>Trazo <select id="brush-width"><option value="2">Fino</option><option value="4" selected>Medio</option><option value="8">Grueso</option></select></label><button class="button ghost small" type="button" id="undo-sketch">↶ Deshacer</button><button class="button ghost small" type="button" id="clear-sketch">Limpiar</button><button class="button ghost small" type="button" id="download-sketch">Guardar PNG</button></div><div class="mission-actions"><button type="button" class="button ghost" data-builder-back="2">← Poderes</button><button class="button primary" type="submit">🚀 Probar mi invento</button></div></section></form><aside class="card soft mission-aside mascot-card"><div class="nebula-mascot" aria-hidden="true">✦</div><p class="step-command">Nebulín te recuerda</p><h2>Tu meta</h2><p>' + mission.problem + '</p><dl><dt>Regla especial</dt><dd>' + mission.restriction + '</dd><dt>Escritura necesaria</dt><dd>Solo el nombre. El detalle secreto es opcional.</dd></dl></aside></div></section>';
 }
 
 function bindBuilder() {
@@ -211,17 +208,21 @@ function bindBuilder() {
   document.getElementById('undo-sketch').addEventListener('click', () => sketch.undo());
   document.getElementById('clear-sketch').addEventListener('click', () => sketch.clear());
   document.getElementById('download-sketch').addEventListener('click', () => sketch.download());
-  form.querySelectorAll('input[maxlength], textarea[maxlength]').forEach((control) => control.addEventListener('input', () => {
-    const counter = document.getElementById(control.id + '-count');
-    if (counter) counter.textContent = control.value.length + '/' + control.maxLength;
-  }));
-  const updateFunctions = () => {
+  let nameOffset = 0;
+  document.getElementById('generate-name').addEventListener('click', () => {
+    nameOffset += 1;
+    document.getElementById('name').value = suggestedName(mission, nameOffset);
+    playTone('select');
+  });
+  const updatePowerPickers = () => {
+    const container = document.getElementById('power-pickers');
+    const currentValues = { ...(mission.solution.powers || {}) };
+    container.querySelectorAll('select').forEach((select) => { currentValues[select.dataset.resource] = select.value; });
     const selected = [...form.querySelectorAll('[name="resource"]:checked')].map((input) => input.value);
-    const container = document.getElementById('resource-functions');
-    container.innerHTML = selected.map((resource) => '<label class="resource-function"><strong>' + resource + '</strong><input name="function-' + encodeURIComponent(resource) + '" maxlength="160" required placeholder="¿Qué función cumple?" value="' + escapeHtml(mission.solution.resourceFunctions[resource] || '') + '"></label>').join('');
+    container.innerHTML = selected.length ? '<h3>Dales un superpoder</h3>' + selected.map((resource, index) => '<label class="power-picker"><span><b>' + resource + '</b><small>¿Qué hará?</small></span><select name="power-' + encodeURIComponent(resource) + '" data-resource="' + resource + '" required><option value="">Elegir poder…</option>' + POWER_OPTIONS.map((power, powerIndex) => '<option value="' + power.id + '" ' + (currentValues[resource] === power.id || (!currentValues[resource] && powerIndex === index % POWER_OPTIONS.length) ? 'selected' : '') + '>' + power.icon + ' ' + power.label + '</option>').join('') + '</select></label>').join('') : '';
   };
-  form.querySelectorAll('[name="resource"]').forEach((input) => input.addEventListener('change', updateFunctions));
-  updateFunctions();
+  form.querySelectorAll('[name="resource"]').forEach((input) => input.addEventListener('change', updatePowerPickers));
+  updatePowerPickers();
   const showPanel = (index) => {
     form.querySelectorAll('[data-builder-panel]').forEach((panel) => { panel.hidden = Number(panel.dataset.builderPanel) !== index; });
     form.querySelectorAll('[data-builder-tab]').forEach((tab) => {
@@ -230,56 +231,80 @@ function bindBuilder() {
       tab.classList.toggle('done', tabIndex < index);
     });
     form.querySelector('[data-builder-panel="' + index + '"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    announce('Tarjeta ' + (index + 1) + ' de 4 del laboratorio.');
+    announce('Nivel ' + (index + 1) + ' de 4 de la fábrica.');
   };
   const stepErrors = (step) => {
     const data = new FormData(form);
     const errors = [];
     if (step === 0) {
-      const ideas = data.getAll('idea').map((idea) => String(idea).trim()).filter(Boolean);
-      if (ideas.length < 3) errors.push('Escribe las tres ideas antes de elegir.');
-      ['name', 'description', 'solvedProblem'].forEach((name) => { if (!String(data.get(name) || '').trim()) errors.push('Completa “' + fieldHelp[name][0] + '”.'); });
+      const selected = data.getAll('resource');
+      if (selected.length < mission.minimumResources) errors.push('Elige al menos ' + mission.minimumResources + ' objetos.');
+      selected.forEach((resource) => { if (!data.get('power-' + encodeURIComponent(resource))) errors.push('Dale un superpoder a ' + resource + '.'); });
     }
     if (step === 1) {
-      const selected = data.getAll('resource');
-      if (selected.length < mission.minimumResources) errors.push('Marca al menos ' + mission.minimumResources + ' objetos.');
-      selected.forEach((resource) => { if (!String(data.get('function-' + encodeURIComponent(resource)) || '').trim()) errors.push('Cuenta qué hará ' + resource + '.'); });
+      if (!data.get('blueprint')) errors.push('Elige uno de los tres planos.');
+      if (!String(data.get('name') || '').trim()) errors.push('Usa un nombre mágico o escribe uno.');
     }
-    if (step === 2) ['steps', 'reasoning', 'environment'].forEach((name) => { if (!String(data.get(name) || '').trim()) errors.push('Completa “' + fieldHelp[name][0] + '”.'); });
+    if (step === 2) {
+      if (data.getAll('reason').length < 2) errors.push('Elige dos razones.');
+      if (!data.get('care')) errors.push('Elige cómo cuidará Nébula-X.');
+    }
     return errors;
   };
   const showErrors = (errors) => {
     const box = document.getElementById('solution-errors');
     box.className = 'error-box';
-    box.innerHTML = '<strong>Antes de seguir:</strong><ul>' + errors.map((error) => '<li>' + error + '</li>').join('') + '</ul>';
+    box.innerHTML = '<strong>Te falta muy poquito:</strong><ul>' + errors.map((error) => '<li>' + error + '</li>').join('') + '</ul>';
     box.scrollIntoView({ behavior: 'smooth' });
-    announce('Hay datos por completar en esta tarjeta.');
+    announce('Falta una elección antes de continuar.');
   };
   form.querySelectorAll('[data-builder-next]').forEach((button) => button.addEventListener('click', () => {
     const current = Number(button.closest('[data-builder-panel]').dataset.builderPanel);
     const errors = stepErrors(current);
     if (errors.length) { showErrors(errors); return; }
-    document.getElementById('solution-errors').className = '';
-    document.getElementById('solution-errors').textContent = '';
+    const box = document.getElementById('solution-errors');
+    box.className = '';
+    box.textContent = '';
     showPanel(Number(button.dataset.builderNext));
   }));
   form.querySelectorAll('[data-builder-back]').forEach((button) => button.addEventListener('click', () => showPanel(Number(button.dataset.builderBack))));
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const data = new FormData(form);
-    const selectedResources = data.getAll('resource');
     const errorsByStep = [stepErrors(0), stepErrors(1), stepErrors(2)];
     const firstInvalidStep = errorsByStep.findIndex((errors) => errors.length);
     if (firstInvalidStep >= 0) { showPanel(firstInvalidStep); showErrors(errorsByStep[firstInvalidStep]); return; }
+    const selectedResources = data.getAll('resource');
+    const powers = {};
     const resourceFunctions = {};
     selectedResources.forEach((resource) => {
-      const value = String(data.get('function-' + encodeURIComponent(resource)) || '').trim();
-      resourceFunctions[resource] = value;
+      const powerId = String(data.get('power-' + encodeURIComponent(resource)));
+      const power = POWER_OPTIONS.find((item) => item.id === powerId);
+      powers[resource] = powerId;
+      resourceFunctions[resource] = resource + ' sirve para ' + power.phrase + '.';
     });
-    ['name', 'description', 'solvedProblem', 'steps', 'reasoning', 'environment'].forEach((name) => { mission.solution[name] = String(data.get(name)).trim(); });
-    mission.solution.alternatives = data.getAll('idea').map((idea) => String(idea).trim()).join('\n');
+    const blueprintId = String(data.get('blueprint'));
+    const blueprint = BLUEPRINTS.find((item) => item.id === blueprintId);
+    const reasonChoices = data.getAll('reason');
+    const reasons = reasonChoices.map((id) => REASON_OPTIONS.find((item) => item.id === id));
+    const careChoice = String(data.get('care'));
+    const care = CARE_OPTIONS.find((item) => item.id === careChoice);
+    const name = String(data.get('name')).trim();
+    const optionalDetail = String(data.get('optionalDetail') || '').trim();
+    mission.solution.name = name;
+    mission.solution.blueprintId = blueprintId;
+    mission.solution.powers = powers;
+    mission.solution.reasonChoices = reasonChoices;
+    mission.solution.careChoice = careChoice;
+    mission.solution.optionalDetail = optionalDetail;
+    mission.solution.alternatives = blueprintOptionsFor(mission).map((item) => item.name).join('\n');
+    mission.solution.description = name + ' es un ' + blueprint.name.toLowerCase() + ' que combina ' + selectedResources.join(', ') + '. ' + blueprint.description + (optionalDetail ? ' Detalle especial: ' + optionalDetail + '.' : '');
+    mission.solution.solvedProblem = 'Ayuda a resolver este reto: ' + mission.problem;
     mission.solution.selectedResources = selectedResources;
     mission.solution.resourceFunctions = resourceFunctions;
+    mission.solution.steps = '1. Combinar ' + selectedResources.join(', ') + '. 2. Activar sus funciones: ' + Object.values(resourceFunctions).join(' ') + ' 3. Probar el invento respetando esta regla: ' + mission.restriction;
+    mission.solution.reasoning = 'Pensamos que funcionará porque ' + reasons.map((item) => item.phrase).join(' y ') + '.';
+    mission.solution.environment = 'Cuida Nébula-X porque ' + care.phrase + '.';
     mission.solution.drawing = sketch.toDataURL() || mission.solution.drawing;
     game.missions[mission.index] = mission;
     saveGame(game);
@@ -291,21 +316,36 @@ function bindBuilder() {
 function renderTwist() {
   const mission = currentMission();
   if (!mission?.solution.name) return renderMission();
-  return '<section class="screen screen-narrow" aria-labelledby="twist-title">' + renderMissionRoadmap(3) + '<article class="card twist-card"><div class="alert-symbol" aria-hidden="true">!</div><p class="eyebrow">Paso 3 · Giro inesperado</p><h1 id="twist-title">¡Algo cambió!</h1><div class="twist-message"><span aria-hidden="true">⚡</span><p>' + mission.twist + '</p></div><p>No borres toda tu idea. Busca qué parte debes cambiar para que vuelva a funcionar.</p></article><div class="before-after"><article class="card soft"><p class="step-command">Antes</p><h2>' + escapeHtml(mission.solution.name) + '</h2><p>' + escapeHtml(mission.solution.description) + '</p></article><article class="card soft"><p class="step-command">Ahora</p><h2>Haz dos cosas</h2><ol><li>Cuenta qué vas a cambiar.</li><li>Explica por qué ese cambio ayuda.</li></ol></article></div><form id="twist-form" class="card"><div id="twist-errors" aria-live="assertive"></div><div class="field"><label for="changes">1. ¿Qué cambiarán?</label><textarea id="changes" name="changes" maxlength="600" required aria-describedby="changes-help changes-count">' + escapeHtml(mission.solution.changes) + '</textarea><small id="changes-help">Puedes agregar, quitar, reemplazar o mover una parte.</small><span class="counter" id="changes-count">' + mission.solution.changes.length + '/600</span></div><div class="field"><label for="changeReason">2. ¿Por qué ahora sí funcionará?</label><textarea id="changeReason" name="changeReason" maxlength="500" required aria-describedby="changeReason-help changeReason-count">' + escapeHtml(mission.solution.changeReason) + '</textarea><small id="changeReason-help">Une tu explicación con el giro que apareció.</small><span class="counter" id="changeReason-count">' + mission.solution.changeReason.length + '/500</span></div><div class="mission-actions"><button type="button" class="button ghost" data-nav="builder">← Revisar el invento</button><button class="button primary" type="submit">Idea mejorada: vamos a evaluar →</button></div></form></section>';
+  const adaptations = ADAPTATION_OPTIONS.map((option) => '<label class="adaptation-pick"><input type="radio" name="adaptation" value="' + option.id + '" ' + (mission.solution.adaptationChoice === option.id ? 'checked' : '') + '><span><b aria-hidden="true">' + option.icon + '</b><strong>' + option.label + '</strong><small>' + option.phrase + '</small></span></label>').join('');
+  const parts = mission.solution.selectedResources.map((resource) => '<label class="part-pick"><input type="radio" name="adaptedResource" value="' + resource + '" ' + (mission.solution.adaptedResource === resource ? 'checked' : '') + '><span>' + resource + '</span></label>').join('');
+  return '<section class="screen screen-narrow" aria-labelledby="twist-title">' + renderMissionRoadmap(3) + '<article class="card twist-card"><div class="alert-symbol" aria-hidden="true">!</div><p class="eyebrow">Sorpresa de Nébula-X</p><h1 id="twist-title">¡Cambio de planes!</h1><div class="twist-message"><span aria-hidden="true">⚡</span><p>' + mission.twist + '</p></div></article><form id="twist-form" class="card game-panel"><div id="twist-errors" aria-live="assertive"></div><p class="step-command">Toca para adaptar</p><h2>1. Elige un truco de reparación</h2><div class="adaptation-grid">' + adaptations + '</div><h2>2. ¿Qué objeto cambiará?</h2><div class="chip-cloud part-cloud">' + parts + '</div><div class="adaptation-preview" id="adaptation-preview"><span aria-hidden="true">🧪</span><p>Elige dos tarjetas y aquí aparecerá tu nueva idea.</p></div><div class="mission-actions"><button type="button" class="button ghost" data-nav="builder">← Ver invento</button><button class="button primary" type="submit">⚡ Activar cambio</button></div></form></section>';
 }
 
 function bindTwist() {
   const form = document.getElementById('twist-form');
-  form.querySelectorAll('textarea').forEach((control) => control.addEventListener('input', () => { document.getElementById(control.name + '-count').textContent = control.value.length + '/' + control.maxLength; }));
+  const updatePreview = () => {
+    const data = new FormData(form);
+    const adaptation = ADAPTATION_OPTIONS.find((item) => item.id === data.get('adaptation'));
+    const resource = data.get('adaptedResource');
+    const preview = document.getElementById('adaptation-preview');
+    if (!adaptation || !resource) { preview.innerHTML = '<span aria-hidden="true">🧪</span><p>Elige dos tarjetas y aquí aparecerá tu nueva idea.</p>'; return; }
+    preview.innerHTML = '<span aria-hidden="true">✨</span><p><strong>Plan nuevo:</strong> usar ' + resource + ' para ' + adaptation.phrase + '.</p>';
+    playTone('select');
+  };
+  form.querySelectorAll('input[type="radio"]').forEach((input) => input.addEventListener('change', updatePreview));
+  updatePreview();
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const data = new FormData(form);
-    const changes = String(data.get('changes') || '').trim();
-    const changeReason = String(data.get('changeReason') || '').trim();
-    if (!changes || !changeReason) { const box = document.getElementById('twist-errors'); box.className = 'error-box'; box.textContent = 'Explica los cambios y por qué responden al giro antes de avanzar.'; return; }
+    const adaptationId = String(data.get('adaptation') || '');
+    const adaptedResource = String(data.get('adaptedResource') || '');
+    if (!adaptationId || !adaptedResource) { const box = document.getElementById('twist-errors'); box.className = 'error-box'; box.textContent = 'Elige un truco de reparación y el objeto que cambiará.'; box.scrollIntoView({ behavior: 'smooth' }); return; }
     const mission = currentMission();
-    mission.solution.changes = changes;
-    mission.solution.changeReason = changeReason;
+    const adaptation = ADAPTATION_OPTIONS.find((item) => item.id === adaptationId);
+    mission.solution.adaptationChoice = adaptationId;
+    mission.solution.adaptedResource = adaptedResource;
+    mission.solution.changes = 'Cambiamos ' + adaptedResource + ' para ' + adaptation.phrase + '.';
+    mission.solution.changeReason = 'Este cambio ayuda a que ' + mission.solution.name + ' siga funcionando después de esta sorpresa: ' + mission.twist;
     game.missions[mission.index] = mission;
     saveGame(game);
     setRoute('rubric');
@@ -315,8 +355,10 @@ function bindTwist() {
 function renderRubric() {
   const mission = currentMission();
   if (!mission?.solution.changes) return renderTwist();
-  const rows = RUBRIC.filter((item) => !item.groupOnly || game.config.mode !== 'individual').map((item) => '<fieldset class="rubric-row"><legend class="sr-only">' + item.label + '</legend><div class="rubric-heading"><strong aria-hidden="true">' + item.label + '</strong><span class="subtle">1 a 5</span></div><div class="rating">' + item.help.map((description, index) => '<label title="' + description + '"><input type="radio" name="score-' + item.id + '" value="' + (index + 1) + '" required><span>' + (index + 1) + '</span></label>').join('') + '</div><p class="rating-description" id="description-' + item.id + '">Selecciona una valoración para leer su descripción.</p><label class="field high-score-reason" id="reason-wrap-' + item.id + '" hidden><span>¿Qué evidencia justifica esta valoración alta?</span><input name="reason-' + item.id + '" maxlength="180" placeholder="Da un ejemplo breve"></label></fieldset>').join('');
-  return '<section class="screen screen-narrow" aria-labelledby="rubric-title">' + renderMissionRoadmap(4) + '<p class="eyebrow">Paso 4 · Mirar y conversar</p><h1 id="rubric-title">¿Cómo quedó la idea?</h1><div class="next-action"><span aria-hidden="true">⭐</span><p><strong>No es un examen.</strong> En cada tarjeta elige del 1 al 5. Pulsa un número para leer qué significa.</p></div><div class="rating-key" aria-label="Guía rápida de puntuación"><span><b>1</b> Apenas empieza</span><span><b>3</b> Va por buen camino</span><span><b>5</b> Está muy bien explicada</span></div><form id="rubric-form" novalidate><div id="rubric-errors" aria-live="assertive"></div><div class="rubric-list">' + rows + '</div><div class="mission-actions"><button type="button" class="button ghost" data-nav="twist">← Revisar el cambio</button><button class="button primary" type="submit">Terminar misión y recuperar núcleo →</button></div></form><p class="subtle center">La Energía Creativa sirve para conversar y mejorar. No es una nota ni una medición científica.</p></section>';
+  const faces = ['😕', '🙂', '😊', '🤩', '🌟'];
+  const rows = RUBRIC.filter((item) => !item.groupOnly || game.config.mode !== 'individual').map((item) => '<fieldset class="rubric-row quick-rubric"><legend>' + item.label + '</legend><div class="rating face-rating">' + item.help.map((description, index) => '<label title="' + description + '"><input type="radio" name="score-' + item.id + '" value="' + (index + 1) + '" required><span><b aria-hidden="true">' + faces[index] + '</b><small>' + (index + 1) + '</small></span></label>').join('') + '</div><p class="rating-description" id="description-' + item.id + '">Toca una cara.</p></fieldset>').join('');
+  const evidence = EVIDENCE_OPTIONS.map((item) => '<label class="chip-choice"><input type="checkbox" name="evidence" value="' + item.id + '"><span>' + item.icon + ' ' + item.label + '</span></label>').join('');
+  return '<section class="screen screen-narrow" aria-labelledby="rubric-title">' + renderMissionRoadmap(4) + '<p class="eyebrow">Chequeo rápido</p><h1 id="rubric-title">¿Cómo quedó?</h1><div class="next-action"><span aria-hidden="true">⭐</span><p><strong>No es un examen.</strong> Toca una cara en cada fila. No necesitas escribir.</p></div><form id="rubric-form" novalidate><div id="rubric-errors" aria-live="assertive"></div><div class="rubric-list quick-rubric-list">' + rows + '</div><fieldset class="card evidence-card"><legend>Si elegiste 4 o 5, marca dos pruebas</legend><p>¿Qué ocurrió mientras inventaban?</p><div class="chip-cloud">' + evidence + '</div></fieldset><div class="mission-actions"><button type="button" class="button ghost" data-nav="twist">← Ver el cambio</button><button class="button primary" type="submit">🏆 Recuperar núcleo</button></div></form><p class="subtle center">La energía sirve para mejorar, no es una nota.</p></section>';
 }
 
 function bindRubric() {
@@ -325,8 +367,6 @@ function bindRubric() {
   RUBRIC.forEach((item) => {
     form.querySelectorAll('[name="score-' + item.id + '"]').forEach((input) => input.addEventListener('change', () => {
       document.getElementById('description-' + item.id).textContent = item.help[Number(input.value) - 1];
-      const wrapper = document.getElementById('reason-wrap-' + item.id);
-      if (wrapper) { wrapper.hidden = Number(input.value) < 4; wrapper.querySelector('input').required = Number(input.value) >= 4; }
       playTone('select');
     }));
   });
@@ -340,17 +380,17 @@ function bindRubric() {
     active.forEach((item) => {
       const score = data.get('score-' + item.id);
       if (!score) errors.push('Valora ' + item.label.toLowerCase() + '.');
-      else {
-        values[item.id] = Number(score);
-        const reason = String(data.get('reason-' + item.id) || '').trim();
-        if (Number(score) >= 4 && !reason) errors.push('Justifica la valoración alta de ' + item.label.toLowerCase() + '.');
-        reasons[item.id] = reason;
-      }
+      else values[item.id] = Number(score);
     });
+    const evidenceIds = data.getAll('evidence');
+    const hasHighScores = Object.values(values).some((score) => score >= 4);
+    if (hasHighScores && evidenceIds.length < 2) errors.push('Marca dos pruebas de lo que hicieron bien.');
+    const evidenceText = evidenceIds.map((id) => EVIDENCE_OPTIONS.find((item) => item.id === id)?.label).filter(Boolean).join(' y ');
+    Object.entries(values).forEach(([id, score]) => { reasons[id] = score >= 4 ? evidenceText : ''; });
     const box = document.getElementById('rubric-errors');
     if (errors.length) { box.className = 'error-box'; box.innerHTML = '<strong>Antes de calcular:</strong><ul>' + errors.map((error) => '<li>' + error + '</li>').join('') + '</ul>'; box.scrollIntoView({ behavior: 'smooth' }); return; }
     const evaluation = calculateEvaluation(values);
-    mission.evaluation = { ...evaluation, reasons };
+    mission.evaluation = { ...evaluation, reasons, evidence: evidenceIds };
     mission.energy = evaluation.energy;
     mission.badge = chooseBadge(evaluation.scores, mission.index);
     mission.recommendation = recommendationFor(evaluation.scores);

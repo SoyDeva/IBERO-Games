@@ -32,12 +32,15 @@ No es un cuestionario ni califica semánticamente las respuestas. La creatividad
 - Modos individual, colaborativo de 2 a 4 participantes y por equipos.
 - Cinco zonas con identidad, sistema de nave y dificultad progresiva.
 - Más de 30 problemas, 40 recursos, 20 restricciones y 20 giros inesperados.
-- Constructor guiado con validación de campos y mínimo de recursos.
+- Tres planos visuales de solución antes de elegir.
+- Fábrica de inventos basada en tarjetas: objetos, superpoderes, planos, razones y cuidado ambiental.
+- Escritura mínima: un nombre generado automáticamente y un detalle completamente opcional.
 - Mecánica explicada con una ruta visible de cinco pasos: entiende, imagina, cambia, evalúa y recupera.
-- Laboratorio dividido en cuatro tarjetas breves: ideas, objetos, plan y dibujo.
+- Laboratorio dividido en cuatro niveles breves: objetos, plano, poderes y boceto opcional.
 - Tutorial con una misión de ejemplo completa y lenguaje apropiado para 10–12 años.
 - Lienzo Canvas compatible con mouse y pantalla táctil, con grosor, deshacer, limpiar y descarga PNG.
-- Rúbrica de 1 a 5 con justificación para valoraciones altas.
+- Giro inesperado resuelto con tarjetas de adaptación, sin textos largos.
+- Rúbrica rápida con caras y evidencias seleccionables, sin escritura.
 - Energía Creativa descrita como valoración pedagógica, no como medición científica.
 - Roles automáticos y rotativos: Explorador, Inventor, Constructor y Comunicador.
 - Mapa progresivo, insignias y Núcleos de Ingenio.
@@ -196,7 +199,7 @@ Consulta [docs/guia-docente.md](docs/guia-docente.md) o la sección “Guía doc
 - [x] Pruebas de persistencia, ajustes y reinicio con almacenamiento local simulado.
 - [x] Prueba de generación del informe y escape de textos introducidos.
 - [x] Auditoría estática de etiquetas, controles, identificadores y dependencias externas.
-- [x] Revisión de validación de campos, mínimo de recursos y tres ideas obligatorias.
+- [x] Revisión de mínimo de recursos, superpoderes, tres planos y decisiones obligatorias.
 - [x] Revisión del Canvas con eventos de puntero, deshacer, limpiar y descarga.
 - [x] Revisión de navegación por teclado, foco visible y opciones de accesibilidad.
 - [x] Revisión de reglas responsivas para móvil, tableta y escritorio.

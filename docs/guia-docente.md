@@ -23,9 +23,9 @@ Misión Nébula fortalece fluidez, flexibilidad, originalidad, elaboración, res
 
 Puede presentar la mecánica con estas palabras:
 
-> “En cada misión primero entendemos el reto, después imaginamos tres ideas, construimos una, la cambiamos cuando aparece una sorpresa y finalmente conversamos sobre cómo quedó. No hay una respuesta escondida que deban adivinar”.
+> “En cada misión entendemos el reto, probamos tres planos, mezclamos objetos con superpoderes, cambiamos la idea cuando aparece una sorpresa y finalmente conversamos sobre cómo quedó. No hay una respuesta escondida que deban adivinar”.
 
-El juego mantiene visible la ruta de la misión y el laboratorio presenta una sola tarjeta cada vez: ideas, objetos, plan y dibujo.
+El juego mantiene visible la ruta y presenta una sola decisión cada vez. La explicación se genera a partir de tarjetas para que el grupo dedique más tiempo a conversar, combinar y jugar.
 
 ## Roles
 

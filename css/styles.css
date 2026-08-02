@@ -192,11 +192,41 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); outline: 
 .builder-step-tabs li.active span { color: #25163f; background: var(--gold); }
 .builder-step-tabs li.done { color: var(--green); border-color: var(--green); }
 .builder-panel { scroll-margin-top: 1rem; }
+.game-panel { overflow: hidden; position: relative; }
+.game-panel::after { content: '✦'; position: absolute; right: -18px; top: -45px; font-size: 9rem; color: rgba(255,255,255,.035); pointer-events: none; }
 .builder-panel hr { margin: 1.5rem 0; border: 0; border-top: 1px solid var(--border); }
-.idea-list { display: grid; gap: .7rem; margin: 1rem 0; }
-.idea-field { display: grid; grid-template-columns: 180px 1fr; align-items: center; gap: .7rem; padding: .7rem; border: 1px solid var(--border); border-radius: 12px; }
-.idea-field span, .idea-field small { display: block; }
-.idea-field small { color: var(--muted); font-weight: 400; }
+.resource-pick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin: 1rem 0; }
+.resource-pick, .blueprint-pick, .chip-choice, .adaptation-pick, .part-pick { position: relative; }
+.resource-pick input, .blueprint-pick input, .chip-choice input, .adaptation-pick input, .part-pick input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.resource-pick-card { min-height: 126px; display: grid; place-items: center; align-content: center; gap: .2rem; padding: .8rem; text-align: center; border: 2px solid var(--border); border-radius: 17px; background: linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.015)); cursor: pointer; transition: transform .18s, border-color .18s, background .18s; }
+.resource-pick-card:hover, .blueprint-pick span:hover, .adaptation-pick span:hover { transform: translateY(-3px); }
+.resource-avatar { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 15px; color: #26183c; background: linear-gradient(135deg, var(--cyan), var(--gold)); font-size: 1.25rem; }
+.resource-pick-card small { color: var(--muted); }
+.resource-pick input:checked + .resource-pick-card { border-color: var(--cyan); background: rgba(94,232,239,.14); box-shadow: 0 8px 24px rgba(94,232,239,.12); }
+.resource-pick input:checked + .resource-pick-card small { color: var(--cyan); }
+.resource-pick input:focus-visible + .resource-pick-card, .blueprint-pick input:focus-visible + span, .chip-choice input:focus-visible + span, .adaptation-pick input:focus-visible + span, .part-pick input:focus-visible + span { outline: 3px solid var(--gold); outline-offset: 3px; }
+.power-pickers { display: grid; gap: .6rem; margin: 1.2rem 0; }
+.power-picker { display: grid; grid-template-columns: minmax(120px, .7fr) 1.3fr; align-items: center; gap: .7rem; padding: .7rem; border-radius: 13px; background: rgba(94,232,239,.07); border: 1px solid rgba(94,232,239,.25); }
+.power-picker span, .power-picker small { display: block; }
+.power-picker small { color: var(--muted); }
+.blueprint-grid, .adaptation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin: 1rem 0; }
+.blueprint-pick > span, .adaptation-pick > span { min-height: 205px; display: grid; align-content: center; justify-items: center; gap: .5rem; padding: 1rem; text-align: center; border: 2px solid var(--border); border-radius: 18px; background: linear-gradient(155deg, rgba(141,115,255,.13), rgba(255,255,255,.025)); cursor: pointer; transition: transform .18s, border-color .18s; }
+.blueprint-pick b, .adaptation-pick b { font-size: 2.7rem; }
+.blueprint-pick small, .adaptation-pick small { color: var(--muted); }
+.blueprint-pick input:checked + span, .adaptation-pick input:checked + span { border-color: var(--gold); background: rgba(247,203,98,.13); box-shadow: 0 10px 30px rgba(247,203,98,.12); }
+.name-forge { display: grid; gap: .5rem; margin: 1.4rem 0; padding: 1rem; border-radius: 16px; background: rgba(255,255,255,.05); }
+.name-forge > div { display: grid; grid-template-columns: 1fr auto; gap: .6rem; }
+.name-forge small { color: var(--muted); }
+.tap-field { margin: 0 0 1.4rem; padding: 0; border: 0; }
+.tap-field legend { margin-bottom: .7rem; font-size: 1.15rem; font-weight: 900; }
+.chip-cloud { display: flex; flex-wrap: wrap; gap: .6rem; }
+.chip-choice span, .part-pick span { display: inline-flex; align-items: center; min-height: 44px; padding: .6rem .8rem; border: 2px solid var(--border); border-radius: 999px; background: rgba(255,255,255,.04); cursor: pointer; }
+.chip-choice input:checked + span, .part-pick input:checked + span { color: #21143b; background: var(--gold); border-color: var(--gold); font-weight: 900; }
+.optional-detail { display: grid; gap: .4rem; margin: 1rem 0; padding: 1rem; border-radius: 14px; border: 1px dashed var(--border); }
+.optional-detail small { color: var(--muted); }
+.playful-canvas { border-color: var(--cyan); box-shadow: 0 0 25px rgba(94,232,239,.12); }
+.mascot-card { text-align: center; }
+.nebula-mascot { width: 90px; height: 90px; display: grid; place-items: center; margin: 0 auto 1rem; border-radius: 45% 55% 50% 48%; color: #281946; background: linear-gradient(145deg, var(--gold), var(--cyan)); font-size: 2.5rem; box-shadow: 0 12px 30px rgba(94,232,239,.2); animation: hover 4s ease-in-out infinite; }
 .mission-aside { position: sticky; top: 1rem; }
 .mission-aside dl { margin: 0; }
 .mission-aside dt { color: var(--cyan); font-weight: 800; margin-top: .8rem; }
@@ -217,7 +247,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); outline: 
 .twist-message { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 14px; background: rgba(255,123,172,.13); }
 .twist-message span { font-size: 2rem; }
 .twist-message p { margin: 0; font-size: 1.25rem; font-weight: 900; }
-.before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.part-cloud { margin: .8rem 0 1.4rem; }
+.adaptation-preview { min-height: 76px; display: flex; align-items: center; gap: .8rem; margin: 1.2rem 0; padding: 1rem; border-radius: 15px; color: var(--ink); background: linear-gradient(100deg, rgba(87,224,160,.15), rgba(94,232,239,.1)); border: 1px solid var(--green); }
+.adaptation-preview span { font-size: 1.7rem; }
+.adaptation-preview p { margin: 0; }
 .alert-symbol { width: 70px; height: 70px; display: grid; place-items: center; border-radius: 22px; background: var(--pink); color: #2a0c2a; font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; transform: rotate(-4deg); }
 
 .rubric-list { display: grid; gap: 1rem; }
@@ -233,7 +266,15 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); outline: 
 .rating-key { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
 .rating-key span { flex: 1 1 180px; padding: .65rem; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid var(--border); }
 .rating-key b { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-right: .3rem; border-radius: 8px; background: var(--gold); color: #25163f; }
-.high-score-reason { margin-top: .6rem; }
+.quick-rubric-list { gap: .65rem; }
+.quick-rubric { padding: .8rem 1rem; }
+.quick-rubric legend { font-size: 1.05rem; font-weight: 900; }
+.face-rating { margin: .45rem 0; }
+.face-rating span { width: 52px; height: 54px; display: grid; gap: 0; place-items: center; align-content: center; }
+.face-rating span b { font-size: 1.35rem; line-height: 1; }
+.face-rating span small { font-size: .68rem; }
+.evidence-card { margin-top: 1rem; box-shadow: none; }
+.evidence-card legend { padding: 0 .4rem; font-size: 1.15rem; font-weight: 900; }
 
 .result-hero { text-align: center; }
 .core-earned { width: 150px; height: 150px; display: grid; place-items: center; margin: 1rem auto 2rem; font-size: 4rem; color: white; background: linear-gradient(145deg, var(--purple), #38247e); clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%); animation: coreGlow 2s ease-in-out infinite; }
@@ -294,9 +335,12 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
   .card-grid, .form-grid, .choice-grid, .player-fields, .challenge-grid, .credits-list { grid-template-columns: 1fr; }
   .system-list, .resource-checks { grid-template-columns: 1fr; }
   .resource-function { grid-template-columns: 1fr; }
-  .idea-field, .before-after { grid-template-columns: 1fr; }
+  .resource-pick-grid, .blueprint-grid, .adaptation-grid { grid-template-columns: 1fr 1fr; }
+  .power-picker, .name-forge > div { grid-template-columns: 1fr; }
   .builder-step-tabs li { justify-content: center; padding: .45rem .2rem; font-size: .72rem; }
   .mission-roadmap li strong { font-size: .68rem; }
+  .face-rating { gap: .2rem; }
+  .face-rating span { width: 44px; height: 48px; }
   .mission-header, .hud { display: block; }
   .energy-chip { display: inline-block; margin-top: .7rem; }
   .stepper li span:last-child { display: none; }
