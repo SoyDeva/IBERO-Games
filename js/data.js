@@ -112,10 +112,10 @@ export const TWISTS = [
 ];
 
 export const ROLES = [
-  { name: 'Explorador', description: 'Analiza el problema y descubre necesidades.' },
-  { name: 'Inventor', description: 'Propone alternativas y combinaciones inesperadas.' },
-  { name: 'Constructor', description: 'Ordena los pasos y comprueba los detalles.' },
-  { name: 'Comunicador', description: 'Explica, escucha y defiende la propuesta.' }
+  { name: 'Explorador', description: 'Lee el reto y dice: “Necesitamos resolver…”' },
+  { name: 'Inventor', description: 'Pide una idea a cada persona y propone combinaciones.' },
+  { name: 'Constructor', description: 'Ordena el plan: primero, después y al final.' },
+  { name: 'Comunicador', description: 'Pregunta por qué funcionará y explica la idea del equipo.' }
 ];
 
 export const BADGES = [
@@ -149,9 +149,9 @@ export const RECOMMENDATIONS = {
 };
 
 export const TUTORIAL_STEPS = [
-  ['1. Observa', 'Lee el problema, la zona y la restricción. No busques una única respuesta.'],
-  ['2. Imagina', 'Genera varias posibilidades y combina al menos los recursos indicados.'],
-  ['3. Construye', 'Describe funciones, pasos, razones y un boceto del invento.'],
-  ['4. Adapta', 'Un giro inesperado cambiará las condiciones: mejora la idea.'],
-  ['5. Reflexiona', 'Usa la rúbrica con honestidad. Una puntuación baja invita a revisar, no castiga.']
+  ['1. Entiende', 'Descubre qué problema debes resolver, qué objetos tienes y cuál es la regla especial.'],
+  ['2. Imagina', 'Escribe tres ideas diferentes. Luego elige una o combina sus mejores partes.'],
+  ['3. Construye', 'Cuenta qué hace cada objeto, ordena los pasos y dibuja el invento.'],
+  ['4. Cambia', 'Aparecerá una sorpresa. Modifica una parte para que la idea vuelva a funcionar.'],
+  ['5. Evalúa', 'Pulsa del 1 al 5 para conversar sobre la idea. No es una nota ni hay una respuesta perfecta.']
 ];

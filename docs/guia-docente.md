@@ -19,6 +19,14 @@ Misión Nébula fortalece fluidez, flexibilidad, originalidad, elaboración, res
 4. Active ajustes de accesibilidad cuando se requieran.
 5. Reserve tiempo para reflexión final.
 
+## Explicación breve para el grupo
+
+Puede presentar la mecánica con estas palabras:
+
+> “En cada misión primero entendemos el reto, después imaginamos tres ideas, construimos una, la cambiamos cuando aparece una sorpresa y finalmente conversamos sobre cómo quedó. No hay una respuesta escondida que deban adivinar”.
+
+El juego mantiene visible la ruta de la misión y el laboratorio presenta una sola tarjeta cada vez: ideas, objetos, plan y dibujo.
+
 ## Roles
 
 - Explorador: analiza el problema.

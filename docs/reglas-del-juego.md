@@ -20,6 +20,16 @@ Recuperar cinco Núcleos de Ingenio para reparar la Asteria. En partida rápida 
 
 Portada → historia → configuración → tutorial → mapa → misión → constructor → giro → rúbrica → resultado → siguiente zona → resultado final → informe.
 
+Durante cada misión aparece una ruta de cinco pasos fáciles de recordar:
+
+1. **Entiende:** lee el problema, los objetos y la regla especial.
+2. **Imagina:** escribe tres ideas y combina las mejores partes.
+3. **Cambia:** adapta el invento cuando aparece una sorpresa.
+4. **Evalúa:** conversa y valora la idea del 1 al 5.
+5. **Núcleo:** recibe retroalimentación y desbloquea la siguiente zona.
+
+El laboratorio muestra una sola tarjeta a la vez: ideas, objetos, plan y dibujo.
+
 ## Roles
 
 - Explorador: analiza.

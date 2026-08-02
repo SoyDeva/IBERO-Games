@@ -22,6 +22,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; }
 body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 10%, #33216d 0, transparent 34%), radial-gradient(circle at 90% 30%, #16375f 0, transparent 30%), var(--deep); color: var(--ink); line-height: 1.55; }
 button, input, textarea, select { font: inherit; }
@@ -131,8 +132,29 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); outline: 
 .tutorial-nav button.active { color: white; border-color: var(--cyan); background: rgba(94,232,239,.12); }
 .tutorial-demo { min-height: 330px; display: grid; place-items: center; text-align: center; }
 .tutorial-symbol { width: 110px; height: 110px; border-radius: 28px; display: grid; place-items: center; font-size: 3rem; background: linear-gradient(135deg, var(--purple), #3a287e); box-shadow: 0 0 50px rgba(141,115,255,.4); }
+.practice-mission { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: .8rem; margin: 1.2rem 0; }
+.practice-mission > div { padding: .8rem; border-radius: 12px; background: rgba(255,255,255,.05); }
+.practice-label { display: block; color: var(--cyan); font-size: .78rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .3rem; }
+.step-command { color: var(--gold); font-weight: 900; text-transform: uppercase; letter-spacing: .1em; font-size: .75rem; }
+.example-line { margin: 1rem auto 0; padding: .8rem; border-radius: 10px; background: rgba(94,232,239,.09); }
+.kid-tip, .next-action { display: flex; gap: .8rem; align-items: center; padding: 1rem; border-radius: 14px; margin: 1rem 0; }
+.kid-tip { background: rgba(247,203,98,.12); border: 1px solid rgba(247,203,98,.45); }
+.next-action { background: linear-gradient(100deg, rgba(94,232,239,.16), rgba(141,115,255,.13)); border: 1px solid rgba(94,232,239,.5); }
+.kid-tip > span, .next-action > span { font-size: 1.8rem; flex: 0 0 auto; }
+.kid-tip p, .next-action p { margin: 0; }
+.kid-tip.compact { padding: .7rem; }
+.kid-tip.compact > span { font-size: 1.25rem; }
 
 .hud { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }
+.mission-roadmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: .35rem; padding: 0; margin: 0 0 2rem; list-style: none; }
+.mission-roadmap li { position: relative; display: grid; justify-items: center; gap: .3rem; color: var(--muted); font-size: .78rem; text-align: center; }
+.mission-roadmap li::after { content: ''; position: absolute; z-index: -1; top: 17px; left: 55%; width: 90%; height: 3px; background: var(--border); }
+.mission-roadmap li:last-child::after { display: none; }
+.mission-roadmap li > span { width: 36px; height: 36px; display: grid; place-items: center; border: 2px solid var(--border); border-radius: 50%; background: var(--navy); font-weight: 900; }
+.mission-roadmap li.active { color: white; }
+.mission-roadmap li.active > span { background: var(--gold); color: #25163f; border-color: var(--gold); box-shadow: 0 0 22px rgba(247,203,98,.35); }
+.mission-roadmap li.done > span { background: var(--green); color: #092918; border-color: var(--green); }
+.mission-roadmap li.done::after { background: var(--green); }
 .progress-wrap { flex: 1; max-width: 560px; }
 .progress-label { display: flex; justify-content: space-between; font-size: .88rem; color: var(--muted); margin-bottom: .35rem; }
 .progress-bar { height: 12px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
@@ -156,12 +178,25 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); outline: 
 .challenge-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1rem; margin-top: 1rem; }
 .problem-card { border-top: 5px solid var(--pink); }
 .constraint-card { border-top: 5px solid var(--gold); }
+.card-number { width: 34px; height: 34px; display: grid; place-items: center; float: right; border-radius: 50%; background: rgba(255,255,255,.1); font-weight: 900; }
 .resource-list { display: flex; flex-wrap: wrap; gap: .6rem; padding: 0; list-style: none; }
 .resource-chip { display: inline-flex; align-items: center; gap: .35rem; padding: .65rem .8rem; border-radius: 12px; background: rgba(94,232,239,.09); border: 1px solid rgba(94,232,239,.35); }
 .resource-chip::before { content: '⬡'; color: var(--cyan); }
 .mission-actions { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; }
 
 .builder-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 1rem; align-items: start; }
+.builder-step-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: .45rem; padding: 0; margin: 0 0 .8rem; list-style: none; }
+.builder-step-tabs li { display: flex; align-items: center; gap: .35rem; padding: .6rem; color: var(--muted); border-bottom: 3px solid var(--border); font-size: .86rem; font-weight: 800; }
+.builder-step-tabs li span { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.08); }
+.builder-step-tabs li.active { color: white; border-color: var(--gold); }
+.builder-step-tabs li.active span { color: #25163f; background: var(--gold); }
+.builder-step-tabs li.done { color: var(--green); border-color: var(--green); }
+.builder-panel { scroll-margin-top: 1rem; }
+.builder-panel hr { margin: 1.5rem 0; border: 0; border-top: 1px solid var(--border); }
+.idea-list { display: grid; gap: .7rem; margin: 1rem 0; }
+.idea-field { display: grid; grid-template-columns: 180px 1fr; align-items: center; gap: .7rem; padding: .7rem; border: 1px solid var(--border); border-radius: 12px; }
+.idea-field span, .idea-field small { display: block; }
+.idea-field small { color: var(--muted); font-weight: 400; }
 .mission-aside { position: sticky; top: 1rem; }
 .mission-aside dl { margin: 0; }
 .mission-aside dt { color: var(--cyan); font-weight: 800; margin-top: .8rem; }
@@ -179,6 +214,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); outline: 
 
 .twist-card { overflow: hidden; position: relative; border: 2px solid var(--pink); }
 .twist-card::before { content: '!'; position: absolute; right: -22px; top: -48px; font-size: 12rem; font-weight: 900; opacity: .06; }
+.twist-message { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 14px; background: rgba(255,123,172,.13); }
+.twist-message span { font-size: 2rem; }
+.twist-message p { margin: 0; font-size: 1.25rem; font-weight: 900; }
+.before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
 .alert-symbol { width: 70px; height: 70px; display: grid; place-items: center; border-radius: 22px; background: var(--pink); color: #2a0c2a; font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; transform: rotate(-4deg); }
 
 .rubric-list { display: grid; gap: 1rem; }
@@ -191,6 +230,9 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); outline: 
 .rating input:checked + span { background: var(--gold); color: #23173f; border-color: var(--gold); }
 .rating input:focus-visible + span { outline: 3px solid var(--cyan); }
 .rating-description { min-height: 2.8em; color: var(--muted); }
+.rating-key { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
+.rating-key span { flex: 1 1 180px; padding: .65rem; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid var(--border); }
+.rating-key b { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-right: .3rem; border-radius: 8px; background: var(--gold); color: #25163f; }
 .high-score-reason { margin-top: .6rem; }
 
 .result-hero { text-align: center; }
@@ -231,6 +273,7 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
   .site-header { align-items: flex-start; }
   .nav-button { display: none; }
   .hero, .story-panel, .tutorial-layout, .builder-layout { grid-template-columns: 1fr; }
+  .practice-mission { grid-template-columns: 1fr; }
   .planet-scene { min-height: 340px; grid-row: 1; }
   .planet { width: min(270px, 70vw); }
   .card-grid { grid-template-columns: 1fr 1fr; }
@@ -251,6 +294,9 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
   .card-grid, .form-grid, .choice-grid, .player-fields, .challenge-grid, .credits-list { grid-template-columns: 1fr; }
   .system-list, .resource-checks { grid-template-columns: 1fr; }
   .resource-function { grid-template-columns: 1fr; }
+  .idea-field, .before-after { grid-template-columns: 1fr; }
+  .builder-step-tabs li { justify-content: center; padding: .45rem .2rem; font-size: .72rem; }
+  .mission-roadmap li strong { font-size: .68rem; }
   .mission-header, .hud { display: block; }
   .energy-chip { display: inline-block; margin-top: .7rem; }
   .stepper li span:last-child { display: none; }

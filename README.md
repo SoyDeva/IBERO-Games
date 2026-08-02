@@ -33,6 +33,9 @@ No es un cuestionario ni califica semánticamente las respuestas. La creatividad
 - Cinco zonas con identidad, sistema de nave y dificultad progresiva.
 - Más de 30 problemas, 40 recursos, 20 restricciones y 20 giros inesperados.
 - Constructor guiado con validación de campos y mínimo de recursos.
+- Mecánica explicada con una ruta visible de cinco pasos: entiende, imagina, cambia, evalúa y recupera.
+- Laboratorio dividido en cuatro tarjetas breves: ideas, objetos, plan y dibujo.
+- Tutorial con una misión de ejemplo completa y lenguaje apropiado para 10–12 años.
 - Lienzo Canvas compatible con mouse y pantalla táctil, con grosor, deshacer, limpiar y descarga PNG.
 - Rúbrica de 1 a 5 con justificación para valoraciones altas.
 - Energía Creativa descrita como valoración pedagógica, no como medición científica.
