@@ -440,3 +440,115 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
   .rescue-pick > span, .mood-pick > span { min-height: 112px; grid-template-columns: 78px 1fr; justify-items: start; text-align: left; }
   .rescue-pick small { grid-column: 2; }
 }
+
+/* Vuelo galáctico 2.5D */
+.flight-home { min-height: 74vh; display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: clamp(2rem, 5vw, 5rem); }
+.flight-home h1 span { display: block; color: var(--gold); }
+.flight-home-copy { position: relative; z-index: 2; }
+.mission-formula { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; margin: 1.6rem 0; }
+.mission-formula > span { min-width: 92px; display: grid; place-items: center; padding: .7rem; border: 1px solid var(--border); border-radius: 18px; background: rgba(255,255,255,.055); }
+.mission-formula b { font-size: 2.1rem; }
+.mission-formula small { font-weight: 900; }
+.mission-formula i { color: var(--cyan); font-style: normal; font-size: 1.4rem; font-weight: 900; }
+.launch-button { min-height: 64px; padding: .85rem 1.55rem; border-radius: 20px; font-size: 1.15rem; }
+.best-flight { margin-top: 1.3rem; color: var(--gold); }
+.home-orbit { min-height: 430px; position: relative; display: grid; place-items: center; isolation: isolate; }
+.orbit-planet { width: min(310px, 70vw); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 32% 25%, #b8f7ff 0 3%, #5ac4e6 14%, #6949d0 52%, #15113d 100%); box-shadow: inset -35px -30px 55px rgba(5,3,25,.65), 0 0 90px rgba(94,232,239,.34); }
+.orbit-planet::after { content: ''; position: absolute; width: 360px; max-width: 88vw; height: 78px; border: 10px solid rgba(247,203,98,.65); border-left-color: transparent; border-right-color: transparent; border-radius: 50%; transform: rotate(-13deg); top: 178px; left: 50%; translate: -50% 0; }
+.orbit { position: absolute; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; z-index: -1; }
+.orbit-one { width: 390px; max-width: 94vw; aspect-ratio: 1; }
+.orbit-two { width: 470px; max-width: 105vw; aspect-ratio: 1; }
+.orbit-ship { position: absolute; left: 6%; top: 18%; color: white; font-size: 4.2rem; transform: rotate(46deg); filter: drop-shadow(-18px 16px 13px var(--cyan)); animation: shipCruise 3s ease-in-out infinite; }
+.orbit-ship i { position: absolute; width: 14px; height: 42px; left: 28px; top: 52px; border-radius: 50%; background: linear-gradient(var(--cyan), transparent); }
+@keyframes shipCruise { 50% { transform: translate(14px,-12px) rotate(50deg); } }
+
+.flight-page { width: min(1320px, calc(100% - 1rem)); margin: 0 auto; padding: .5rem 0 2rem; }
+.flight-hud { display: grid; grid-template-columns: 1.55fr 1fr 1fr 1.1fr; gap: .55rem; margin-bottom: .55rem; }
+.hud-block { min-height: 64px; display: grid; align-content: center; padding: .55rem .8rem; border: 1px solid var(--border); border-radius: 15px; background: rgba(22,13,59,.88); box-shadow: 0 8px 24px rgba(4,1,22,.22); }
+.hud-block > span { color: var(--muted); font-size: .72rem; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
+.hud-block > strong { font-size: 1.05rem; }
+.fuel-hud { grid-template-columns: 1fr auto; column-gap: .6rem; }
+.fuel-hud > span { grid-column: 1 / -1; }
+.fuel-track { height: 13px; overflow: hidden; align-self: center; border-radius: 999px; background: rgba(255,255,255,.1); }
+.fuel-track i { width: 62%; height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--cyan)); box-shadow: 0 0 14px var(--cyan); transition: width .2s; }
+.fuel-track i.low { background: linear-gradient(90deg, var(--danger), var(--gold)); box-shadow: 0 0 14px var(--danger); }
+.hull-hud strong { color: var(--pink); letter-spacing: .18em; }
+.checkpoint-hud strong { color: var(--cyan); }
+.flight-stage { position: relative; overflow: hidden; border: 2px solid rgba(141,115,255,.42); border-radius: 24px; background: #07031b; box-shadow: 0 24px 70px rgba(2,0,15,.55), 0 0 40px rgba(94,232,239,.08); }
+#flight-canvas { width: 100%; height: min(68vh, 720px); min-height: 440px; display: block; touch-action: none; cursor: crosshair; }
+.flight-overlay, .quiz-panel { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow-y: auto; padding: 1rem; background: rgba(4,2,18,.66); backdrop-filter: blur(6px); }
+.overlay-card, .quiz-card { width: min(620px, 100%); padding: clamp(1.2rem, 4vw, 2.2rem); border: 1px solid var(--border); border-radius: 28px; background: linear-gradient(145deg, rgba(40,27,91,.98), rgba(19,12,56,.98)); box-shadow: 0 28px 80px rgba(0,0,0,.5); text-align: center; }
+.overlay-card h2, .quiz-card h2 { margin-bottom: .7rem; }
+.control-demo { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .8rem; margin: 1rem 0; }
+.control-demo span { display: grid; place-items: center; gap: .25rem; padding: .7rem; border-radius: 16px; background: rgba(255,255,255,.06); font-size: 1.8rem; }
+.control-demo small { font-size: .72rem; font-weight: 900; }
+.control-demo > b { font-size: 3rem; }
+.flight-toast { position: absolute; z-index: 4; left: 50%; top: 12%; translate: -50% 0; width: max-content; max-width: calc(100% - 2rem); padding: .7rem 1rem; border: 2px solid var(--cyan); border-radius: 999px; background: rgba(10,6,36,.94); box-shadow: 0 10px 28px rgba(0,0,0,.38); text-align: center; font-weight: 900; }
+.flight-toast.danger { border-color: var(--danger); }
+.flight-toast.success { border-color: var(--green); color: var(--green); }
+.quiz-panel { background: radial-gradient(circle, rgba(69,45,142,.84), rgba(4,2,18,.9)); }
+.quiz-card { border: 2px solid var(--cyan); }
+.quiz-category { margin: 0 auto .5rem; color: var(--cyan); font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+.fuel-question-icon { width: 72px; height: 72px; display: grid; place-items: center; margin: .5rem auto; border-radius: 22px; background: rgba(247,203,98,.15); font-size: 2.5rem; }
+.quiz-options { display: grid; gap: .7rem; margin-top: 1.25rem; }
+.quiz-options button { min-height: 58px; display: flex; align-items: center; gap: .8rem; padding: .7rem 1rem; border: 2px solid var(--border); border-radius: 17px; color: white; background: rgba(255,255,255,.06); cursor: pointer; text-align: left; font-weight: 900; transition: transform .15s, border-color .15s, background .15s; }
+.quiz-options button:hover { transform: translateX(5px); border-color: var(--cyan); }
+.quiz-options button > span { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 10px; color: #24143e; background: var(--gold); }
+.quiz-options button.correct { border-color: var(--green); background: rgba(87,224,160,.2); }
+.quiz-options button.wrong { border-color: var(--danger); background: rgba(255,109,125,.2); }
+.quiz-result { min-height: 1.5em; margin: 1rem auto 0; font-weight: 900; }
+.touch-controls { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; margin-top: .65rem; }
+.touch-controls button { min-height: 64px; display: flex; justify-content: center; align-items: center; gap: .65rem; border: 2px solid var(--border); border-radius: 18px; color: white; background: rgba(48,34,105,.86); cursor: pointer; font-size: 1.55rem; font-weight: 900; }
+.touch-controls button:active { transform: scale(.98); background: rgba(94,232,239,.16); border-color: var(--cyan); }
+.touch-controls span { font-size: .82rem; }
+.flight-tip { margin: .45rem auto 0; color: var(--muted); text-align: center; font-size: .78rem; }
+.stranded-icon { font-size: 4rem; filter: grayscale(.25); }
+.stranded-card { border-color: var(--danger); }
+.flight-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem; margin: 1.2rem 0; }
+.flight-summary span { padding: .7rem .35rem; border-radius: 14px; background: rgba(255,255,255,.055); color: var(--muted); font-size: .76rem; }
+.flight-summary b { display: block; color: white; font-size: 1.35rem; }
+
+.flight-info h1 { max-width: 700px; }
+.instruction-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; margin: 1.5rem 0; }
+.instruction-grid article { position: relative; min-height: 190px; display: grid; justify-items: center; align-content: center; padding: 1rem .6rem; border: 1px solid var(--border); border-radius: 22px; background: rgba(255,255,255,.05); text-align: center; }
+.instruction-grid article > b { position: absolute; left: .6rem; top: .6rem; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: #251540; background: var(--gold); }
+.instruction-grid article > span { font-size: 3rem; }
+.instruction-grid h2 { margin: .25rem 0; font-size: 1.25rem; }
+.instruction-grid p { margin: 0; color: var(--muted); font-size: .88rem; }
+.rule-banner { display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 2px solid var(--danger); border-radius: 18px; background: rgba(255,109,125,.1); }
+.rule-banner > span { font-size: 2.4rem; }
+.rule-banner p { margin: 0; }
+.knowledge-chips { display: flex; flex-wrap: wrap; gap: .55rem; }
+.knowledge-chips span { padding: .6rem .85rem; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,.055); font-weight: 800; }
+
+@media (max-width: 850px) {
+  .flight-home { grid-template-columns: 1fr; text-align: center; }
+  .flight-home .button-row, .mission-formula { justify-content: center; }
+  .home-orbit { grid-row: 1; min-height: 330px; }
+  .orbit-planet { width: 245px; }
+  .orbit-planet::after { width: 290px; top: 136px; }
+  .flight-hud { grid-template-columns: 1.4fr 1fr 1fr; }
+  .checkpoint-hud { display: none; }
+  .instruction-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 560px) {
+  .flight-page { width: calc(100% - .5rem); }
+  .flight-hud { grid-template-columns: 1.45fr .8fr .9fr; gap: .25rem; }
+  .hud-block { min-height: 56px; padding: .4rem .5rem; border-radius: 11px; }
+  .hud-block > span { font-size: .58rem; }
+  .hud-block > strong { font-size: .82rem; }
+  #flight-canvas { min-height: 430px; height: 63vh; }
+  .flight-stage { border-radius: 17px; }
+  .flight-overlay, .quiz-panel { padding: .55rem; }
+  .overlay-card, .quiz-card { padding: 1rem; border-radius: 20px; }
+  .quiz-card h2 { font-size: 1.45rem; }
+  .fuel-question-icon { width: 54px; height: 54px; font-size: 1.9rem; }
+  .quiz-options button { min-height: 54px; }
+  .touch-controls button { min-height: 58px; }
+  .flight-tip { display: none; }
+  .mission-formula > span { min-width: 72px; }
+  .mission-formula i { display: none; }
+  .instruction-grid { grid-template-columns: 1fr 1fr; }
+  .instruction-grid article { min-height: 150px; }
+}

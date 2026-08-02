@@ -1,54 +1,57 @@
-# Misión Nébula: Rescate en el planeta desconocido
+# Misión Nébula: Pilota, responde y avanza
 
-Juego pedagógico digital para fortalecer creatividad, colaboración, argumentación y resolución de problemas abiertos en niñas y niños de 10 a 12 años.
+Juego pedagógico de pilotaje espacial 2.5D y conocimiento general para niñas y niños de 10 a 12 años.
 
-**Autor y creador: Danilo Olarte González.**
+**Diseñado y desarrollado por Danilo Olarte González.**
 
-Proyecto desarrollado para la Maestría en Educación de la Corporación Universitaria Iberoamericana, curso Electiva Creatividad e Innovación Educativa, Actividad 1 “Jugando enseño a crear”.
+Proyecto de la Maestría en Educación de la Corporación Universitaria Iberoamericana, curso Electiva Creatividad e Innovación Educativa, Actividad 1 “Jugando enseño a crear”.
 
-## Propósito pedagógico
+## La experiencia
 
-La nave Asteria ha aterrizado en Nébula-X con cinco sistemas dañados. Para recuperar los Núcleos de Ingenio, las tripulaciones mezclan dos objetos, un poder y un ecoescudo; después salvan el invento ante una sorpresa y celebran el resultado.
+La nave Asteria viaja automáticamente por una ruta galáctica. El jugador la mueve entre tres carriles para evitar planetas, meteoritos, estrellas ardientes y otras naves. Cada cierto tiempo aparece un portal de recarga que pausa el vuelo y presenta una pregunta de conocimiento general.
 
-La experiencia trabaja explícitamente:
+- Respuesta correcta: la nave recibe combustible y continúa.
+- Respuesta incorrecta: la nave queda varada y termina el intento.
+- Choque: se pierde un escudo y parte del combustible.
+- Tres choques: la nave queda varada.
+- Sin combustible: termina el intento.
 
-- fluidez y generación de posibilidades;
-- flexibilidad ante cambios;
-- originalidad en la combinación de recursos;
-- elaboración de funciones y pasos;
-- resolución creativa de problemas;
-- argumentación;
-- colaboración mediante roles rotativos.
+El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
 
-No es un cuestionario ni califica semánticamente las respuestas. La creatividad es indispensable para completar cada misión.
+## Características
 
-## Captura
+- Escena Canvas con perspectiva 2.5D, profundidad y sensación de velocidad.
+- Tres carriles y controles con teclado, botones táctiles o toque directo sobre la escena.
+- Obstáculos diferenciados: planetas, meteoritos, estrellas ardientes y naves rivales.
+- Tres escudos para que el aprendizaje inicial sea amable.
+- Indicadores permanentes de combustible, escudos, distancia y siguiente portal.
+- Portales aproximadamente cada 15–20 segundos.
+- 24 preguntas de opción múltiple, sin escritura.
+- Categorías: espacio, ciencias, naturaleza, geografía, matemáticas, lenguaje, historia, tecnología y convivencia.
+- Explicación breve después de una respuesta incorrecta.
+- Récord de distancia guardado únicamente en `localStorage`.
+- Sonido opcional, alto contraste, texto grande y reducción de animaciones de interfaz.
+- Diseño adaptable a computador, tableta y teléfono.
+- Funcionamiento sin cuentas, publicidad, analítica ni servicios externos.
+- Caché sin conexión mediante Service Worker.
 
-> Espacio para añadir la captura definitiva de la portada después de publicar el proyecto.
+## Cómo jugar
 
-## Características principales
+1. Pulsar **Despegar**.
+2. Usar `←` y `→`, las teclas `A` y `D`, los botones grandes o tocar un lado de la escena.
+3. Cambiar de carril para esquivar todos los objetos.
+4. Entrar al portal brillante.
+5. Elegir una de tres respuestas.
+6. Acertar para recargar combustible y continuar.
 
-- Expedición completa de cinco misiones y partida rápida de tres.
-- Modos individual, colaborativo de 2 a 4 participantes y por equipos.
-- Cinco zonas coloridas con retos breves y sin dificultad progresiva obligatoria.
-- Retos, reglas y sorpresas escritos en una sola frase.
-- Mezclador visual: tocar exactamente dos objetos, un poder y un ecoescudo.
-- Cero escritura infantil: el nombre, la descripción, los pasos y las razones se generan automáticamente.
-- Mecánica de tres verbos: mirar, mezclar y salvar.
-- Tutorial visual de pocos segundos para estudiantes de 10 a 12 años.
-- Lienzo Canvas compatible con mouse y pantalla táctil, con grosor, deshacer, limpiar y descarga PNG.
-- Giro inesperado resuelto eligiendo una de dos reparaciones grandes.
-- Autoevaluación emocional de un toque con tres caras; la ficha pedagógica se genera en segundo plano.
-- Energía Creativa descrita como valoración pedagógica, no como medición científica.
-- Roles automáticos y rotativos: Explorador, Inventor, Constructor y Comunicador.
-- Mapa progresivo, insignias y Núcleos de Ingenio.
-- Persistencia y continuación mediante `localStorage`.
-- Informe final imprimible y descargable en HTML o texto.
-- Documento académico independiente e imprimible.
-- Guía para docentes integrada y en Markdown.
-- Sonidos sintetizados localmente con Web Audio API.
-- Alto contraste, texto grande, reducción de movimiento y navegación por teclado.
-- Diseño responsivo sin imágenes ni librerías externas.
+## Reglas pedagógicas
+
+- Las preguntas están dirigidas a estudiantes de 10 a 12 años.
+- Cada pregunta tiene tres opciones y una respuesta definida.
+- El vuelo se detiene por completo mientras se responde.
+- El récord es una motivación personal y no una calificación.
+- Después de un error se muestra el dato correcto antes de permitir un nuevo intento.
+- Se recomienda realizar intentos de 5 a 10 minutos y conversar brevemente sobre las respuestas nuevas.
 
 ## Tecnologías
 
@@ -58,11 +61,11 @@ No es un cuestionario ni califica semánticamente las respuestas. La creatividad
 - Canvas 2D
 - Web Audio API
 - `localStorage`
-- SVG local únicamente para el icono del sitio
+- Service Worker
 
-No existe backend, compilación, analítica, publicidad, API key ni dependencia de terceros.
+No existe backend, proceso de compilación, dependencia externa ni clave de API.
 
-## Estructura
+## Estructura principal
 
 ```text
 IBERO-Games/
@@ -76,30 +79,18 @@ IBERO-Games/
 │   └── print.css
 ├── js/
 │   ├── app.js
-│   ├── game.js
-│   ├── data.js
-│   ├── storage.js
-│   ├── canvas.js
-│   ├── evaluation.js
-│   ├── report.js
-│   └── accessibility.js
-├── assets/
-│   ├── icons/favicon.svg
-│   ├── illustrations/
-│   └── audio/
-└── docs/
-    ├── guia-docente.md
-    ├── reglas-del-juego.md
-    └── evidencias.md
+│   ├── space-game.js
+│   ├── questions.js
+│   ├── accessibility.js
+│   └── storage.js
+└── assets/icons/favicon.svg
 ```
 
-Las carpetas de ilustraciones y audio están reservadas para recursos locales futuros. La versión actual crea ilustraciones con CSS y sonidos con Web Audio API, por lo que no requiere archivos multimedia.
+Los módulos anteriores de prototipos creativos permanecen temporalmente en el repositorio como historial técnico, pero no se cargan en la experiencia actual.
 
 ## Ejecutar localmente
 
-Los módulos JavaScript necesitan un servidor HTTP sencillo; no se recomienda abrir `index.html` directamente con `file://`.
-
-Con Python:
+Los módulos JavaScript necesitan un servidor HTTP:
 
 ```bash
 python -m http.server 8000
@@ -107,113 +98,24 @@ python -m http.server 8000
 
 Después, abrir `http://localhost:8000/`.
 
-Con Node.js, si se dispone de `npx`:
+## Publicación
 
-```bash
-npx serve .
-```
+GitHub Pages publica la rama `main` desde la raíz del repositorio:
 
-No se necesita instalar dependencias del proyecto.
+<https://soydeva.github.io/IBERO-Games/>
 
-Después de la primera carga desde `localhost` o GitHub Pages, un Service Worker conserva los archivos esenciales para permitir la apertura sin conexión. El registro no se ejecuta al usar `file://`.
+## Verificaciones
 
-## Publicar en GitHub Pages
+- [x] Sintaxis de todos los módulos JavaScript.
+- [x] Integridad de 24 preguntas, opciones y respuestas.
+- [x] Simulación del primer portal y pausa del vuelo.
+- [x] Respuesta correcta: recarga y reanudación.
+- [x] Respuesta incorrecta: nave varada.
+- [x] Pérdida de escudos y combustible por colisión.
+- [x] Carga local de portada, estilos, motor y preguntas.
+- [x] Rutas relativas compatibles con GitHub Pages.
+- [x] Controles accesibles por teclado y pantalla táctil.
 
-1. Subir todos los archivos a la rama principal `main` del repositorio `SoyDeva/IBERO-Games`.
-2. Abrir el repositorio en GitHub.
-3. Entrar en **Settings**.
-4. En el menú lateral, abrir **Pages**.
-5. En **Build and deployment**, seleccionar **Deploy from a branch**.
-6. En **Branch**, seleccionar `main` y la carpeta `/(root)`.
-7. Pulsar **Save**.
-8. Esperar a que GitHub muestre el despliegue como publicado.
+## Autoría y privacidad
 
-URL esperada:
-
-`https://soydeva.github.io/IBERO-Games/`
-
-Todas las rutas son relativas y funcionan dentro del subdirectorio `IBERO-Games`.
-
-## Cómo jugar
-
-1. Elegir insignia, modalidad y duración con toques.
-2. Tocar el planeta brillante.
-3. Leer un reto y una regla cortos.
-4. Elegir dos objetos, un poder y un ecoescudo.
-5. Pulsar **¡Mezclar!**.
-6. Salvar el invento eligiendo una de dos reparaciones.
-7. Tocar una cara y celebrar.
-
-## Reglas
-
-- Elegir dos de los tres objetos disponibles.
-- Elegir un poder y un ecoescudo.
-- Cumplir la regla y salvar el invento ante la sorpresa.
-- Cuidar el planeta y sus formas de vida.
-- Escuchar aportes antes de decidir.
-- No hay respuestas malas ni premio por terminar más rápido.
-
-Consulta [docs/reglas-del-juego.md](docs/reglas-del-juego.md) para la versión completa.
-
-## Uso pedagógico
-
-La persona docente puede facilitar una conversación breve sin interrumpir el ritmo. El juego registra automáticamente una ficha pedagógica a partir de las elecciones y mantiene el informe final dentro de un panel exclusivo para adultos.
-
-Consulta [docs/guia-docente.md](docs/guia-docente.md) o la sección “Guía docente” dentro del juego.
-
-## Accesibilidad
-
-- HTML semántico y etiquetas asociadas.
-- Foco visible y navegación por teclado.
-- Región `aria-live` para avisos relevantes.
-- Mensajes de error descriptivos.
-- Controles grandes y compatibles con pantalla táctil.
-- Opciones de texto grande, alto contraste y movimiento reducido.
-- Respeto de `prefers-reduced-motion` y colores forzados.
-- El significado no depende solo del color.
-- Sonido opcional y sin reproducción automática.
-
-## Privacidad y seguridad
-
-- No se envían formularios ni datos a internet.
-- No existen autenticación, analítica, publicidad o rastreo.
-- Los nombres, soluciones, dibujos y avances se guardan solo en `localStorage`.
-- Los textos de usuario se escapan antes de incluirlos en resultados o informes.
-- No se insertan textos de usuario sin procesamiento.
-- Se puede borrar la partida desde el mapa, con confirmación previa.
-
-## Pruebas realizadas
-
-- [x] Validación sintáctica de todos los módulos JavaScript.
-- [x] Comprobación de cantidades mínimas de datos pedagógicos.
-- [x] Verificación automática de rutas y archivos locales.
-- [x] Simulación programática de partidas individual, colaborativa y por equipos.
-- [x] Simulación de cinco misiones y partida rápida, con rotación de roles y progresión.
-- [x] Pruebas de cálculo de energía, promedios y finalización.
-- [x] Pruebas de persistencia, ajustes y reinicio con almacenamiento local simulado.
-- [x] Prueba de generación del informe y escape de textos introducidos.
-- [x] Auditoría estática de etiquetas, controles, identificadores y dependencias externas.
-- [x] Revisión de dos objetos, un poder, un ecoescudo y decisiones obligatorias.
-- [x] Revisión del Canvas con eventos de puntero, deshacer, limpiar y descarga.
-- [x] Revisión de navegación por teclado, foco visible y opciones de accesibilidad.
-- [x] Revisión de reglas responsivas para móvil, tableta y escritorio.
-- [x] Funcionamiento con rutas relativas para GitHub Pages.
-
-La automatización visual del navegador integrado se interrumpió por una incidencia del entorno de pruebas. Se recomienda realizar una ronda visual final en los navegadores de los dispositivos que se usarán en el aula después de activar GitHub Pages.
-
-## Documentos incluidos
-
-- [`informe-actividad-1.html`](informe-actividad-1.html): documento académico editable e imprimible.
-- [`docs/guia-docente.md`](docs/guia-docente.md): mediación pedagógica.
-- [`docs/reglas-del-juego.md`](docs/reglas-del-juego.md): reglas y flujo detallado.
-- [`docs/evidencias.md`](docs/evidencias.md): guía para reunir capturas y evidencias.
-
-## Estado del proyecto
-
-Versión funcional completa, preparada para GitHub Pages. No requiere proceso de compilación.
-
-## Créditos
-
-**Diseñado y desarrollado por Danilo Olarte González.**
-
-Concepto, narrativa, contenido, interfaz, ilustraciones CSS y código creados para esta actividad académica. No se utilizan recursos protegidos de videojuegos, películas o franquicias.
+Concepto, interfaz, programación, figuras Canvas y contenido pedagógico originales. Los sonidos se sintetizan dentro del navegador. El proyecto no recopila datos personales; únicamente conserva el récord local de distancia.

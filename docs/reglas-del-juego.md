@@ -2,39 +2,41 @@
 
 ## Meta
 
-Recuperar cinco Núcleos de Ingenio para reparar la Asteria. En partida rápida se recuperan tres.
+Pilotar la nave Asteria, superar puestos de recarga y viajar la mayor distancia posible.
 
-## Reglas esenciales
+## Ciclo de juego
 
-1. Elegir dos de los tres objetos disponibles.
-2. Elegir un poder y un ecoescudo.
-3. Respetar la regla corta de la misión.
-4. Salvar el invento después de la sorpresa.
-5. Evitar daño a seres vivos y al entorno.
-6. Escuchar todos los aportes antes de decidir.
-7. No premiar la rapidez ni comparar puntuaciones.
+Pilotar → esquivar → llegar al portal → responder → recargar → continuar.
 
-## Flujo
+## Controles
 
-Portada → equipo → mapa → reto → mezclador → sorpresa → carita → celebración.
+- Teclado: flechas izquierda y derecha o teclas A y D.
+- Pantalla táctil: botones grandes bajo la escena.
+- Toque directo: tocar el lado izquierdo o derecho del espacio.
 
-Cada misión se resume en tres acciones:
+La nave se mueve entre tres carriles. Avanza automáticamente.
 
-1. **Mira:** lee un reto y una regla de una frase.
-2. **Mezcla:** toca dos objetos, un poder y un ecoescudo.
-3. **Salva:** elige una de dos reparaciones y una carita.
+## Obstáculos
 
-El juego redacta automáticamente el nombre, la descripción, los pasos, las razones y el cuidado ambiental a partir de esas elecciones. El estudiante no necesita escribir. El boceto permanece como premio creativo opcional.
+- Planetas.
+- Meteoritos.
+- Estrellas ardientes.
+- Otras naves.
 
-## Roles
+Cada choque elimina un escudo y parte del combustible. La nave comienza con tres escudos.
 
-- Explorador: analiza.
-- Inventor: propone.
-- Constructor: organiza.
-- Comunicador: explica.
+## Puestos de recarga
 
-Los roles rotan automáticamente después de cada misión.
+Un portal aparece aproximadamente cada 15–20 segundos. Al alcanzarlo:
 
-## Victoria pedagógica
+1. El vuelo se pausa.
+2. Aparece una pregunta de conocimiento general con tres opciones.
+3. Una respuesta correcta recarga 38 % de combustible.
+4. Una respuesta incorrecta deja la nave varada y termina el intento.
+5. Antes de reiniciar se muestra el dato correcto.
 
-La partida se completa al recuperar los núcleos, pero su propósito es producir, explicar y mejorar ideas. Diferentes soluciones son válidas cuando se justifican y protegen Nébula-X.
+También termina el intento cuando se pierden los tres escudos o se agota el combustible.
+
+## Récord
+
+El juego guarda únicamente la mayor distancia en el navegador. El récord sirve como motivación personal; no es una calificación académica.

@@ -3,15 +3,15 @@
 ## Capturas sugeridas
 
 1. Portada de Misión Nébula.
-2. Configuración de una tripulación.
-3. Mapa con zonas bloqueadas y desbloqueadas.
-4. Misión con problema, recursos y restricción.
-5. Constructor con boceto.
-6. Giro inesperado.
-7. Rúbrica completa.
-8. Núcleo e insignia obtenidos.
-9. Resultado final.
-10. Informe imprimible.
+2. Pantalla inicial de controles.
+3. Nave pilotando por la ruta 2.5D.
+4. Planeta, meteorito, estrella ardiente u otra nave acercándose.
+5. Portal de recarga visible.
+6. Pregunta de conocimiento general con tres opciones.
+7. Mensaje de combustible recargado después de un acierto.
+8. Pantalla de nave varada después de un error.
+9. Récord de distancia en la portada.
+10. Documento académico imprimible.
 
 ## Procedimiento
 

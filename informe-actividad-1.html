@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Informe académico imprimible de Misión Nébula: Rescate en el planeta desconocido. Diseñado y desarrollado por Danilo Olarte González.">
+  <meta name="description" content="Informe académico de Misión Nébula, juego educativo de pilotaje espacial y conocimiento general.">
   <meta name="author" content="Danilo Olarte González">
   <title>Informe Actividad 1 · Misión Nébula</title>
   <style>
-    :root { --ink:#24213a; --purple:#49368d; --light:#f2effb; --line:#cfc8e4; --accent:#137a82; font-family: Georgia, "Times New Roman", serif; color:#24213a; }
-    * { box-sizing:border-box; } body { margin:0; background:#e8e5ef; line-height:1.55; } main { width:min(900px, calc(100% - 24px)); margin:24px auto; background:white; padding:72px 80px; box-shadow:0 12px 40px #433c5830; }
+    :root { --ink:#24213a; --purple:#49368d; --light:#f2effb; --line:#cfc8e4; --accent:#137a82; font-family:Georgia,"Times New Roman",serif; color:var(--ink); }
+    * { box-sizing:border-box; } body { margin:0; background:#e8e5ef; line-height:1.55; } main { width:min(900px,calc(100% - 24px)); margin:24px auto; background:white; padding:72px 80px; box-shadow:0 12px 40px #433c5830; }
     h1,h2,h3 { color:var(--purple); line-height:1.2; } h1 { font-size:2.6rem; } h2 { margin-top:2.4rem; border-bottom:2px solid var(--line); padding-bottom:.35rem; } h3 { margin-top:1.5rem; }
     .cover { min-height:850px; display:flex; flex-direction:column; justify-content:center; text-align:center; page-break-after:always; } .cover .orb { width:120px; height:120px; margin:0 auto 30px; display:grid; place-items:center; color:white; font-size:3rem; background:var(--purple); clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%); }
     .meta { margin:40px auto 0; max-width:600px; text-align:left; border:1px solid var(--line); padding:24px; } .meta p { margin:.45rem 0; }
     table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:.94rem; } th,td { border:1px solid #aaa; padding:.55rem; vertical-align:top; } th { background:var(--light); text-align:left; }
-    .editable { min-width:180px; display:inline-block; padding:1px 5px; border-bottom:1px dashed #555; background:#fffceb; } .note { background:var(--light); border-left:5px solid var(--purple); padding:16px; } .capture { min-height:240px; border:2px dashed #999; display:grid; place-items:center; text-align:center; color:#666; margin:18px 0; padding:20px; } .example { border:1px solid var(--line); border-radius:12px; padding:20px; } .no-print { position:sticky; top:12px; display:flex; justify-content:center; gap:10px; z-index:2; } button,a.button { border:0; border-radius:8px; padding:12px 18px; background:var(--purple); color:white; text-decoration:none; cursor:pointer; font:600 1rem system-ui; }
+    .editable { min-width:180px; display:inline-block; padding:1px 5px; border-bottom:1px dashed #555; background:#fffceb; } .note { background:var(--light); border-left:5px solid var(--purple); padding:16px; } .capture { min-height:230px; border:2px dashed #999; display:grid; place-items:center; text-align:center; color:#666; margin:18px 0; padding:20px; } .example { border:1px solid var(--line); border-radius:12px; padding:20px; } .no-print { position:sticky; top:12px; display:flex; justify-content:center; gap:10px; z-index:2; } button,a.button { border:0; border-radius:8px; padding:12px 18px; background:var(--purple); color:white; text-decoration:none; cursor:pointer; font:600 1rem system-ui; }
     footer { margin-top:50px; padding-top:14px; border-top:1px solid var(--line); font-size:.86rem; }
     @page { size:A4; margin:18mm; } @media print { body { background:white; } main { width:auto; margin:0; padding:0; box-shadow:none; } .no-print { display:none; } h2,h3 { break-after:avoid; } table,.example,.note,.capture { break-inside:avoid; } a { color:inherit; text-decoration:none; } .editable { background:white; } }
     @media (max-width:700px) { main { padding:32px 22px; } .cover { min-height:75vh; } h1 { font-size:2rem; } }
@@ -23,201 +23,168 @@
   <div class="no-print"><button type="button" onclick="window.print()">Imprimir o guardar PDF</button><a class="button" href="index.html">Abrir el juego</a></div>
   <main>
     <section class="cover">
-      <div class="orb" aria-hidden="true">✦</div>
+      <div class="orb" aria-hidden="true">🚀</div>
       <p>Corporación Universitaria Iberoamericana</p>
       <p>Maestría en Educación</p>
-      <h1>Misión Nébula:<br>Rescate en el planeta desconocido</h1>
+      <h1>Misión Nébula:<br>Pilota, responde y avanza</h1>
       <h2>Actividad 1: “Jugando enseño a crear”</h2>
       <div class="meta">
         <p><strong>Autor:</strong> Danilo Olarte González</p>
         <p><strong>Demás integrantes:</strong> <span class="editable" contenteditable="true" role="textbox" aria-label="Nombres de los demás integrantes">Escribir aquí</span></p>
         <p><strong>Docente:</strong> <span class="editable" contenteditable="true" role="textbox" aria-label="Nombre del docente">Escribir aquí</span></p>
         <p><strong>Curso:</strong> Electiva Creatividad e Innovación Educativa</p>
-        <p><strong>Fecha de entrega:</strong> <span class="editable" contenteditable="true" role="textbox" aria-label="Fecha de entrega">Escribir aquí</span></p>
+        <p><strong>Fecha:</strong> <span class="editable" contenteditable="true" role="textbox" aria-label="Fecha de entrega">Escribir aquí</span></p>
       </div>
     </section>
 
     <section>
-      <h2>1. Introducción</h2>
-      <p><em>Misión Nébula: Rescate en el planeta desconocido</em> es un juego pedagógico digital dirigido a niñas y niños de 10 a 12 años. Sitúa a sus participantes en una expedición espacial donde deben imaginar soluciones, combinar recursos limitados, argumentar decisiones y adaptar una propuesta ante nuevas condiciones.</p>
-      <p>La experiencia evita la estructura de cuestionario y convierte la producción creativa en la acción indispensable para avanzar. No existe una respuesta predeterminada: el valor educativo está en el proceso de generar, seleccionar, elaborar, explicar, revisar y compartir ideas.</p>
+      <h2>1. Presentación</h2>
+      <p><em>Misión Nébula</em> es un juego pedagógico digital para estudiantes de 10 a 12 años. El participante pilota una nave por una ruta espacial en perspectiva 2.5D, evita obstáculos y alcanza portales de recarga. Cada portal detiene el vuelo y presenta una pregunta de conocimiento general.</p>
+      <p>La propuesta une una acción motriz sencilla con recuperación de información. La relación entre acción y consecuencia es siempre visible: esquivar conserva los escudos; chocar produce daño; acertar una pregunta entrega combustible; fallar deja la nave varada.</p>
     </section>
 
     <section>
       <h2>2. Justificación pedagógica</h2>
-      <p>El juego propone un contexto seguro para practicar pensamiento divergente y resolución creativa de problemas. Los retos abiertos invitan a conversar sobre posibilidades; las restricciones y sorpresas favorecen la flexibilidad; y la combinación no convencional de objetos impulsa la originalidad. La interfaz automatiza el registro escrito para que la carga lectora no interrumpa el juego.</p>
-      <p>La rotación de roles distribuye responsabilidades cognitivas y comunicativas. La reacción final con tres caras no pretende emitir un diagnóstico, sino registrar cómo se sintió el grupo; el informe adulto conserva una ficha orientativa generada a partir de la experiencia. Esta perspectiva reconoce la creatividad como proceso susceptible de acompañamiento, revisión y mejora.</p>
+      <p>El aprendizaje basado en juegos puede integrar dimensiones cognitivas, motivacionales, afectivas y sociales cuando las metas, reglas y respuestas del sistema se articulan con claridad. En esta propuesta, el reto de pilotaje sostiene la atención y convierte cada pregunta en un puesto de control con una consecuencia comprensible.</p>
+      <p>La recuperación activa de información no se usa solo para comprobar lo aprendido. La investigación sobre el efecto de prueba indica que recuperar conocimientos puede favorecer su retención posterior. Cuando ocurre un error, el juego muestra inmediatamente el dato correcto para convertir el fallo en una oportunidad breve de aprendizaje.</p>
+      <p>La presentación combina palabras breves, símbolos, movimiento y respuesta directa. Se evita la escritura y se pausa la escena durante las preguntas para reducir interferencias entre el control de la nave y la lectura.</p>
     </section>
 
     <section>
       <h2>3. Objetivos</h2>
       <h3>Objetivo general</h3>
-      <p>Fortalecer procesos cognitivos creativos en niñas y niños de 10 a 12 años mediante la resolución colaborativa de problemas abiertos, la combinación de recursos y la revisión argumentada de soluciones.</p>
+      <p>Fortalecer atención, coordinación visomotora y recuperación de conocimientos generales mediante una experiencia digital de pilotaje con retroalimentación inmediata.</p>
       <h3>Objetivos específicos</h3>
       <ul>
-        <li>Promover la generación de múltiples alternativas antes de elegir una solución.</li>
-        <li>Estimular cambios de estrategia frente a restricciones y situaciones inesperadas.</li>
-        <li>Favorecer combinaciones originales, útiles y responsables con recursos limitados.</li>
-        <li>Desarrollar la explicación detallada de funciones, pasos y consecuencias.</li>
-        <li>Fortalecer escucha, participación, coevaluación y toma de decisiones compartida.</li>
+        <li>Practicar decisiones espaciales rápidas entre izquierda, centro y derecha.</li>
+        <li>Mantener la atención ante obstáculos visualmente diferenciados.</li>
+        <li>Recuperar conocimientos de distintas áreas mediante preguntas breves.</li>
+        <li>Relacionar respuestas correctas e incorrectas con consecuencias claras.</li>
+        <li>Favorecer nuevos intentos después del error sin convertir el récord en una nota.</li>
       </ul>
     </section>
 
     <section>
-      <h2>4. Población, participantes y duración</h2>
+      <h2>4. Población y contexto</h2>
       <table>
         <tr><th>Población</th><td>Niñas y niños entre 10 y 12 años.</td></tr>
-        <tr><th>Participantes</th><td>Modo individual; modo colaborativo de 2 a 4 participantes; o modo por equipos.</td></tr>
-        <tr><th>Duración</th><td>20 a 30 minutos para cinco misiones; 10 a 15 minutos para partida rápida de tres misiones.</td></tr>
-        <tr><th>Contexto</th><td>Aula, biblioteca, hogar o espacio de aprendizaje con acompañamiento.</td></tr>
+        <tr><th>Participación</th><td>Individual o por turnos dentro de un grupo.</td></tr>
+        <tr><th>Duración</th><td>Intentos sugeridos de 5 a 10 minutos.</td></tr>
+        <tr><th>Contexto</th><td>Aula, biblioteca, hogar o espacio de aprendizaje acompañado.</td></tr>
+        <tr><th>Dispositivo</th><td>Computador, tableta o teléfono con navegador moderno.</td></tr>
       </table>
     </section>
 
     <section>
-      <h2>5. Materiales y requerimientos técnicos</h2>
-      <ul>
-        <li>Computador, tableta o teléfono con navegador moderno.</li>
-        <li>Acceso a los archivos locales o a la publicación en GitHub Pages.</li>
-        <li>Mouse, pantalla táctil o panel táctil para el boceto.</li>
-        <li>Papel y lápiz opcionales para lluvia de ideas previa.</li>
-        <li>Impresora o función “Guardar como PDF” opcional para conservar resultados.</li>
-      </ul>
-      <p>La aplicación no necesita cuentas, backend, bases de datos ni servicios externos. Guarda el progreso exclusivamente en el navegador.</p>
+      <h2>5. Narrativa</h2>
+      <p>La nave Asteria atraviesa una región galáctica llena de planetas, meteoritos, estrellas ardientes y naves desconocidas. Sus reservas de combustible son limitadas. Para continuar debe alcanzar portales de conocimiento que transforman respuestas correctas en energía.</p>
+      <p>Cuando el piloto falla una respuesta, la estación no puede completar la recarga y la Asteria queda varada. La expedición puede reiniciarse, conservando únicamente el récord personal de distancia.</p>
     </section>
 
     <section>
-      <h2>6. Historia del juego</h2>
-      <p>La nave Asteria aterriza de emergencia en Nébula-X. El impacto daña comunicación, energía, navegación, soporte vital y propulsión. La tripulación debe recorrer el Desierto de Cristal, el Bosque Bioluminiscente, el Cañón Magnético, el Archipiélago Flotante y el Núcleo de Nébula para recuperar cinco Núcleos de Ingenio.</p>
-      <p>El planeta alberga ecosistemas y seres vivos que deben ser respetados. Una solución violenta, destructiva o discriminatoria contradice las reglas de la expedición y debe reformularse.</p>
-    </section>
-
-    <section>
-      <h2>7. Mecánica y preparación</h2>
-      <h3>Preparación</h3>
+      <h2>6. Mecánica central</h2>
+      <p class="note"><strong>Ciclo:</strong> pilotar → esquivar → alcanzar el portal → responder → recargar → continuar.</p>
       <ol>
-        <li>Abrir el juego y elegir modalidad y duración.</li>
-        <li>Elegir una insignia de tripulación sin registrar datos personales.</li>
-        <li>Observar el tutorial visual de tres acciones.</li>
-        <li>Acordar turnos breves para tocar las tarjetas.</li>
-      </ol>
-      <h3>Mecánica de una misión</h3>
-      <ol>
-        <li>Se combinan un reto corto, tres objetos, una regla y una sorpresa.</li>
-        <li>El equipo mira las opciones y conversa brevemente sobre posibles mezclas.</li>
-        <li>Construye la propuesta con una mecánica visual: elige dos objetos, un poder y un ecoescudo, y pulsa “Mezclar”. El juego convierte esas decisiones en una descripción y un plan sin exigir escritura al estudiante.</li>
-        <li>Puede realizar un boceto opcional en el lienzo.</li>
-        <li>Recibe una sorpresa y elige una de dos reparaciones visuales.</li>
-        <li>Expresa cómo se sintió con una de tres caras; el sistema conserva una ficha pedagógica orientativa para el informe adulto.</li>
-        <li>Obtiene Energía Creativa, una insignia y un Núcleo de Ingenio.</li>
+        <li>La nave avanza automáticamente por tres carriles.</li>
+        <li>El jugador cambia de carril con teclado, botones táctiles o toque directo.</li>
+        <li>Los obstáculos se acercan desde el punto de fuga para producir profundidad 2.5D.</li>
+        <li>Cada choque elimina un escudo y 14 % de combustible.</li>
+        <li>Después de aproximadamente 15–20 segundos aparece un portal.</li>
+        <li>El vuelo se pausa y se presenta una pregunta con tres opciones.</li>
+        <li>Una respuesta correcta recarga 38 % y reanuda la marcha.</li>
+        <li>Una respuesta incorrecta termina el intento y muestra el dato correcto.</li>
       </ol>
     </section>
 
     <section>
-      <h2>8. Reglas</h2>
-      <ol>
-        <li>Elegir exactamente dos de los tres objetos.</li>
-        <li>Elegir un poder y un ecoescudo.</li>
-        <li>Respetar la restricción y responder al giro inesperado.</li>
-        <li>Conversar, si se desea, sobre por qué la mezcla puede funcionar.</li>
-        <li>Proteger seres vivos y entorno; evitar violencia y destrucción.</li>
-        <li>Escuchar los aportes de todas las personas o equipos.</li>
-        <li>No convertir la rapidez ni la energía obtenida en el único criterio de éxito.</li>
-      </ol>
-    </section>
-
-    <section>
-      <h2>9. Roles colaborativos</h2>
+      <h2>7. Condiciones de progreso</h2>
       <table>
-        <tr><th>Rol</th><th>Función</th></tr>
-        <tr><td>Explorador</td><td>Analiza el problema y descubre necesidades.</td></tr>
-        <tr><td>Inventor</td><td>Propone alternativas y combinaciones inesperadas.</td></tr>
-        <tr><td>Constructor</td><td>Ordena los pasos y comprueba los detalles.</td></tr>
-        <tr><td>Comunicador</td><td>Explica, escucha y defiende la propuesta.</td></tr>
+        <tr><th>Situación</th><th>Consecuencia</th></tr>
+        <tr><td>Esquivar un obstáculo</td><td>La nave conserva sus recursos y avanza.</td></tr>
+        <tr><td>Chocar</td><td>Pierde un escudo y parte del combustible.</td></tr>
+        <tr><td>Perder tres escudos</td><td>La nave queda varada.</td></tr>
+        <tr><td>Agotar combustible</td><td>La nave queda varada.</td></tr>
+        <tr><td>Responder correctamente</td><td>Recibe combustible y continúa.</td></tr>
+        <tr><td>Responder incorrectamente</td><td>Finaliza el intento y se explica la respuesta.</td></tr>
       </table>
-      <p>Los roles rotan después de cada misión. Si hay menos de cuatro participantes, una persona asume más de una función.</p>
     </section>
 
     <section>
-      <h2>10. Sistema de progreso y condiciones de éxito</h2>
-      <p>Cada misión entrega Energía Creativa, retroalimentación, una recomendación, una insignia y un Núcleo de Ingenio. El mapa desbloquea zonas progresivamente y la partida se conserva en <code>localStorage</code>.</p>
-      <p>La expedición completa concluye al recuperar cinco núcleos; la rápida concluye con tres. El éxito pedagógico no depende de alcanzar una puntuación máxima, sino de completar el ciclo de creación, explicación, adaptación y evaluación responsable.</p>
-    </section>
-
-    <section>
-      <h2>11. Procesos cognitivos creativos</h2>
+      <h2>8. Banco de preguntas</h2>
+      <p>La versión actual integra 24 preguntas de opción múltiple. Cada pregunta contiene tres opciones, una respuesta correcta y una explicación breve.</p>
       <table>
-        <tr><th>Proceso</th><th>Manifestación en el juego</th></tr>
-        <tr><td>Fluidez</td><td>Generación de varias posibilidades antes de seleccionar.</td></tr>
-        <tr><td>Flexibilidad</td><td>Cambio de estrategia ante una condición inesperada.</td></tr>
-        <tr><td>Originalidad</td><td>Usos no convencionales y combinaciones poco habituales.</td></tr>
-        <tr><td>Elaboración</td><td>Descripción de funciones, pasos, razones, riesgos y cuidado.</td></tr>
-        <tr><td>Resolución creativa</td><td>Respuesta viable a problemas nuevos con recursos limitados.</td></tr>
-        <tr><td>Argumentación</td><td>Justificación del funcionamiento y de las modificaciones.</td></tr>
-        <tr><td>Colaboración</td><td>Roles, aportes compartidos, escucha y coevaluación.</td></tr>
+        <tr><th>Área</th><th>Ejemplo</th></tr>
+        <tr><td>Espacio</td><td>Planetas y satélites.</td></tr>
+        <tr><td>Ciencias y naturaleza</td><td>Cuerpo humano, agua, plantas y animales.</td></tr>
+        <tr><td>Geografía</td><td>Colombia, continentes y océanos.</td></tr>
+        <tr><td>Matemáticas</td><td>Multiplicación, fracciones y perímetro.</td></tr>
+        <tr><td>Lenguaje</td><td>Sinónimos, ortografía y signos.</td></tr>
+        <tr><td>Historia, tecnología y convivencia</td><td>Culturas, seguridad digital y escucha.</td></tr>
       </table>
     </section>
 
     <section>
-      <h2>12. Función del docente</h2>
-      <p>El docente presenta el propósito, facilita turnos breves, formula preguntas sin imponer respuestas y protege un clima donde sea posible probar y cambiar ideas. Evita jerarquizar a los equipos por rapidez y mantiene cualquier reflexión extensa fuera del flujo infantil.</p>
-      <div class="note"><strong>Preguntas sugeridas:</strong> ¿qué recurso tuvo el uso más inesperado?, ¿qué cambió con la nueva condición?, ¿qué otra respuesta habría sido posible?, ¿cómo se combinaron los aportes?, ¿qué efecto tendría la solución sobre el planeta?</div>
-    </section>
-
-    <section>
-      <h2>13. Ejemplo completo de misión</h2>
+      <h2>9. Ejemplo de una secuencia</h2>
       <article class="example">
-        <p><strong>Zona:</strong> Desierto de Cristal.</p>
-        <p><strong>Problema:</strong> la tripulación necesita comunicarse sin emitir sonidos.</p>
-        <p><strong>Recursos:</strong> espejo, tela, tubo y banda elástica. Mínimo requerido: tres.</p>
-        <p><strong>Restricción:</strong> la solución debe funcionar con energía natural.</p>
-        <p><strong>Primera solución:</strong> “Código de luz flexible”. El espejo refleja la luz solar; la tela crea patrones de sombra; el tubo dirige la señal; la banda permite orientar el espejo. El equipo acuerda secuencias visuales para mensajes básicos.</p>
-        <p><strong>Pasos:</strong> construir una base con el tubo; sujetar el espejo con la banda; tensar la tela como plantilla; orientar la luz; ensayar tres secuencias; comprobar que no se dirija luz intensa hacia seres vivos.</p>
-        <p><strong>Giro:</strong> la misión debe resolverse de noche.</p>
-        <p><strong>Modificación:</strong> el equipo reemplaza la luz solar por el brillo reflejado de cristales bioluminiscentes sin extraerlos. Reubica el sistema cerca de una formación y aumenta el tamaño de los patrones de tela.</p>
-        <p><strong>Argumento:</strong> la modificación conserva el código visual y aprovecha una fuente ambiental sin alterar la formación.</p>
+        <p><strong>Vuelo:</strong> el estudiante cambia del carril central al izquierdo para evitar un meteorito.</p>
+        <p><strong>Portal:</strong> la ruta se detiene y aparece la pregunta “¿Cuál es el planeta más grande del Sistema Solar?”.</p>
+        <p><strong>Opciones:</strong> Marte, Júpiter y Mercurio.</p>
+        <p><strong>Acierto:</strong> al elegir Júpiter, el depósito recibe 38 % de combustible y el vuelo continúa.</p>
+        <p><strong>Error:</strong> si selecciona otra opción, se muestra “Júpiter es el planeta más grande” y la nave queda varada hasta un nuevo intento.</p>
       </article>
     </section>
 
     <section>
-      <h2>14. Rúbrica de creatividad</h2>
-      <p>Escala común: 1 indica una dimensión apenas iniciada; 3, un desarrollo funcional; y 5, una respuesta novedosa, detallada y coherente. Las valoraciones 4 y 5 requieren una justificación breve.</p>
-      <table>
-        <thead><tr><th>Dimensión</th><th>1</th><th>3</th><th>5</th></tr></thead>
-        <tbody>
-          <tr><td>Originalidad</td><td>Muy común o incompleta.</td><td>Combina ideas conocidas.</td><td>Novedosa, detallada y coherente.</td></tr>
-          <tr><td>Utilidad</td><td>No responde todavía.</td><td>Funciona con ajustes.</td><td>Viable y anticipa riesgos.</td></tr>
-          <tr><td>Uso de recursos</td><td>Sin funciones claras.</td><td>Un uso diferente.</td><td>Combinaciones ingeniosas y claras.</td></tr>
-          <tr><td>Claridad</td><td>Faltan datos.</td><td>Comunica lo principal.</td><td>Otro equipo podría probarla.</td></tr>
-          <tr><td>Adaptación</td><td>No considera el giro.</td><td>Realiza un cambio básico.</td><td>El giro mejora la idea.</td></tr>
-          <tr><td>Cuidado del planeta</td><td>Podría causar daño.</td><td>Evita un daño evidente.</td><td>Protege y deja una mejora reutilizable.</td></tr>
-          <tr><td>Colaboración</td><td>Participa una sola voz.</td><td>Cada persona aporta.</td><td>El equipo construye y revisa en conjunto.</td></tr>
-        </tbody>
-      </table>
-      <p class="note">La Energía Creativa es una valoración pedagógica orientativa y no una medición científica definitiva de la creatividad.</p>
+      <h2>10. Función docente</h2>
+      <ul>
+        <li>Explicar la relación entre portal, pregunta y combustible.</li>
+        <li>Permitir un intento inicial dedicado a comprender los controles.</li>
+        <li>Leer una pregunta cuando exista una barrera de acceso.</li>
+        <li>Conversar brevemente sobre el dato correcto después de un error.</li>
+        <li>Rotar al piloto después de cada portal cuando se juegue en grupo.</li>
+        <li>Usar el récord como reto personal, nunca como calificación o comparación.</li>
+      </ul>
     </section>
 
     <section>
-      <h2>15. Evidencias visuales</h2>
-      <p>Los siguientes espacios están destinados a las capturas definitivas tomadas durante la aplicación.</p>
-      <div class="capture" contenteditable="true" role="textbox" aria-label="Espacio para captura de portada">Insertar aquí captura definitiva de la portada</div>
-      <div class="capture" contenteditable="true" role="textbox" aria-label="Espacio para captura de misión">Insertar aquí captura definitiva de una misión y su constructor</div>
-      <div class="capture" contenteditable="true" role="textbox" aria-label="Espacio para captura de resultados">Insertar aquí captura definitiva de resultados</div>
+      <h2>11. Accesibilidad y privacidad</h2>
+      <p>El juego permite teclado, controles táctiles y toque directo; emplea controles grandes, foco visible, etiquetas accesibles, alto contraste, texto grande y sonido opcional. El vuelo se pausa mientras se responde para que la acción no compita con la lectura.</p>
+      <p>No solicita nombres, cuentas ni datos personales. El único dato persistente es el récord de distancia, almacenado localmente en el navegador.</p>
     </section>
 
     <section>
-      <h2>16. Conclusiones</h2>
-      <p>Misión Nébula integra narrativa, juego y reflexión para hacer de la creatividad una práctica observable. La combinación de problemas abiertos, recursos limitados y giros inesperados evita que la actividad se reduzca a memorizar o seleccionar respuestas. El registro de la idea inicial y su adaptación permite reconocer que crear también implica revisar.</p>
-      <p>La mediación docente y la reacción emocional final abren una oportunidad breve de diálogo. Así, el resultado conserva importancia, pero el énfasis permanece en las decisiones, aportes compartidos y consecuencias ambientales del proceso.</p>
+      <h2>12. Evaluación de la experiencia</h2>
+      <p>La actividad no genera una nota. Para una observación pedagógica se pueden registrar:</p>
+      <ul>
+        <li>control progresivo de los tres carriles;</li>
+        <li>cantidad de portales alcanzados;</li>
+        <li>áreas de conocimiento que requieren conversación posterior;</li>
+        <li>capacidad de reintentar después de un error;</li>
+        <li>participación respetuosa cuando se juega en grupo.</li>
+      </ul>
     </section>
 
     <section>
-      <h2>17. Referencias</h2>
-      <p>Acosta Gutiérrez, J., Barco Rodríguez, J. M. y Castañeda Rodríguez, R. T. (2014). En busca de las nuevas ideas: mediación de la creatividad desde la perspectiva cognitiva. <em>Pensamiento, Palabra y Obra, 12</em>, 64-73.</p>
-      <p>Casado, Y., Llamas Salguero, F. y López-Fernández, V. (2015). Inteligencias múltiples, creatividad y lateralidad, nuevos retos en metodologías docentes enfocadas a la innovación educativa. <em>Reidocrea, 4</em>, artículo 43, 343-358.</p>
-      <p>Elisondo, R. C. (2015). La creatividad como perspectiva educativa. Cinco ideas para pensar los contextos creativos de enseñanza y aprendizaje. <em>Actualidades Investigativas en Educación, 15</em>(3), 1-23.</p>
+      <h2>13. Evidencias visuales</h2>
+      <div class="capture" contenteditable="true" role="textbox" aria-label="Espacio para captura de portada">Insertar captura de la portada</div>
+      <div class="capture" contenteditable="true" role="textbox" aria-label="Espacio para captura de vuelo">Insertar captura del pilotaje 2.5D</div>
+      <div class="capture" contenteditable="true" role="textbox" aria-label="Espacio para captura de pregunta">Insertar captura de un portal de preguntas</div>
     </section>
 
-    <footer>Diseñado y desarrollado por Danilo Olarte González. · Corporación Universitaria Iberoamericana · Maestría en Educación.</footer>
+    <section>
+      <h2>14. Conclusiones</h2>
+      <p>Misión Nébula presenta una lógica breve y observable: pilotar para llegar y responder para continuar. La profundidad visual, los obstáculos y el combustible dan sentido a la acción; los portales crean pausas claras para recuperar conocimientos sin exigir escritura.</p>
+      <p>El error tiene una consecuencia narrativa, pero también entrega la respuesta correcta y permite volver a empezar. Así, el reto conserva tensión lúdica sin convertir el resultado en una calificación definitiva.</p>
+    </section>
+
+    <section>
+      <h2>15. Referencias</h2>
+      <p>Mayer, R. E. (2021). <em>Multimedia Learning</em> (3.ª ed.). Cambridge University Press.</p>
+      <p>Plass, J. L., Homer, B. D. y Kinzer, C. K. (2015). Foundations of game-based learning. <em>Educational Psychologist, 50</em>(4), 258–283. https://doi.org/10.1080/00461520.2015.1122533</p>
+      <p>Roediger, H. L. y Karpicke, J. D. (2006). Test-enhanced learning: Taking memory tests improves long-term retention. <em>Psychological Science, 17</em>(3), 249–255. https://doi.org/10.1111/j.1467-9280.2006.01693.x</p>
+    </section>
+
+    <footer>Diseñado y desarrollado por Danilo Olarte González · Corporación Universitaria Iberoamericana · Maestría en Educación.</footer>
   </main>
 </body>
 </html>
