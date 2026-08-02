@@ -187,20 +187,19 @@ Consulta [docs/guia-docente.md](docs/guia-docente.md) o la sección “Guía doc
 - [x] Validación sintáctica de todos los módulos JavaScript.
 - [x] Comprobación de cantidades mínimas de datos pedagógicos.
 - [x] Verificación automática de rutas y archivos locales.
-- [x] Inicio de partida individual.
-- [x] Inicio de partida colaborativa.
-- [x] Rotación de roles entre misiones.
-- [x] Generación de misiones y progresión de zonas.
-- [x] Validación de campos y mínimo obligatorio de recursos.
-- [x] Giro inesperado y modificación de la solución.
-- [x] Rúbrica, justificaciones altas y cálculo de energía.
-- [x] Persistencia, recarga, continuación y reinicio.
-- [x] Dibujo con eventos de puntero para mouse y tacto.
-- [x] Deshacer, limpiar y descargar dibujo.
-- [x] Informe final, descarga HTML/texto e impresión.
-- [x] Navegación por teclado y controles accesibles.
-- [x] Revisión responsiva en anchos de móvil y escritorio.
+- [x] Simulación programática de partidas individual, colaborativa y por equipos.
+- [x] Simulación de cinco misiones y partida rápida, con rotación de roles y progresión.
+- [x] Pruebas de cálculo de energía, promedios y finalización.
+- [x] Pruebas de persistencia, ajustes y reinicio con almacenamiento local simulado.
+- [x] Prueba de generación del informe y escape de textos introducidos.
+- [x] Auditoría estática de etiquetas, controles, identificadores y dependencias externas.
+- [x] Revisión de validación de campos, mínimo de recursos y tres ideas obligatorias.
+- [x] Revisión del Canvas con eventos de puntero, deshacer, limpiar y descarga.
+- [x] Revisión de navegación por teclado, foco visible y opciones de accesibilidad.
+- [x] Revisión de reglas responsivas para móvil, tableta y escritorio.
 - [x] Funcionamiento con rutas relativas para GitHub Pages.
+
+La automatización visual del navegador integrado se interrumpió por una incidencia del entorno de pruebas. Se recomienda realizar una ronda visual final en los navegadores de los dispositivos que se usarán en el aula después de activar GitHub Pages.
 
 ## Documentos incluidos
 
