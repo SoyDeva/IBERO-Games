@@ -1,0 +1,7 @@
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.reduced-motion *, .reduced-motion *::before, .reduced-motion *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+.high-contrast { --deep: #000; --navy: #090018; --panel: #13052e; --panel-soft: #1d0b3e; --muted: #fff; --border: rgba(255,255,255,.7); --purple: #a992ff; --cyan: #72ffff; --gold: #ffdf70; }
+.high-contrast .card, .high-contrast input, .high-contrast textarea, .high-contrast select { border-color: white; }
+.large-text { font-size: 19px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; } }
+@media (forced-colors: active) { .button, .card, input, textarea, select { border: 2px solid ButtonText; } .zone-orb, .core-earned { forced-color-adjust: none; } }

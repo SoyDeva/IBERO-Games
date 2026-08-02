@@ -1,0 +1,6 @@
+.site-header, .site-footer, .space-bg, .button, dialog, .canvas-tools { display: none !important; }
+:root { color-scheme: light; }
+body { background: white !important; color: #111 !important; font-family: Georgia, serif; }
+#app, .screen, .screen-narrow { width: 100%; max-width: none; padding: 0; }
+.card { color: #111; background: white; border: 1px solid #777; box-shadow: none; break-inside: avoid; }
+a { color: #111; text-decoration: none; }
