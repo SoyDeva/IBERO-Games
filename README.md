@@ -8,7 +8,7 @@ Proyecto desarrollado para la Maestría en Educación de la Corporación Univers
 
 ## Propósito pedagógico
 
-La nave Asteria ha aterrizado en Nébula-X con cinco sistemas dañados. Para recuperar cinco Núcleos de Ingenio, las tripulaciones deben producir posibilidades, combinar recursos limitados, elaborar una solución, dibujarla, argumentarla, adaptarla a una condición inesperada y evaluarla de manera reflexiva.
+La nave Asteria ha aterrizado en Nébula-X con cinco sistemas dañados. Para recuperar los Núcleos de Ingenio, las tripulaciones mezclan dos objetos, un poder y un ecoescudo; después salvan el invento ante una sorpresa y celebran el resultado.
 
 La experiencia trabaja explícitamente:
 
@@ -30,17 +30,15 @@ No es un cuestionario ni califica semánticamente las respuestas. La creatividad
 
 - Expedición completa de cinco misiones y partida rápida de tres.
 - Modos individual, colaborativo de 2 a 4 participantes y por equipos.
-- Cinco zonas con identidad, sistema de nave y dificultad progresiva.
-- Más de 30 problemas, 40 recursos, 20 restricciones y 20 giros inesperados.
-- Tres planos visuales de solución antes de elegir.
-- Fábrica de inventos basada en tarjetas: objetos, superpoderes, planos, razones y cuidado ambiental.
-- Escritura mínima: un nombre generado automáticamente y un detalle completamente opcional.
-- Mecánica explicada con una ruta visible de cinco pasos: entiende, imagina, cambia, evalúa y recupera.
-- Laboratorio dividido en cuatro niveles breves: objetos, plano, poderes y boceto opcional.
-- Tutorial con una misión de ejemplo completa y lenguaje apropiado para 10–12 años.
+- Cinco zonas coloridas con retos breves y sin dificultad progresiva obligatoria.
+- Retos, reglas y sorpresas escritos en una sola frase.
+- Mezclador visual: tocar exactamente dos objetos, un poder y un ecoescudo.
+- Cero escritura infantil: el nombre, la descripción, los pasos y las razones se generan automáticamente.
+- Mecánica de tres verbos: mirar, mezclar y salvar.
+- Tutorial visual de pocos segundos para estudiantes de 10 a 12 años.
 - Lienzo Canvas compatible con mouse y pantalla táctil, con grosor, deshacer, limpiar y descarga PNG.
-- Giro inesperado resuelto con tarjetas de adaptación, sin textos largos.
-- Rúbrica rápida con caras y evidencias seleccionables, sin escritura.
+- Giro inesperado resuelto eligiendo una de dos reparaciones grandes.
+- Autoevaluación emocional de un toque con tres caras; la ficha pedagógica se genera en segundo plano.
 - Energía Creativa descrita como valoración pedagógica, no como medición científica.
 - Roles automáticos y rotativos: Explorador, Inventor, Constructor y Comunicador.
 - Mapa progresivo, insignias y Núcleos de Ingenio.
@@ -138,32 +136,28 @@ Todas las rutas son relativas y funcionan dentro del subdirectorio `IBERO-Games`
 
 ## Cómo jugar
 
-1. Elegir nueva expedición, modalidad y duración.
-2. Escribir nombres o apodos, sin datos personales.
-3. Completar el tutorial y revisar los roles.
-4. Entrar a la zona disponible del mapa.
-5. Leer problema, recursos y restricción.
-6. Elaborar la primera solución y el boceto.
-7. Adaptar la propuesta al giro inesperado.
-8. Completar la rúbrica con conversación y evidencias.
-9. Recuperar el núcleo y avanzar.
-10. Imprimir o descargar el informe final.
+1. Elegir insignia, modalidad y duración con toques.
+2. Tocar el planeta brillante.
+3. Leer un reto y una regla cortos.
+4. Elegir dos objetos, un poder y un ecoescudo.
+5. Pulsar **¡Mezclar!**.
+6. Salvar el invento eligiendo una de dos reparaciones.
+7. Tocar una cara y celebrar.
 
 ## Reglas
 
-- Usar la cantidad mínima de recursos indicada.
-- Explicar la función de cada recurso elegido.
-- Cumplir restricción y giro inesperado.
-- Argumentar por qué la solución puede funcionar.
+- Elegir dos de los tres objetos disponibles.
+- Elegir un poder y un ecoescudo.
+- Cumplir la regla y salvar el invento ante la sorpresa.
 - Cuidar el planeta y sus formas de vida.
 - Escuchar aportes antes de decidir.
-- No convertir la rapidez o la energía en el único criterio de éxito.
+- No hay respuestas malas ni premio por terminar más rápido.
 
 Consulta [docs/reglas-del-juego.md](docs/reglas-del-juego.md) para la versión completa.
 
 ## Uso pedagógico
 
-La persona docente facilita la lluvia de ideas, ayuda a distribuir la palabra y formula preguntas sin imponer una solución. La rúbrica se utiliza para reflexionar y revisar. Una valoración baja nunca bloquea la experiencia: permite volver al constructor para mejorar.
+La persona docente puede facilitar una conversación breve sin interrumpir el ritmo. El juego registra automáticamente una ficha pedagógica a partir de las elecciones y mantiene el informe final dentro de un panel exclusivo para adultos.
 
 Consulta [docs/guia-docente.md](docs/guia-docente.md) o la sección “Guía docente” dentro del juego.
 
@@ -199,7 +193,7 @@ Consulta [docs/guia-docente.md](docs/guia-docente.md) o la sección “Guía doc
 - [x] Pruebas de persistencia, ajustes y reinicio con almacenamiento local simulado.
 - [x] Prueba de generación del informe y escape de textos introducidos.
 - [x] Auditoría estática de etiquetas, controles, identificadores y dependencias externas.
-- [x] Revisión de mínimo de recursos, superpoderes, tres planos y decisiones obligatorias.
+- [x] Revisión de dos objetos, un poder, un ecoescudo y decisiones obligatorias.
 - [x] Revisión del Canvas con eventos de puntero, deshacer, limpiar y descarga.
 - [x] Revisión de navegación por teclado, foco visible y opciones de accesibilidad.
 - [x] Revisión de reglas responsivas para móvil, tableta y escritorio.

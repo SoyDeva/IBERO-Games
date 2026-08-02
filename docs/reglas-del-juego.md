@@ -6,29 +6,25 @@ Recuperar cinco Núcleos de Ingenio para reparar la Asteria. En partida rápida 
 
 ## Reglas esenciales
 
-1. Utilizar como mínimo la cantidad de recursos indicada.
-2. Explicar la función de cada recurso.
-3. Respetar la restricción inicial.
-4. Modificar la propuesta después del giro inesperado.
-5. Argumentar por qué la solución puede funcionar.
-6. Evitar daño a seres vivos y al entorno.
-7. Escuchar todos los aportes antes de decidir.
-8. Completar la rúbrica con honestidad y evidencias.
-9. No premiar únicamente rapidez o puntuación.
+1. Elegir dos de los tres objetos disponibles.
+2. Elegir un poder y un ecoescudo.
+3. Respetar la regla corta de la misión.
+4. Salvar el invento después de la sorpresa.
+5. Evitar daño a seres vivos y al entorno.
+6. Escuchar todos los aportes antes de decidir.
+7. No premiar la rapidez ni comparar puntuaciones.
 
 ## Flujo
 
-Portada → historia → configuración → tutorial → mapa → misión → constructor → giro → rúbrica → resultado → siguiente zona → resultado final → informe.
+Portada → equipo → mapa → reto → mezclador → sorpresa → carita → celebración.
 
-Durante cada misión aparece una ruta de cinco pasos fáciles de recordar:
+Cada misión se resume en tres acciones:
 
-1. **Entiende:** lee el problema, los objetos y la regla especial.
-2. **Imagina:** explora tres planos y combina objetos con superpoderes.
-3. **Cambia:** adapta el invento cuando aparece una sorpresa.
-4. **Evalúa:** conversa y valora la idea del 1 al 5.
-5. **Núcleo:** recibe retroalimentación y desbloquea la siguiente zona.
+1. **Mira:** lee un reto y una regla de una frase.
+2. **Mezcla:** toca dos objetos, un poder y un ecoescudo.
+3. **Salva:** elige una de dos reparaciones y una carita.
 
-La fábrica de inventos muestra un solo nivel a la vez: objetos, plano, poderes y boceto opcional. El juego redacta automáticamente la descripción, los pasos, las razones y el cuidado ambiental a partir de las elecciones. Escribir queda limitado al nombre —que también puede generarse— y a un detalle opcional.
+El juego redacta automáticamente el nombre, la descripción, los pasos, las razones y el cuidado ambiental a partir de esas elecciones. El estudiante no necesita escribir. El boceto permanece como premio creativo opcional.
 
 ## Roles
 

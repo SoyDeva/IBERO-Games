@@ -7,7 +7,7 @@ Misión Nébula fortalece fluidez, flexibilidad, originalidad, elaboración, res
 ## Ficha rápida
 
 - Participantes: individual, grupos de 2 a 4 o equipos.
-- Duración: 60–90 minutos; partida rápida de 35–50 minutos.
+- Duración estimada: 20–30 minutos; partida rápida de 10–15 minutos.
 - Materiales: dispositivo con navegador; papel y lápiz opcionales.
 - Organización: un dispositivo por equipo y roles rotativos.
 
@@ -23,9 +23,9 @@ Misión Nébula fortalece fluidez, flexibilidad, originalidad, elaboración, res
 
 Puede presentar la mecánica con estas palabras:
 
-> “En cada misión entendemos el reto, probamos tres planos, mezclamos objetos con superpoderes, cambiamos la idea cuando aparece una sorpresa y finalmente conversamos sobre cómo quedó. No hay una respuesta escondida que deban adivinar”.
+> “Miren el reto, toquen dos objetos, elijan un poder y mezclen. Cuando aparezca una sorpresa, salven su invento con un toque. No hay respuestas malas”.
 
-El juego mantiene visible la ruta y presenta una sola decisión cada vez. La explicación se genera a partir de tarjetas para que el grupo dedique más tiempo a conversar, combinar y jugar.
+El juego muestra tarjetas grandes y genera por sí mismo el nombre, la explicación y el registro pedagógico. El grupo no escribe: dedica el tiempo a elegir, conversar y jugar.
 
 ## Roles
 
@@ -40,11 +40,11 @@ Los roles rotan después de cada misión. Con menos de cuatro participantes se c
 
 Evite ofrecer una solución. Use preguntas como “¿qué otra posibilidad existe?”, “¿qué función diferente podría tener este objeto?” y “¿qué consecuencia tendría esa decisión?”. Invite a generar varias ideas antes de elegir.
 
-## Rúbrica
+## Autoevaluación rápida
 
-La escala de 1 a 5 orienta una autoevaluación o coevaluación. Solicite evidencias concretas para valoraciones altas. La Energía Creativa no es una medición científica ni debe utilizarse como diagnóstico.
+Al final de cada misión el grupo toca una de tres caras para expresar cómo se sintió. Esta percepción alimenta una ficha orientativa para el informe adulto; no es una medición científica ni debe utilizarse como diagnóstico.
 
-Una energía baja invita a regresar al constructor y mejorar. No compare equipos únicamente por puntos o velocidad.
+No compare equipos por puntos o velocidad. Si desean explorar otra combinación, pueden volver al mezclador desde la celebración.
 
 ## Reflexión posterior
 
@@ -62,7 +62,7 @@ Una energía baja invita a regresar al constructor y mejorar. No compare equipos
 - Amplíe el tiempo y divida la misión en momentos.
 - Permita bocetos en papel cuando el Canvas represente una barrera.
 - Use partida rápida para una sesión corta.
-- Permita que una persona no hable y participe escribiendo o señalando.
+- Permita que una persona participe señalando o tocando tarjetas.
 - Active texto grande, alto contraste y reducción de movimiento.
 
 ## Resultados

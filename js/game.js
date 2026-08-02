@@ -44,8 +44,8 @@ export function generateMission(game, index = game.currentMission) {
   if (existing) return existing;
   const usedProblems = new Set(game.missions.map((mission) => mission.problem));
   const usedTwists = new Set(game.missions.map((mission) => mission.twist));
-  const resourceCount = Math.min(5, 3 + Math.floor(index / 2));
-  const minimumResources = resourceCount === 3 ? 2 : 3;
+  const resourceCount = 3;
+  const minimumResources = 2;
   const zoneIndex = game.config.length === 'quick' ? Math.round(index * 2) : index;
   return {
     id: globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : String(Date.now()) + '-' + index,
@@ -69,7 +69,7 @@ export function emptySolution() {
   return {
     name: '', description: '', solvedProblem: '', alternatives: '', selectedResources: [],
     resourceFunctions: {}, steps: '', reasoning: '', environment: '',
-    changes: '', changeReason: '', drawing: '', blueprintId: '', powers: {},
+    changes: '', changeReason: '', drawing: '', blueprintId: '', powers: {}, primaryPower: '',
     reasonChoices: [], careChoice: '', optionalDetail: '', adaptationChoice: '', adaptedResource: ''
   };
 }
