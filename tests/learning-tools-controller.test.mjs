@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { downloadLearningExport } from '../js/ui/learning-tools-controller.js';
+import { downloadLearningBackup, downloadLearningExport } from '../js/ui/learning-tools-controller.js';
 import { renderTeacherLearningReport } from '../js/ui/teacher-learning-report.js';
 import { createLearningProgress } from '../js/core/learning-progress.js';
 
-test('crea una descarga local únicamente después de una acción explícita', () => {
+function createDownloadEnvironment() {
   let clicked = false;
   let appended = false;
   let revoked = '';
@@ -27,24 +27,53 @@ test('crea una descarga local únicamente después de una acción explícita', (
     },
     setTimeout(callback) { callback(); }
   };
+  return { documentRef, windowRef, link, state: () => ({ clicked, appended, revoked }) };
+}
 
+test('crea una descarga local únicamente después de una acción explícita', () => {
+  const environment = createDownloadEnvironment();
   const file = downloadLearningExport({
     progress: createLearningProgress(),
     pilotName: 'Piloto',
     format: 'json',
-    documentRef,
-    windowRef
+    documentRef: environment.documentRef,
+    windowRef: environment.windowRef
   });
+  const state = environment.state();
 
-  assert.equal(clicked, true);
-  assert.equal(appended, true);
-  assert.equal(link.download, file.filename);
-  assert.equal(revoked, 'blob:local-learning-export');
+  assert.equal(state.clicked, true);
+  assert.equal(state.appended, true);
+  assert.equal(environment.link.download, file.filename);
+  assert.equal(state.revoked, 'blob:local-learning-export');
 });
 
-test('presenta metas, seguimiento y exportación con contenido escapado', () => {
+test('descarga el respaldo preparado por el almacén sin usar red', () => {
+  const environment = createDownloadEnvironment();
+  const file = downloadLearningBackup({
+    store: {
+      createBackup() {
+        return {
+          content: '{"schema":"mision-nebula-learning-backup-v1"}',
+          mime: 'application/json;charset=utf-8',
+          filename: 'respaldo.json'
+        };
+      }
+    },
+    documentRef: environment.documentRef,
+    windowRef: environment.windowRef
+  });
+
+  assert.equal(file.filename, 'respaldo.json');
+  assert.equal(environment.link.download, 'respaldo.json');
+  assert.equal(environment.state().clicked, true);
+});
+
+test('presenta metas, perfiles, seguimiento, respaldo e importación con contenido escapado', () => {
   const html = renderTeacherLearningReport({
+    pilotName: '<Piloto>',
     learning: {
+      profileName: '<Piloto>',
+      profileCount: 2,
       customGoal: { mode: 'both', targetAnswers: 10, targetAccuracy: 80, focusCategory: '<Ciencias>' },
       longitudinalTracking: true,
       goal: { text: 'Responder 10 preguntas.', custom: true },
@@ -56,9 +85,13 @@ test('presenta metas, seguimiento y exportación con contenido escapado', () => 
 
   assert.match(html, /Guardar meta/);
   assert.match(html, /Seguimiento longitudinal ampliado/);
-  assert.match(html, /Exportar JSON/);
+  assert.match(html, /Exportar reporte JSON/);
   assert.match(html, /Exportar CSV/);
+  assert.match(html, /Crear respaldo verificable/);
+  assert.match(html, /data-import-learning/);
+  assert.match(html, /2 perfiles guardados/);
   assert.match(html, /data-learning-tracking checked/);
   assert.match(html, /&lt;Ciencias&gt;/);
-  assert.doesNotMatch(html, /<Ciencias>/);
+  assert.match(html, /&lt;Piloto&gt;/);
+  assert.doesNotMatch(html, /<Ciencias>|<Piloto>/);
 });
