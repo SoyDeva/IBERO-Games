@@ -76,3 +76,13 @@ test('rechaza acciones desconocidas y puntos alterados', () => {
   point.previousCollection.profiles = {};
   assert.equal(inspectLearningRecoveryPoint(point, current), null);
 });
+
+test('descarta silenciosamente puntos con claves reservadas', () => {
+  const { previous, current } = collections();
+  const point = createLearningRecoveryPoint(previous, current, { action: 'delete' });
+  const manipulated = JSON.parse(JSON.stringify(point).replace(
+    '"previousCollection":{',
+    '"previousCollection":{"__proto__":{"polluted":true},'
+  ));
+  assert.equal(inspectLearningRecoveryPoint(manipulated, current), null);
+});
