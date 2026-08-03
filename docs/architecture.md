@@ -29,7 +29,10 @@ Ejemplos actuales:
 - catálogo de mejoras y sesión de compra única de la Estación Nova;
 - pasos, pregunta y evaluación sin penalización del tutorial guiado;
 - normalización de la bitácora de misión, cálculo de récord y estado de sincronización;
-- estado inicial del vuelo, dificultad adaptativa, sectores, recarga, HUD y resumen final.
+- estado inicial del vuelo, dificultad adaptativa, sectores, recarga, HUD y resumen final;
+- avance continuo, agotamiento de combustible y rescates de práctica;
+- movimiento y limpieza de obstáculos, proyectiles y explosiones;
+- generación de oleadas, detección de impactos, colisiones y destrucciones.
 
 ### `js/services/`
 
@@ -62,7 +65,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ### Motor de vuelo
 
-`js/space-game.js` conserva Canvas, entrada, simulación y renderizado, pero ya delega en `js/core/flight-state.js` la creación y reinicialización del estado, la dificultad adaptativa, la progresión de sectores, la recarga de plasma, el modelo del HUD y el resumen final. Las siguientes fases extraerán simulación, colisiones y generación de oleadas; después entrada y dibujo.
+`js/space-game.js` conserva la fachada `SpaceFlight`, el ciclo de animación, la entrada y el renderizado. Delega en `js/core/flight-state.js` la creación del estado, dificultad, sectores, recarga, HUD y resumen; y en `js/core/flight-simulation.js` el avance continuo, combustible, rescates, oleadas, proyectiles, colisiones, destrucciones y limpieza de objetos. Las siguientes fases separarán primero la entrada y después el dibujo en Canvas.
 
 ## Reglas del refactor
 
@@ -85,6 +88,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 9. Estación Nova y panel de pausa. **Completado.**
 10. Tutorial y cierre de partida. **Completado.**
 11. Motor de vuelo: estado y reglas derivadas. **Completado.**
-12. Motor de vuelo: simulación, colisiones y oleadas.
-13. Motor de vuelo: entrada y renderizado.
-14. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
+12. Motor de vuelo: simulación, colisiones y oleadas. **Completado.**
+13. Motor de vuelo: entrada de teclado, puntero y controles.
+14. Motor de vuelo: renderizado y utilidades de Canvas.
+15. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
