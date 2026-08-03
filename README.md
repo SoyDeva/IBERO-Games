@@ -41,8 +41,11 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 - Dificultad adaptativa: progresa con las respuestas y rachas, pero ofrece ayuda temporal después de los choques.
 - Cinco sectores galácticos con ambiente, colores y progresión visual propios.
 - Economía infantil sin dinero real: 12 cristales por acierto y 3 por objeto destruido en misión.
-- Mercado Nova cada 10 niveles con reparación, superplasma o estabilización del siguiente tramo.
-- Bazar Orbital exterior con cuatro estilos permanentes de nave que cambian su apariencia en Canvas.
+- Estación Nova cada 10 niveles con reparación, superplasma o estabilización del siguiente tramo.
+- Hangar Estelar con seis fuselajes y cinco estelas permanentes que cambian la nave y su motor en Canvas.
+- Perfil de piloto opcionalmente recordado y bitácoras personalizadas.
+- Liga Galáctica local con podio, top 10, un mejor vuelo por piloto y reinicio automático al actualizar el juego.
+- Controles directos por carril, señales rojas de peligro y ruta segura verde en oleadas dobles.
 - Pausa disponible durante el vuelo y con la tecla `P`.
 - Cinco logros locales, celebraciones con partículas y bitácora educativa al final de cada intento.
 - Paso cercano corregido: los objetos que se esquivan cruzan el primer plano y se desvanecen fuera de cámara.

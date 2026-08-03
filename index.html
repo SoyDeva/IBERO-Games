@@ -11,9 +11,9 @@
   <meta name="theme-color" content="#21144f">
   <title>Misión Nébula · Pilota, responde y avanza</title>
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/styles.css?v=20">
-  <link rel="stylesheet" href="css/accessibility.css?v=20">
-  <link rel="stylesheet" href="css/print.css?v=20" media="print">
+  <link rel="stylesheet" href="css/styles.css?v=21">
+  <link rel="stylesheet" href="css/accessibility.css?v=21">
+  <link rel="stylesheet" href="css/print.css?v=21" media="print">
 </head>
 <body>
   <a class="skip-link" href="#app">Saltar al contenido principal</a>
@@ -24,7 +24,8 @@
       <span><strong>Misión Nébula</strong><small>Pilota · Responde · Avanza</small></span>
     </a>
     <nav aria-label="Navegación principal">
-      <button class="nav-button" data-nav="shop">🛍️ Bazar</button>
+      <button class="nav-button" data-nav="shop">🛸 Hangar</button>
+      <button class="nav-button" data-nav="ranking">🏆 Liga</button>
       <button class="nav-button" data-nav="instructions">Cómo jugar</button>
       <button class="nav-button" data-nav="teacher">Para docentes</button>
       <button class="nav-button" data-nav="credits">Créditos</button>
@@ -54,6 +55,19 @@
     </form>
   </dialog>
 
+  <dialog id="pilot-dialog" class="pilot-dialog" aria-labelledby="pilot-title">
+    <form id="pilot-form" class="dialog-card pilot-card">
+      <div class="pilot-avatar" aria-hidden="true"><span>👨‍🚀</span><i></i><i></i></div>
+      <p class="eyebrow">Identificación de la tripulación</p>
+      <h2 id="pilot-title">¿Cómo te llamas, piloto?</h2>
+      <p>Tu nombre aparecerá en la bitácora y en la Liga Galáctica de este dispositivo.</p>
+      <label class="pilot-name-field"><span>Nombre o apodo</span><input id="pilot-name" name="pilot-name" type="text" required minlength="2" maxlength="18" autocomplete="nickname" placeholder="Ejemplo: Luna" aria-describedby="pilot-error"></label>
+      <p id="pilot-error" class="pilot-error" role="alert"></p>
+      <label class="remember-pilot"><input id="remember-pilot" type="checkbox"><span><strong>Recordarme en este dispositivo</strong><small>Si no lo marcas, volveremos a preguntarte al abrir el juego.</small></span></label>
+      <button class="button primary launch-button" type="submit">🚀 Entrar a la nave</button>
+    </form>
+  </dialog>
+
   <dialog id="confirm-dialog" aria-labelledby="confirm-title">
     <form method="dialog" class="dialog-card">
       <h2 id="confirm-title">¿Reiniciar el progreso?</h2>
@@ -63,6 +77,6 @@
   </dialog>
 
   <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-  <script type="module" src="js/app.js?v=20"></script>
+  <script type="module" src="js/app.js?v=21"></script>
 </body>
 </html>

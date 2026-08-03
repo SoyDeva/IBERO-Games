@@ -1,9 +1,10 @@
-import { SpaceFlight, SHIP_SKINS } from './space-game.js?v=20';
+import { SpaceFlight, SHIP_SKINS, SHIP_TRAILS } from './space-game.js?v=21';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
-import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=20';
+import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=21';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
+const pilotDialog = document.getElementById('pilot-dialog');
 let route = 'home';
 let flight = null;
 const questionDecks = new Map();
@@ -22,8 +23,15 @@ let shopMessage = '';
 let stationPurchased = false;
 let runCrystals = 0;
 let viewportResizeFrame = 0;
+let activePilotName = '';
+let pendingPilotAction = null;
 
 const ECONOMY_KEY = 'nebula-economy-v1';
+const PROFILE_KEY = 'nebula-pilot-profile';
+const GAME_RELEASE = new URL(import.meta.url).searchParams.get('v') || 'local';
+const RANKING_PREFIX = 'nebula-ranking-';
+const RANKING_KEY = RANKING_PREFIX + GAME_RELEASE;
+const SEASON_NAME = 'Expedición Horizonte ' + GAME_RELEASE;
 const STATION_OFFERS = {
   repair: { icon: '🛡️', name: 'Reparación total', description: 'Restaura los escudos y suma 20% de combustible.', price: 20 },
   plasma: { icon: '⚡', name: 'Superplasma', description: 'Carga 5 disparos para el siguiente tramo.', price: 25 },
@@ -53,9 +61,12 @@ function loadEconomy() {
     const ownedSkins = Array.isArray(saved.ownedSkins) ? saved.ownedSkins.filter((id) => SHIP_SKINS[id]) : [];
     if (!ownedSkins.includes('nebula')) ownedSkins.unshift('nebula');
     const activeSkin = ownedSkins.includes(saved.activeSkin) ? saved.activeSkin : 'nebula';
-    return { credits: Math.max(0, Math.floor(Number(saved.credits) || 0)), ownedSkins, activeSkin };
+    const ownedTrails = Array.isArray(saved.ownedTrails) ? saved.ownedTrails.filter((id) => SHIP_TRAILS[id]) : [];
+    if (!ownedTrails.includes('pulse')) ownedTrails.unshift('pulse');
+    const activeTrail = ownedTrails.includes(saved.activeTrail) ? saved.activeTrail : 'pulse';
+    return { credits: Math.max(0, Math.floor(Number(saved.credits) || 0)), ownedSkins, activeSkin, ownedTrails, activeTrail };
   } catch (error) {
-    return { credits: 0, ownedSkins: ['nebula'], activeSkin: 'nebula' };
+    return { credits: 0, ownedSkins: ['nebula'], activeSkin: 'nebula', ownedTrails: ['pulse'], activeTrail: 'pulse' };
   }
 }
 
@@ -108,6 +119,88 @@ function escapeHtml(value = '') {
   return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
 }
 
+function cleanPilotName(value = '') {
+  return String(value).replace(/[^\p{L}\p{N} ._-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 18);
+}
+
+function loadRememberedPilot() {
+  try {
+    const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+    return profile.remember ? cleanPilotName(profile.name) : '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function getPilotName() {
+  return activePilotName || loadRememberedPilot();
+}
+
+function savePilot(name, remember) {
+  activePilotName = cleanPilotName(name);
+  if (remember) localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: activePilotName, remember: true }));
+  else localStorage.removeItem(PROFILE_KEY);
+  return activePilotName;
+}
+
+function openPilotDialog(action = null) {
+  if (!pilotDialog) return;
+  pendingPilotAction = action;
+  const remembered = loadRememberedPilot();
+  const input = document.getElementById('pilot-name');
+  input.value = getPilotName();
+  document.getElementById('remember-pilot').checked = Boolean(remembered);
+  document.getElementById('pilot-error').textContent = '';
+  if (!pilotDialog.open) pilotDialog.showModal();
+  window.setTimeout(() => input.focus(), 30);
+}
+
+function requirePilot(action) {
+  if (getPilotName()) action();
+  else openPilotDialog(action);
+}
+
+function purgePreviousRankings() {
+  try {
+    Object.keys(localStorage).filter((key) => key.startsWith(RANKING_PREFIX) && key !== RANKING_KEY).forEach((key) => localStorage.removeItem(key));
+  } catch (error) { /* El juego continúa aunque el navegador limite el almacenamiento. */ }
+}
+
+function loadRanking() {
+  try {
+    const entries = JSON.parse(localStorage.getItem(RANKING_KEY) || '[]');
+    return Array.isArray(entries) ? entries.filter((entry) => cleanPilotName(entry.name) && Number.isFinite(Number(entry.distance))).slice(0, 10) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function recordRanking(result) {
+  if (flightMode !== 'mission' || result.practice) return null;
+  const name = getPilotName();
+  if (!name) return null;
+  const economy = loadEconomy();
+  const entry = {
+    name,
+    distance: Math.max(0, Math.round(result.distance)),
+    checkpoints: Math.max(0, Math.round(result.checkpoints)),
+    correct: Math.max(0, Math.round(result.correct)),
+    destroyed: Math.max(0, Math.round(result.destroyed)),
+    skin: economy.activeSkin,
+    trail: economy.activeTrail,
+    date: Date.now()
+  };
+  const ranking = loadRanking();
+  const existing = ranking.findIndex((item) => item.name.toLocaleLowerCase('es') === name.toLocaleLowerCase('es'));
+  if (existing < 0) ranking.push(entry);
+  else if (entry.distance > ranking[existing].distance || (entry.distance === ranking[existing].distance && entry.correct > ranking[existing].correct)) ranking[existing] = entry;
+  ranking.sort((a, b) => b.distance - a.distance || b.correct - a.correct || b.destroyed - a.destroyed);
+  const top = ranking.slice(0, 10);
+  localStorage.setItem(RANKING_KEY, JSON.stringify(top));
+  const position = top.findIndex((item) => item.name.toLocaleLowerCase('es') === name.toLocaleLowerCase('es'));
+  return position >= 0 ? position + 1 : null;
+}
+
 function setRoute(next) {
   window.clearTimeout(quizTimer);
   window.clearTimeout(toastTimer);
@@ -134,29 +227,61 @@ function renderHome() {
   const unlocked = loadAchievements();
   const economy = loadEconomy();
   const activeSkin = SHIP_SKINS[economy.activeSkin];
+  const pilotName = getPilotName();
   const achievementShelf = Object.entries(ACHIEVEMENTS).map(([id, achievement]) => '<span class="' + (unlocked.includes(id) ? 'unlocked' : 'locked') + '" title="' + escapeHtml(achievement.title) + '"><b>' + (unlocked.includes(id) ? achievement.icon : '✦') + '</b><small>' + escapeHtml(achievement.title) + '</small></span>').join('');
   const learned = localStorage.getItem('nebula-tutorial-complete') === 'true';
-  return '<section class="screen flight-home" aria-labelledby="home-title"><div class="flight-home-copy"><p class="eyebrow">🚀 Aventura educativa 2.5D</p><h1 id="home-title">Pilota la <span>Asteria</span></h1><p class="lead">Esquiva, dispara y supera desafíos de conocimiento en cinco sectores galácticos.</p><div class="mission-formula"><span><b>🕹️</b><small>Esquiva</small></span><i>→</i><span><b>🌀</b><small>Llega</small></span><i>→</i><span><b>🧠</b><small>Responde</small></span><i>→</i><span><b>✨</b><small>Celebra</small></span></div><div class="home-actions"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Jugar misión</button><button class="button shop-button" data-nav="shop">🛍️ Bazar orbital</button><button class="button tutorial-button" data-nav="flight" data-mode="tutorial">🎮 ' + (learned ? 'Repetir tutorial' : 'Tutorial de 30 s') + '</button><button class="button ghost" data-nav="flight" data-mode="practice">🧪 Modo práctica</button><button class="button text-button" data-nav="instructions">Ver reglas</button></div><div class="home-records">' + (best ? '<span>🏆 <strong>' + best + '</strong> km</span>' : '<span>🏆 Sin récord aún</span>') + '<span>🏅 <strong>' + unlocked.length + '</strong>/5 logros</span><span class="crystal-chip">💎 <strong data-crystal-balance>' + economy.credits + '</strong> cristales</span></div><div class="achievement-shelf" aria-label="Logros de la misión">' + achievementShelf + '</div></div><div class="home-orbit" aria-hidden="true" style="--active-body:' + activeSkin.body + ';--active-wing:' + activeSkin.wing + ';--active-glow:' + activeSkin.glow + '"><div class="orbit-planet"></div><div class="orbit-ship">▲<i></i><b>' + activeSkin.icon + '</b></div><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span></div></section>';
+  return '<section class="screen flight-home" aria-labelledby="home-title"><div class="flight-home-copy"><p class="eyebrow">🚀 Aventura educativa 2.5D</p><div class="pilot-welcome"><span>👨‍🚀</span><p><small>PILOTO ACTUAL</small><strong>' + escapeHtml(pilotName || 'Sin registrar') + '</strong></p><button type="button" data-change-pilot>' + (pilotName ? 'Cambiar' : 'Registrar') + '</button></div><h1 id="home-title">Pilota la <span>Asteria</span></h1><p class="lead">Esquiva, dispara y supera desafíos de conocimiento en cinco sectores galácticos.</p><div class="mission-formula"><span><b>🕹️</b><small>Esquiva</small></span><i>→</i><span><b>🌀</b><small>Llega</small></span><i>→</i><span><b>🧠</b><small>Responde</small></span><i>→</i><span><b>✨</b><small>Celebra</small></span></div><div class="home-actions"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Jugar misión</button><button class="button shop-button" data-nav="shop">🛸 Hangar Estelar</button><button class="button ranking-button" data-nav="ranking">🏆 Liga Galáctica</button><button class="button tutorial-button" data-nav="flight" data-mode="tutorial">🎮 ' + (learned ? 'Repetir tutorial' : 'Tutorial de 30 s') + '</button><button class="button ghost" data-nav="flight" data-mode="practice">🧪 Modo práctica</button><button class="button text-button" data-nav="instructions">Ver reglas</button></div><div class="home-records">' + (best ? '<span>🏆 <strong>' + best + '</strong> km</span>' : '<span>🏆 Sin récord aún</span>') + '<span>🏅 <strong>' + unlocked.length + '</strong>/5 logros</span><span class="crystal-chip">💎 <strong data-crystal-balance>' + economy.credits + '</strong> cristales</span></div><div class="achievement-shelf" aria-label="Logros de la misión">' + achievementShelf + '</div></div><div class="home-orbit" aria-hidden="true" style="--active-body:' + activeSkin.body + ';--active-wing:' + activeSkin.wing + ';--active-glow:' + activeSkin.glow + '"><div class="orbit-planet"></div><div class="orbit-ship">▲<i></i><b>' + activeSkin.icon + '</b></div><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span></div></section>';
 }
 
 function skinPreviewMarkup(skin) {
   return '<div class="skin-preview" aria-hidden="true" style="--skin-body:' + skin.body + ';--skin-wing:' + skin.wing + ';--skin-glass:' + skin.glass + ';--skin-flame:' + skin.flame + ';--skin-glow:' + skin.glow + '"><i></i><span></span><b></b></div>';
 }
 
+function trailPreviewMarkup(trail) {
+  return '<div class="trail-preview" aria-hidden="true" style="--trail-one:' + trail.primary + ';--trail-two:' + trail.secondary + '"><span>▲</span><i></i><i></i><i></i><i></i></div>';
+}
+
+function catalogAction(kind, id, item, owned, active) {
+  if (active) return '<button class="button equipped" type="button" disabled>✓ En uso</button>';
+  if (owned) return '<button class="button secondary" type="button" data-equip-item data-kind="' + kind + '" data-item="' + id + '">Usar ahora</button>';
+  return '<button class="button primary" type="button" data-buy-item data-kind="' + kind + '" data-item="' + id + '">💎 ' + item.price + ' · Desbloquear</button>';
+}
+
 function renderShop() {
   const economy = loadEconomy();
-  const cards = Object.entries(SHIP_SKINS).map(([id, skin]) => {
+  const shipCards = Object.entries(SHIP_SKINS).map(([id, skin]) => {
     const owned = economy.ownedSkins.includes(id);
     const active = economy.activeSkin === id;
-    const action = active
-      ? '<button class="button equipped" type="button" disabled>✓ Equipada</button>'
-      : owned
-        ? '<button class="button secondary" type="button" data-equip-skin="' + id + '">Equipar</button>'
-        : '<button class="button primary" type="button" data-buy-skin="' + id + '"' + (economy.credits < skin.price ? ' disabled' : '') + '>💎 ' + skin.price + ' · Comprar</button>';
+    const action = catalogAction('skin', id, skin, owned, active);
     return '<article class="skin-card ' + (active ? 'active' : '') + '">' + skinPreviewMarkup(skin) + '<p class="skin-rarity">' + skin.icon + ' ESTILO DE NAVE</p><h2>' + escapeHtml(skin.name) + '</h2><p>' + escapeHtml(skin.description) + '</p>' + action + '</article>';
   }).join('');
+  const trailCards = Object.entries(SHIP_TRAILS).map(([id, trail]) => {
+    const owned = economy.ownedTrails.includes(id);
+    const active = economy.activeTrail === id;
+    return '<article class="trail-card ' + (active ? 'active' : '') + '">' + trailPreviewMarkup(trail) + '<div><p class="skin-rarity">' + trail.icon + ' ESTELA DE MOTOR</p><h3>' + escapeHtml(trail.name) + '</h3><p>' + escapeHtml(trail.description) + '</p></div>' + catalogAction('trail', id, trail, owned, active) + '</article>';
+  }).join('');
   const message = shopMessage ? '<p class="shop-message" role="status">' + escapeHtml(shopMessage) + '</p>' : '';
-  return '<section class="screen screen-narrow orbital-shop" aria-labelledby="shop-title"><div class="shop-heading"><div><p class="eyebrow">🛍️ Hangar de personalización</p><h1 id="shop-title">Bazar Orbital</h1><p class="lead">Transforma la Asteria con los cristales que ganas jugando la misión.</p></div><div class="shop-wallet"><span>Tu saldo</span><strong>💎 <b data-crystal-balance>' + economy.credits + '</b></strong><small>No se usa dinero real</small></div></div>' + message + '<div class="skin-grid">' + cards + '</div><div class="shop-note"><span>💡</span><p><strong>¿Cómo consigo cristales?</strong> Ganas 12 por cada respuesta correcta y 3 por cada objeto destruido en la misión.</p></div><div class="button-row"><button class="button primary" data-nav="flight" data-mode="mission">🚀 Usar mi nave</button><button class="button ghost" data-nav="home">Volver</button></div></section>';
+  return '<section class="screen screen-narrow orbital-shop" aria-labelledby="shop-title"><div class="hangar-hero"><div class="hangar-satellite" aria-hidden="true">🛰️</div><div><p class="eyebrow">🛸 Centro de personalización</p><h1 id="shop-title">Hangar Estelar</h1><p class="lead">Construye una Asteria única. Todo es cosmético: el conocimiento y la habilidad siguen mandando.</p></div><div class="shop-wallet"><span>Tu energía estelar</span><strong>💎 <b data-crystal-balance>' + economy.credits + '</b></strong><small>Sin dinero real</small></div></div>' + message + '<div class="hangar-section-title"><span>🚀</span><div><p>PINTURA Y FUSELAJE</p><h2>Escoge tu nave</h2></div><small>' + economy.ownedSkins.length + '/' + Object.keys(SHIP_SKINS).length + ' desbloqueadas</small></div><div class="skin-grid">' + shipCards + '</div><div class="hangar-section-title"><span>✨</span><div><p>EFECTOS DE VUELO</p><h2>Estelas de motor</h2></div><small>' + economy.ownedTrails.length + '/' + Object.keys(SHIP_TRAILS).length + ' desbloqueadas</small></div><div class="trail-grid">' + trailCards + '</div><div class="shop-note"><span>💡</span><p><strong>Consigue energía estelar:</strong> gana 12 cristales por respuesta correcta y 3 por objeto destruido en una misión real.</p></div><div class="button-row"><button class="button primary" data-nav="flight" data-mode="mission">🚀 Volar con mi diseño</button><button class="button ranking-button" data-nav="ranking">🏆 Ver Liga Galáctica</button><button class="button ghost" data-nav="home">Volver</button></div></section>';
+}
+
+function renderRanking() {
+  const ranking = loadRanking();
+  const pilotName = getPilotName();
+  const medals = ['🥇', '🥈', '🥉'];
+  const podium = [1, 0, 2].map((index) => {
+    const entry = ranking[index];
+    const place = index + 1;
+    if (!entry) return '<div class="podium-place place-' + place + ' empty"><span>' + medals[index] + '</span><strong>Disponible</strong><small>¡Puede ser tu lugar!</small><i>' + place + '</i></div>';
+    const skin = SHIP_SKINS[entry.skin] || SHIP_SKINS.nebula;
+    return '<div class="podium-place place-' + place + (entry.name === pilotName ? ' current' : '') + '"><span>' + medals[index] + '</span><b>' + skin.icon + '</b><strong>' + escapeHtml(entry.name) + '</strong><small>' + entry.distance + ' km · ' + entry.correct + ' aciertos</small><i>' + place + '</i></div>';
+  }).join('');
+  const rows = ranking.map((entry, index) => {
+    const skin = SHIP_SKINS[entry.skin] || SHIP_SKINS.nebula;
+    const trail = SHIP_TRAILS[entry.trail] || SHIP_TRAILS.pulse;
+    return '<li class="ranking-row' + (entry.name === pilotName ? ' current' : '') + '"><span class="ranking-position">' + (index < 3 ? medals[index] : index + 1) + '</span><span class="ranking-pilot"><b>' + skin.icon + '</b><span><strong>' + escapeHtml(entry.name) + '</strong><small>' + trail.icon + ' ' + escapeHtml(trail.name) + '</small></span></span><span><strong>' + entry.distance + ' km</strong><small>Distancia</small></span><span><strong>' + entry.checkpoints + '</strong><small>Portales</small></span><span><strong>' + entry.correct + '</strong><small>Aciertos</small></span></li>';
+  }).join('');
+  const empty = '<div class="ranking-empty"><span>🪐</span><h2>La galaxia espera a su primera leyenda</h2><p>Completa una misión real para inaugurar esta clasificación.</p></div>';
+  return '<section class="screen screen-narrow galaxy-ranking" aria-labelledby="ranking-title"><div class="ranking-hero"><div><p class="eyebrow">🏆 Temporada local · ' + escapeHtml(SEASON_NAME) + '</p><h1 id="ranking-title">Liga Galáctica</h1><p class="lead">Los diez mejores vuelos realizados en este dispositivo.</p></div><div class="season-core" aria-hidden="true"><span>★</span><i></i><i></i></div></div><p class="season-rule"><span>🔄</span><strong>Clasificación justa:</strong> empieza vacía con cada actualización del juego. Solo cuentan las misiones reales y se conserva el mejor vuelo de cada piloto.</p><div class="space-podium">' + podium + '</div>' + (ranking.length ? '<ol class="ranking-list">' + rows + '</ol>' : empty) + '<div class="button-row"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Mejorar mi posición</button><button class="button shop-button" data-nav="shop">🛸 Visitar Hangar</button><button class="button ghost" data-nav="home">Volver</button></div></section>';
 }
 
 function renderFlight() {
@@ -172,6 +297,7 @@ function renderFlight() {
   const launch = isTutorial ? '🎮 Iniciar entrenamiento' : isPractice ? '🧪 Empezar práctica' : '🚀 ¡Despegar!';
   const modeBadge = isTutorial ? '🎮 TUTORIAL' : isPractice ? '🧪 PRÁCTICA' : '🚀 MISIÓN';
   const economy = loadEconomy();
+  const pilotName = getPilotName() || 'Piloto';
   const stationOffers = Object.entries(STATION_OFFERS).map(([id, offer]) => '<button class="station-offer" type="button" data-station-buy="' + id + '" data-price="' + offer.price + '"><span>' + offer.icon + '</span><strong>' + offer.name + '</strong><small>' + offer.description + '</small><b>💎 ' + offer.price + '</b></button>').join('');
   return `<section class="flight-page" aria-labelledby="flight-title">
     <h1 id="flight-title" class="sr-only">Vuelo de la nave Asteria</h1>
@@ -191,74 +317,87 @@ function renderFlight() {
         <button class="pause-flight" id="pause-flight" type="button" aria-label="Pausar vuelo"><span>⏸</span><strong>Pausa</strong></button>
         <button class="exit-flight" type="button" data-nav="home" aria-label="Salir del vuelo"><span>✕</span><strong>Salir</strong></button>
       </div>
-      <div class="sector-badge" id="sector-badge"><span id="sector-mode">${modeBadge}</span><strong id="sector-name">🌌 Nebulosa Violeta</strong><small>💎 <b data-crystal-balance>${economy.credits}</b></small></div>
+      <div class="sector-badge" id="sector-badge"><span id="sector-mode">${modeBadge}</span><strong id="sector-name">🌌 Nebulosa Violeta</strong><small>👨‍🚀 ${escapeHtml(pilotName)} · 💎 <b data-crystal-balance>${economy.credits}</b></small></div>
       <div id="flight-toast" class="flight-toast" hidden></div>
       <div id="flight-overlay" class="flight-overlay ${isPractice ? 'practice-overlay' : ''}"><div class="overlay-card rules-card"><p class="eyebrow">${eyebrow}</p><h2>${title}</h2><div class="quick-rules" role="list"><div role="listitem"><b>1</b><span>↔️</span><strong>MUÉVETE</strong><small>Flechas o botones</small></div><div role="listitem"><b>2</b><span>⚡</span><strong>DISPARA</strong><small>3 cargas · recarga N5</small></div><div role="listitem"><b>3</b><span>🌀</span><strong>LLEGA</strong><small>Entra al portal</small></div><div role="listitem"><b>4</b><span>🧠</span><strong>RESPONDE</strong><small>Acierta y recarga</small></div></div><p class="quick-warning"><span>${isPractice ? '💚' : isTutorial ? '✨' : '⚠️'}</span><strong>${warning}</strong></p><button class="button primary launch-button" id="start-flight">${launch}</button></div></div>
       <div id="tutorial-coach" class="tutorial-coach" hidden aria-live="assertive"></div>
       <div id="achievement-pop" class="achievement-pop" hidden aria-live="polite"></div>
       <section id="pause-panel" class="pause-panel" hidden aria-labelledby="pause-title"><div><span class="pause-icon">⏸</span><p class="eyebrow">Tiempo para respirar</p><h2 id="pause-title">Vuelo en pausa</h2><p>La nave y los obstáculos están congelados.</p><button class="button primary" id="resume-flight">▶ Continuar</button><button class="button ghost" id="restart-from-pause">↻ Reiniciar</button></div></section>
-      <section id="station-panel" class="station-panel" hidden aria-labelledby="station-title"><div class="station-card"><div class="station-beacon" aria-hidden="true">🛰️</div><div class="station-heading"><div><p class="eyebrow" id="station-level">Estación cada 10 niveles</p><h2 id="station-title">Mercado Nova-10</h2><p>Elige una mejora para continuar tu viaje.</p></div><div class="station-wallet">💎 <strong data-crystal-balance>${economy.credits}</strong></div></div><div class="station-grid">${stationOffers}</div><p id="station-result" class="station-result" role="status">Puedes comprar una ayuda o guardar tus cristales.</p><button class="button primary" id="leave-station">🚀 Continuar misión</button></div></section>
+      <section id="station-panel" class="station-panel" hidden aria-labelledby="station-title"><div class="station-card"><div class="station-beacon" aria-hidden="true">🛰️</div><div class="station-heading"><div><p class="eyebrow" id="station-level">Estación cada 10 niveles</p><h2 id="station-title">Estación Nova-10</h2><p>Elige una mejora para continuar tu viaje.</p></div><div class="station-wallet">💎 <strong data-crystal-balance>${economy.credits}</strong></div></div><div class="station-grid">${stationOffers}</div><p id="station-result" class="station-result" role="status">Puedes comprar una ayuda o guardar tus cristales.</p><button class="button primary" id="leave-station">🚀 Continuar misión</button></div></section>
       <section id="quiz-panel" class="quiz-panel" hidden aria-labelledby="quiz-question"><div class="quiz-card"><p class="quiz-category" id="quiz-category"></p><div class="fuel-question-icon" aria-hidden="true">⛽</div><h2 id="quiz-question"></h2><div id="quiz-options" class="quiz-options"></div><p id="quiz-result" class="quiz-result" aria-live="assertive"></p></div></section>
       <div class="mobile-flight-controls" aria-label="Controles móviles"><button id="mobile-steer-left" type="button" aria-label="Mover nave a la izquierda"><span>⬅️</span><strong>IZQUIERDA</strong></button><button class="mobile-fire-control" id="mobile-fire-plasma" data-fire-plasma type="button" aria-label="Disparar plasma. Quedan tres disparos"><span>⚡</span><strong>DISPARAR</strong><small><b id="mobile-ammo-value">3</b> CARGAS</small></button><button id="mobile-steer-right" type="button" aria-label="Mover nave a la derecha"><span>➡️</span><strong>DERECHA</strong></button></div>
     </div>
     <div class="touch-controls" aria-label="Controles táctiles"><button id="steer-left" type="button" aria-label="Mover nave a la izquierda">⬅️<span>IZQUIERDA</span></button><button class="fire-control" id="fire-plasma" data-fire-plasma type="button" aria-label="Disparar plasma. Quedan tres disparos">⚡<span>DISPARAR</span><small>ESPACIO</small></button><button id="steer-right" type="button" aria-label="Mover nave a la derecha"><span>DERECHA</span>➡️</button></div>
-    <p class="flight-tip">Toca los lados para moverte · Pulsa ESPACIO para disparar.</p>
+    <p class="flight-tip">Toca directamente un carril para moverte · Rojo: peligro · Verde: ruta segura.</p>
   </section>`;
 }
 
 function renderInstructions() {
-  return '<article class="screen screen-narrow flight-info" aria-labelledby="instructions-title"><p class="eyebrow">Cómo jugar</p><h1 id="instructions-title">Llega tan lejos como puedas</h1><p class="lead">Entra al portal, acierta la pregunta y continúa volando.</p><div class="instruction-grid"><article><b>1</b><span>↔️</span><h2>Muévete</h2><p>Usa flechas, A/D o los botones para cambiar entre 3 carriles.</p></article><article><b>2</b><span>⚡</span><h2>Dispara</h2><p>Usa ESPACIO. Tienes 3 cargas y recuperas todas al superar cada 5 niveles.</p></article><article><b>3</b><span>🌀</span><h2>Portal</h2><p>Al entrar, el vuelo se detiene y aparece una pregunta.</p></article><article><b>4</b><span>🧠</span><h2>Responde</h2><p>Un acierto recarga combustible. Una respuesta incorrecta termina la misión.</p></article></div><div class="shop-note"><span>💎</span><p><strong>Gana y personaliza:</strong> cada acierto entrega 12 cristales y cada objeto destruido entrega 3. En los niveles 10, 20 y siguientes aparece una estación de mejoras.</p></div><div class="rule-banner"><span>⚠️</span><p><strong>Cuida la nave:</strong> cada choque quita 1 escudo y combustible. Tres choques o combustible vacío también terminan el intento.</p></div><div class="button-row"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Jugar ahora</button><button class="button shop-button" data-nav="shop">🛍️ Visitar bazar</button><button class="button tutorial-button" data-nav="flight" data-mode="tutorial">🎮 Aprender a pilotar</button><button class="button ghost" data-nav="home">Volver</button></div></article>';
+  return '<article class="screen screen-narrow flight-info" aria-labelledby="instructions-title"><p class="eyebrow">Cómo jugar</p><h1 id="instructions-title">Llega tan lejos como puedas</h1><p class="lead">Entra al portal, acierta la pregunta y continúa volando.</p><div class="instruction-grid"><article><b>1</b><span>↔️</span><h2>Elige carril</h2><p>Usa flechas, A/D o toca directamente uno de los 3 carriles.</p></article><article><b>2</b><span>⚡</span><h2>Dispara</h2><p>Usa ESPACIO. Tienes 3 cargas y recuperas todas al superar cada 5 niveles.</p></article><article><b>3</b><span>🟢</span><h2>Lee las señales</h2><p>Rojo indica peligro. Cuando dos carriles están ocupados, el aro verde muestra la salida segura.</p></article><article><b>4</b><span>🧠</span><h2>Responde</h2><p>Un acierto recarga combustible. Una respuesta incorrecta termina la misión.</p></article></div><div class="shop-note"><span>💎</span><p><strong>Gana y personaliza:</strong> cada acierto entrega 12 cristales y cada objeto destruido entrega 3. Usa tus cristales en el Hangar Estelar.</p></div><div class="rule-banner"><span>⚠️</span><p><strong>Cuida la nave:</strong> cada choque quita 1 escudo y combustible. Tres choques o combustible vacío también terminan el intento.</p></div><div class="button-row"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Jugar ahora</button><button class="button shop-button" data-nav="shop">🛸 Visitar Hangar</button><button class="button ranking-button" data-nav="ranking">🏆 Liga Galáctica</button><button class="button tutorial-button" data-nav="flight" data-mode="tutorial">🎮 Aprender a pilotar</button><button class="button ghost" data-nav="home">Volver</button></div></article>';
 }
 
 function renderTeacher() {
-  return '<article class="screen screen-narrow content-page" aria-labelledby="teacher-title"><p class="eyebrow">Guía docente</p><h1 id="teacher-title">Pilotaje y conocimiento general</h1><p class="lead">Experiencia para estudiantes de 10 a 12 años que combina coordinación visomotora, atención sostenida y recuperación de conocimientos.</p><section class="card"><h2>Progresión</h2><ul><li>El banco contiene 100 preguntas repartidas en cinco niveles.</li><li>Cada dos portales cambia el sector y aumenta el nivel cognitivo.</li><li>La dificultad se adapta: una buena racha acelera el reto y los choques activan ayuda temporal.</li><li>Cada diez niveles, la estación permite tomar una decisión sencilla de administración de recursos.</li><li>Los cristales refuerzan aciertos y coordinación, sin dinero real, publicidad ni ventaja académica.</li><li>El tutorial y el modo práctica permiten aprender sin castigo.</li></ul></section><section><h2>Áreas</h2><div class="knowledge-chips"><span>🪐 Espacio</span><span>🌱 Ciencias</span><span>🌎 Geografía</span><span>✖️ Matemáticas</span><span>📚 Lenguaje</span><span>🤝 Convivencia</span></div></section><section class="callout"><h2>Uso sugerido</h2><p>Realice intentos de 5 a 10 minutos. Use primero el tutorial, luego práctica y finalmente misión. La bitácora final ayuda a conversar sobre lo aprendido; el récord y la personalización son motivación personal, no una calificación.</p></section><div class="button-row"><a class="button secondary" href="informe-actividad-1.html">Documento académico</a><button class="button primary" data-nav="home">Volver</button></div></article>';
+  return '<article class="screen screen-narrow content-page" aria-labelledby="teacher-title"><p class="eyebrow">Guía docente</p><h1 id="teacher-title">Pilotaje y conocimiento general</h1><p class="lead">Experiencia para estudiantes de 10 a 12 años que combina coordinación visomotora, atención sostenida y recuperación de conocimientos.</p><section class="card"><h2>Progresión</h2><ul><li>El banco contiene 100 preguntas repartidas en cinco niveles.</li><li>Cada dos portales cambia el sector y aumenta el nivel cognitivo.</li><li>La dificultad se adapta y las señales de carril anticipan el peligro sin resolver el pilotaje.</li><li>Cada diez niveles, la estación permite tomar una decisión sencilla de administración de recursos.</li><li>La Liga Galáctica conserva un mejor resultado por piloto, solo acepta misiones reales y se reinicia con cada actualización.</li><li>Los cristales desbloquean personalización cosmética, sin dinero real ni ventaja académica.</li><li>El tutorial y el modo práctica permiten aprender sin castigo.</li></ul></section><section><h2>Áreas</h2><div class="knowledge-chips"><span>🪐 Espacio</span><span>🌱 Ciencias</span><span>🌎 Geografía</span><span>✖️ Matemáticas</span><span>📚 Lenguaje</span><span>🤝 Convivencia</span></div></section><section class="callout"><h2>Uso sugerido</h2><p>Realice intentos de 5 a 10 minutos. Use primero el tutorial, luego práctica y finalmente misión. La clasificación es local al dispositivo y sirve como motivación lúdica, no como calificación.</p></section><div class="button-row"><a class="button secondary" href="informe-actividad-1.html">Documento académico</a><button class="button primary" data-nav="home">Volver</button></div></article>';
 }
 
 function renderCredits() {
-  return '<article class="screen screen-narrow content-page" aria-labelledby="credits-title"><p class="eyebrow">Créditos</p><h1 id="credits-title">Misión Nébula</h1><div class="card"><p class="lead"><strong>Diseñado y desarrollado por Danilo Olarte González.</strong></p><p>Maestría en Educación · Corporación Universitaria Iberoamericana.</p><p>Electiva Creatividad e Innovación Educativa · Actividad 1, “Jugando enseño a crear”.</p></div><section class="callout"><h2>Privacidad</h2><p>No utiliza cuentas, publicidad, dinero real ni analítica. Solo guarda en este dispositivo el récord, los logros, los cristales, las naves compradas, el tutorial y los ajustes elegidos.</p></section><div class="button-row"><button class="button primary" data-nav="home">Volver</button></div></article>';
+  return '<article class="screen screen-narrow content-page" aria-labelledby="credits-title"><p class="eyebrow">Créditos</p><h1 id="credits-title">Misión Nébula</h1><div class="card"><p class="lead"><strong>Diseñado y desarrollado por Danilo Olarte González.</strong></p><p>Maestría en Educación · Corporación Universitaria Iberoamericana.</p><p>Electiva Creatividad e Innovación Educativa · Actividad 1, “Jugando enseño a crear”.</p></div><section class="callout"><h2>Privacidad</h2><p>No utiliza cuentas, publicidad, dinero real ni analítica. El nombre opcionalmente recordado, la clasificación, el récord, los logros, los cristales y la personalización permanecen únicamente en este dispositivo.</p></section><div class="button-row"><button class="button primary" data-nav="home">Volver</button></div></article>';
 }
 
 function bindShop() {
-  document.querySelectorAll('[data-buy-skin]').forEach((button) => button.addEventListener('click', () => {
-    const id = button.dataset.buySkin;
-    const skin = SHIP_SKINS[id];
-    if (!skin) return;
+  document.querySelectorAll('[data-buy-item]').forEach((button) => button.addEventListener('click', () => {
+    const id = button.dataset.item;
+    const kind = button.dataset.kind;
+    const catalog = kind === 'trail' ? SHIP_TRAILS : SHIP_SKINS;
+    const item = catalog[id];
+    if (!item) return;
     const economy = loadEconomy();
-    if (economy.ownedSkins.includes(id)) return;
-    if (economy.credits < skin.price) {
-      shopMessage = 'Aún faltan ' + (skin.price - economy.credits) + ' cristales para conseguir la nave ' + skin.name + '.';
+    const ownedKey = kind === 'trail' ? 'ownedTrails' : 'ownedSkins';
+    const activeKey = kind === 'trail' ? 'activeTrail' : 'activeSkin';
+    if (economy[ownedKey].includes(id)) return;
+    if (economy.credits < item.price) {
+      shopMessage = 'Te faltan ' + (item.price - economy.credits) + ' cristales para desbloquear ' + item.name + '.';
       playTone('empty');
       render();
       return;
     }
-    economy.credits -= skin.price;
-    economy.ownedSkins.push(id);
-    economy.activeSkin = id;
+    economy.credits -= item.price;
+    economy[ownedKey].push(id);
+    economy[activeKey] = id;
     saveEconomy(economy);
-    shopMessage = '✨ ¡Nave ' + skin.name + ' comprada y equipada!';
+    shopMessage = item.icon + ' ¡' + item.name + ' desbloqueada y activada!';
     playTone('achievement');
     render();
   }));
-  document.querySelectorAll('[data-equip-skin]').forEach((button) => button.addEventListener('click', () => {
-    const id = button.dataset.equipSkin;
+  document.querySelectorAll('[data-equip-item]').forEach((button) => button.addEventListener('click', () => {
+    const id = button.dataset.item;
+    const kind = button.dataset.kind;
+    const catalog = kind === 'trail' ? SHIP_TRAILS : SHIP_SKINS;
+    const ownedKey = kind === 'trail' ? 'ownedTrails' : 'ownedSkins';
+    const activeKey = kind === 'trail' ? 'activeTrail' : 'activeSkin';
     const economy = loadEconomy();
-    if (!SHIP_SKINS[id] || !economy.ownedSkins.includes(id)) return;
-    economy.activeSkin = id;
+    if (!catalog[id] || !economy[ownedKey].includes(id)) return;
+    economy[activeKey] = id;
     saveEconomy(economy);
-    shopMessage = SHIP_SKINS[id].icon + ' Nave ' + SHIP_SKINS[id].name + ' equipada.';
+    shopMessage = catalog[id].icon + ' ' + catalog[id].name + ' está en uso.';
     playTone('complete');
     render();
   }));
 }
 
 function render() {
-  const screens = { home: renderHome, flight: renderFlight, shop: renderShop, instructions: renderInstructions, teacher: renderTeacher, credits: renderCredits };
+  const screens = { home: renderHome, flight: renderFlight, shop: renderShop, ranking: renderRanking, instructions: renderInstructions, teacher: renderTeacher, credits: renderCredits };
   document.body.classList.toggle('flight-route', route === 'flight');
   app.innerHTML = (screens[route] || renderHome)();
   app.querySelectorAll('[data-nav]').forEach((button) => button.addEventListener('click', () => {
-    if (button.dataset.mode) flightMode = button.dataset.mode;
-    setRoute(button.dataset.nav);
+    const navigate = () => {
+      if (button.dataset.mode) flightMode = button.dataset.mode;
+      setRoute(button.dataset.nav);
+    };
+    if (button.dataset.nav === 'flight') requirePilot(navigate);
+    else navigate();
   }));
+  app.querySelectorAll('[data-change-pilot]').forEach((button) => button.addEventListener('click', () => openPilotDialog(() => render())));
   if (route === 'flight') bindFlight();
   if (route === 'shop') bindShop();
   applySettings();
@@ -425,7 +564,8 @@ function startFlightSession() {
   runCrystals = 0;
   stationPurchased = false;
   lastLearnedFact = '';
-  flight.start({ practice: flightMode === 'practice', tutorial: flightMode === 'tutorial', skin: loadEconomy().activeSkin });
+  const economy = loadEconomy();
+  flight.start({ practice: flightMode === 'practice', tutorial: flightMode === 'tutorial', skin: economy.activeSkin, trail: economy.activeTrail });
   startMusic(1);
   playTone('complete');
   const message = flightMode === 'practice' ? '🧪 PRÁCTICA ACTIVA · AQUÍ APRENDEMOS' : flightMode === 'tutorial' ? '🎮 SIGUE A NOVA, TU GUÍA' : '🎵 MÚSICA ESPACIAL ACTIVADA';
@@ -448,13 +588,13 @@ function showStation(progress) {
   stationPurchased = false;
   flight.enterStation();
   document.getElementById('station-level').textContent = '✨ NIVEL ' + progress.completedLevel + ' SUPERADO';
-  document.getElementById('station-title').textContent = 'Mercado Nova-' + progress.completedLevel;
+  document.getElementById('station-title').textContent = 'Estación Nova-' + progress.completedLevel;
   document.getElementById('station-result').textContent = 'Ganaste acceso a la estación. Elige una ayuda o guarda tus cristales.';
   updateCrystalDisplays();
   refreshStationButtons();
   panel.hidden = false;
   playTone('achievement');
-  announce('Llegaste al Mercado Nova. Puedes elegir una mejora o continuar la misión.');
+  announce('Llegaste a la Estación Nova. Puedes elegir una mejora o continuar la misión.');
   panel.querySelector('button:not([disabled])')?.focus();
 }
 
@@ -592,12 +732,15 @@ function answerQuestion(selectedIndex) {
 
 function showGameOver(result) {
   stopMusic();
+  const rankingPosition = recordRanking(result);
+  const pilotName = getPilotName() || 'Piloto';
   const best = Math.max(result.distance, Number(localStorage.getItem('nebula-flight-best') || 0));
   localStorage.setItem('nebula-flight-best', String(best));
   const overlay = document.getElementById('flight-overlay');
   const fact = lastLearnedFact ? '<div class="learned-fact"><span>💡</span><p><small>HOY APRENDISTE</small><strong>' + escapeHtml(lastLearnedFact) + '</strong></p></div>' : '';
   const achievementNote = runAchievements.length ? '<p class="run-achievements">🏅 Desbloqueaste ' + runAchievements.length + (runAchievements.length === 1 ? ' logro nuevo' : ' logros nuevos') + '</p>' : '';
-  overlay.innerHTML = '<div class="overlay-card stranded-card"><div class="stranded-icon" aria-hidden="true">🛰️</div><p class="eyebrow">Bitácora de vuelo</p><h2>¡Gran intento, piloto!</h2><p>' + escapeHtml(result.reason) + '</p><div class="flight-summary"><span><b>' + result.distance + '</b> km<small>Distancia</small></span><span><b>' + result.correct + '</b><small>Respuestas</small></span><span><b>' + result.bestStreak + '</b><small>Mejor racha</small></span><span><b>' + result.destroyed + '</b><small>Destruidos</small></span><span><b>' + result.checkpoints + '</b><small>Portales</small></span><span><b>' + best + '</b> km<small>Récord</small></span><span><b>+' + runCrystals + ' 💎</b><small>Cristales ganados</small></span></div>' + fact + achievementNote + '<div class="summary-actions"><button class="button primary launch-button" id="restart-flight">🚀 Intentar otra vez</button><button class="button ghost" id="practice-after-game">🧪 Practicar</button><button class="button ghost" id="shop-after-game">🛍️ Bazar</button><button class="button text-button" data-nav="home">Salir</button></div></div>';
+  const rankingNote = rankingPosition ? '<p class="ranking-result">🏆 ' + escapeHtml(pilotName) + ', ocupas el puesto <strong>#' + rankingPosition + '</strong> de la Liga Galáctica</p>' : '';
+  overlay.innerHTML = '<div class="overlay-card stranded-card"><div class="stranded-icon" aria-hidden="true">🛰️</div><p class="eyebrow">Bitácora de ' + escapeHtml(pilotName) + '</p><h2>¡Gran intento, piloto!</h2><p>' + escapeHtml(result.reason) + '</p><div class="flight-summary"><span><b>' + result.distance + '</b> km<small>Distancia</small></span><span><b>' + result.correct + '</b><small>Respuestas</small></span><span><b>' + result.bestStreak + '</b><small>Mejor racha</small></span><span><b>' + result.destroyed + '</b><small>Destruidos</small></span><span><b>' + result.checkpoints + '</b><small>Portales</small></span><span><b>' + best + '</b> km<small>Récord</small></span><span><b>+' + runCrystals + ' 💎</b><small>Cristales ganados</small></span></div>' + rankingNote + fact + achievementNote + '<div class="summary-actions"><button class="button primary launch-button" id="restart-flight">🚀 Intentar otra vez</button><button class="button ranking-button" id="ranking-after-game">🏆 Clasificación</button><button class="button ghost" id="shop-after-game">🛸 Hangar</button><button class="button ghost" id="practice-after-game">🧪 Practicar</button><button class="button text-button" data-nav="home">Salir</button></div></div>';
   overlay.hidden = false;
   overlay.querySelector('#restart-flight').addEventListener('click', () => {
     flightMode = 'mission';
@@ -608,6 +751,7 @@ function showGameOver(result) {
     startFlightSession();
   });
   overlay.querySelector('#shop-after-game').addEventListener('click', () => setRoute('shop'));
+  overlay.querySelector('#ranking-after-game').addEventListener('click', () => setRoute('ranking'));
   overlay.querySelector('[data-nav]').addEventListener('click', () => setRoute('home'));
   announce('Misión terminada. Revisa tu bitácora y vuelve a intentarlo cuando quieras.');
 }
@@ -740,6 +884,27 @@ document.querySelectorAll('.site-header [data-nav]').forEach((button) => button.
   event.preventDefault();
   setRoute(button.dataset.nav);
 }));
+document.getElementById('pilot-form')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const input = document.getElementById('pilot-name');
+  const name = cleanPilotName(input.value);
+  if (name.length < 2) {
+    document.getElementById('pilot-error').textContent = 'Escribe un nombre o apodo de al menos 2 caracteres.';
+    input.focus();
+    return;
+  }
+  savePilot(name, document.getElementById('remember-pilot').checked);
+  pilotDialog.close();
+  playTone('achievement');
+  const action = pendingPilotAction;
+  pendingPilotAction = null;
+  if (action) action();
+  else render();
+});
+pilotDialog?.addEventListener('cancel', (event) => {
+  if (!getPilotName()) event.preventDefault();
+  else pendingPilotAction = null;
+});
 document.querySelectorAll('[data-open-settings]').forEach((button) => button.addEventListener('click', () => {
   settingsDialog.dataset.resumeMusic = ['running', 'quiz', 'station'].includes(flight?.mode) ? 'true' : 'false';
   settingsDialog.dataset.resumeFlight = flight?.mode === 'running' ? 'true' : 'false';
@@ -785,4 +950,6 @@ bindSettings(document);
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('./sw.js').catch((error) => console.warn('El modo sin conexión no pudo activarse.', error));
 }
+purgePreviousRankings();
 render();
+if (!getPilotName()) window.setTimeout(() => { if (!getPilotName() && !pilotDialog?.open) openPilotDialog(); }, 180);

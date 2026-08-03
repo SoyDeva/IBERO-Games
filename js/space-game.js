@@ -4,7 +4,16 @@ export const SHIP_SKINS = Object.freeze({
   nebula: { name: 'Nébula', icon: '🚀', price: 0, body: '#e9efff', wing: '#8d73ff', glass: '#54def2', flame: '#5ee8ef', glow: '#5ee8ef', description: 'El uniforme clásico de la Asteria.' },
   solar: { name: 'Solar', icon: '☀️', price: 75, body: '#fff2bd', wing: '#ff8b45', glass: '#ffd95e', flame: '#ff6d7d', glow: '#f7cb62', description: 'Brilla como una pequeña estrella.' },
   aqua: { name: 'Aqua', icon: '🌊', price: 105, body: '#dffff7', wing: '#20bfa9', glass: '#79f4ff', flame: '#57e0a0', glow: '#5ee8ef', description: 'Tecnología del Cinturón Helado.' },
-  aurora: { name: 'Aurora', icon: '🌈', price: 150, body: '#ffe8f5', wing: '#ff6fb2', glass: '#bda5ff', flame: '#f7cb62', glow: '#ff7bac', description: 'Una nave legendaria llena de color.' }
+  aurora: { name: 'Aurora', icon: '🌈', price: 150, body: '#ffe8f5', wing: '#ff6fb2', glass: '#bda5ff', flame: '#f7cb62', glow: '#ff7bac', description: 'Una nave legendaria llena de color.' },
+  guardian: { name: 'Guardiana', icon: '🛡️', price: 190, body: '#e4fff3', wing: '#34c77b', glass: '#f7cb62', flame: '#73ffd1', glow: '#57e0a0', description: 'La protectora esmeralda de los portales.' },
+  eclipse: { name: 'Eclipse', icon: '🌑', price: 240, body: '#d9d2ff', wing: '#50378e', glass: '#ff7bac', flame: '#b181ff', glow: '#b181ff', description: 'Tecnología secreta nacida en el vacío.' }
+});
+export const SHIP_TRAILS = Object.freeze({
+  pulse: { name: 'Pulso Nébula', icon: '💫', price: 0, primary: '#5ee8ef', secondary: '#8d73ff', description: 'La estela clásica de energía azul.' },
+  comet: { name: 'Cometa Dorado', icon: '☄️', price: 45, primary: '#fff2a8', secondary: '#ff8b45', description: 'Chispas doradas que cruzan el cosmos.' },
+  ion: { name: 'Tormenta Iónica', icon: '⚡', price: 70, primary: '#d896ff', secondary: '#5ee8ef', description: 'Un rastro eléctrico violeta y turquesa.' },
+  nature: { name: 'Aurora Viva', icon: '🌿', price: 95, primary: '#73ffd1', secondary: '#f7cb62', description: 'Partículas verdes inspiradas en la vida.' },
+  rainbow: { name: 'Prisma Estelar', icon: '🌈', price: 130, primary: '#ff7bac', secondary: '#f7cb62', description: 'Una estela especial que cambia de color.' }
 });
 const SECTORS = [
   { name: 'Nebulosa Violeta', icon: '🌌', top: '#09041f', middle: '#21125b', bottom: '#08051b', glow: '124,78,255', route: '94,232,239' },
@@ -59,6 +68,7 @@ export class SpaceFlight {
     this.collisionsThisLeg = 0;
     this.celebrationParticles = [];
     this.shipSkin = 'nebula';
+    this.shipTrail = 'pulse';
     this.stationSlowdown = 0;
     this.lastFrame = performance.now();
     this.stars = Array.from({ length: 105 }, () => this.createStar());
@@ -98,6 +108,7 @@ export class SpaceFlight {
     this.tutorial = Boolean(options.tutorial);
     this.tutorialStep = this.tutorial ? 'left' : '';
     this.shipSkin = SHIP_SKINS[options.skin] ? options.skin : 'nebula';
+    this.shipTrail = SHIP_TRAILS[options.trail] ? options.trail : 'pulse';
     this.lane = 0;
     this.lanePosition = 0;
     this.fuel = this.practice ? 78 : 62;
@@ -144,9 +155,12 @@ export class SpaceFlight {
     if (this.mode === 'station') this.mode = 'running';
   }
 
-  moveLane(direction) {
+  setLane(target) {
     if (this.mode !== 'running') return;
-    this.lane = clamp(this.lane + direction, -1, 1);
+    const previousLane = this.lane;
+    this.lane = clamp(Math.round(target), -1, 1);
+    const direction = Math.sign(this.lane - previousLane);
+    if (!direction) return;
     this.callbacks.onSteer?.(this.lane);
     if (this.tutorial && this.tutorialStep === 'left' && direction < 0) {
       this.tutorialStep = 'right';
@@ -157,6 +171,10 @@ export class SpaceFlight {
       this.obstacles = [{ type: 'meteor', lane: 0, depth: .2, spin: 0, spinSpeed: 1.2, speedFactor: .42, size: 1.05, hit: false, tutorialTarget: true }];
       this.callbacks.onTutorialStep?.({ step: 'fire' });
     }
+  }
+
+  moveLane(direction) {
+    this.setLane(this.lane + Math.sign(direction));
   }
 
   fire() {
@@ -192,7 +210,8 @@ export class SpaceFlight {
   onPointer(event) {
     if (this.mode !== 'running') return;
     const rect = this.canvas.getBoundingClientRect();
-    this.moveLane(event.clientX < rect.left + rect.width / 2 ? -1 : 1);
+    const position = (event.clientX - rect.left) / Math.max(1, rect.width);
+    this.setLane(position < 1 / 3 ? -1 : position > 2 / 3 ? 1 : 0);
   }
 
   answerCorrect() {
@@ -312,7 +331,7 @@ export class SpaceFlight {
 
   update(delta) {
     this.elapsed += delta;
-    this.lanePosition += (this.lane - this.lanePosition) * Math.min(1, delta * 8);
+    this.lanePosition += (this.lane - this.lanePosition) * Math.min(1, delta * 11);
     const difficulty = this.getDifficulty();
     const distanceRate = 17 + this.checkpoints * 1.8;
     if (!this.tutorial) {
@@ -352,7 +371,7 @@ export class SpaceFlight {
     }
     this.updateProjectiles(delta);
     for (const obstacle of this.obstacles) {
-      if (!obstacle.hit && !obstacle.tutorialTarget && this.invulnerable <= 0 && obstacle.depth > .86 && obstacle.depth < .99 && Math.abs(obstacle.lane - this.lanePosition) < .4) {
+      if (!obstacle.hit && !obstacle.tutorialTarget && this.invulnerable <= 0 && obstacle.depth > .87 && obstacle.depth < .99 && Math.abs(obstacle.lane - this.lanePosition) < .34) {
         obstacle.hit = true;
         this.collide(obstacle);
       }
@@ -421,7 +440,7 @@ export class SpaceFlight {
   spawnWave() {
     const difficulty = this.getDifficulty();
     const lanes = [...LANES].sort(() => Math.random() - .5);
-    const count = Math.random() < difficulty.pairChance ? 2 : 1;
+    const count = this.checkpoints >= 2 && Math.random() < difficulty.pairChance ? 2 : 1;
     for (let index = 0; index < count; index += 1) {
       this.obstacles.push({
         type: OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)],
@@ -442,8 +461,8 @@ export class SpaceFlight {
     this.collisionsThisLeg += 1;
     this.correctStreak = 0;
     this.adaptiveAssist = Math.min(.16, this.adaptiveAssist + .038);
-    this.invulnerable = .85;
-    this.fuel = Math.max(0, this.fuel - 14);
+    this.invulnerable = 1.05;
+    this.fuel = Math.max(0, this.fuel - 12);
     this.shake = 1;
     this.flash = -.7;
     this.explosions.push({ lane: obstacle.lane, depth: obstacle.depth, age: 0, seed: Math.random() * Math.PI * 2 });
@@ -538,6 +557,7 @@ export class SpaceFlight {
     if (this.shake > 0) ctx.translate((Math.random() - .5) * 14 * this.shake, (Math.random() - .5) * 10 * this.shake);
     this.drawSpace(ctx);
     this.drawRoute(ctx);
+    this.drawLaneSignals(ctx);
     this.drawCheckpoint(ctx);
     const sorted = [...this.obstacles].sort((a, b) => a.depth - b.depth);
     sorted.filter((obstacle) => obstacle.depth <= .92).forEach((obstacle) => this.drawObstacle(ctx, obstacle));
@@ -620,6 +640,43 @@ export class SpaceFlight {
       ctx.lineTo(this.width / 2 + half, y);
       ctx.stroke();
     }
+  }
+
+  drawLaneSignals(ctx) {
+    if (this.mode !== 'running') return;
+    const threats = this.obstacles.filter((obstacle) => !obstacle.hit && !obstacle.tutorialTarget && obstacle.depth > .58 && obstacle.depth < .84);
+    if (!threats.length) return;
+    const blocked = new Set(threats.map((obstacle) => obstacle.lane));
+    ctx.save();
+    for (const lane of blocked) {
+      const point = this.project(lane, .9);
+      const pulse = .55 + Math.sin(this.elapsed * 9) * .18;
+      ctx.fillStyle = `rgba(255,109,125,${pulse})`;
+      ctx.shadowColor = '#ff6d7d';
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y - 28);
+      ctx.lineTo(point.x - 17, point.y + 2);
+      ctx.lineTo(point.x + 17, point.y + 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 18px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('!', point.x, point.y - 5);
+    }
+    if (blocked.size === 2) {
+      const safeLane = LANES.find((lane) => !blocked.has(lane));
+      const point = this.project(safeLane, .9);
+      ctx.strokeStyle = 'rgba(87,224,160,.88)';
+      ctx.shadowColor = '#57e0a0';
+      ctx.shadowBlur = 20;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y - 12, 24 + Math.sin(this.elapsed * 7) * 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   drawCheckpoint(ctx) {
@@ -848,6 +905,7 @@ export class SpaceFlight {
 
   drawShip(ctx) {
     const skin = SHIP_SKINS[this.shipSkin] || SHIP_SKINS.nebula;
+    const trail = SHIP_TRAILS[this.shipTrail] || SHIP_TRAILS.pulse;
     const x = this.width / 2 + this.lanePosition * this.width * .27;
     const mobileCockpit = this.width <= 850;
     const mobileShipHeight = this.height < 380 ? .55 : this.height < 520 ? .66 : .72;
@@ -868,15 +926,28 @@ export class SpaceFlight {
       ctx.restore();
     }
     const flame = 20 + Math.sin(this.elapsed * 18) * 6;
-    ctx.shadowColor = skin.glow;
+    ctx.shadowColor = trail.secondary;
     ctx.shadowBlur = 25;
-    ctx.fillStyle = skin.flame;
+    const trailGradient = ctx.createLinearGradient(0, size * .42, 0, size * .48 + flame);
+    trailGradient.addColorStop(0, trail.primary);
+    trailGradient.addColorStop(1, trail.secondary);
+    ctx.fillStyle = trailGradient;
     ctx.beginPath();
     ctx.moveTo(-size * .2, size * .48);
     ctx.lineTo(0, size * .48 + flame);
     ctx.lineTo(size * .2, size * .48);
     ctx.closePath();
     ctx.fill();
+    for (let spark = 0; spark < 4; spark += 1) {
+      const drift = Math.sin(this.elapsed * (8 + spark) + spark * 2.1) * size * .18;
+      const fall = size * (.62 + spark * .16 + (this.elapsed * .8 % .16));
+      ctx.fillStyle = spark % 2 ? trail.primary : trail.secondary;
+      ctx.globalAlpha = .72 - spark * .12;
+      ctx.beginPath();
+      ctx.arc(drift, fall, Math.max(2, size * (.045 - spark * .006)), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
     ctx.shadowBlur = 12;
     ctx.fillStyle = skin.body;
     ctx.beginPath();
