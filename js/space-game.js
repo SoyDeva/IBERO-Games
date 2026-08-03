@@ -1,5 +1,12 @@
 const LANES = [-1, 0, 1];
 const OBSTACLE_TYPES = ['planet', 'meteor', 'star', 'ship'];
+const SECTORS = [
+  { name: 'Nebulosa Violeta', icon: '🌌', top: '#09041f', middle: '#21125b', bottom: '#08051b', glow: '124,78,255', route: '94,232,239' },
+  { name: 'Cinturón Helado', icon: '❄️', top: '#031a32', middle: '#0d4c6f', bottom: '#071524', glow: '94,232,239', route: '151,225,255' },
+  { name: 'Galaxia Roja', icon: '🔥', top: '#260414', middle: '#681c3b', bottom: '#170510', glow: '255,83,125', route: '255,190,104' },
+  { name: 'Zona Alienígena', icon: '👽', top: '#041d18', middle: '#17523f', bottom: '#06120f', glow: '87,224,160', route: '174,255,113' },
+  { name: 'Vacío Dorado', icon: '✨', top: '#211503', middle: '#594113', bottom: '#130d03', glow: '247,203,98', route: '255,232,147' }
+];
 
 function clamp(value, minimum, maximum) {
   return Math.max(minimum, Math.min(maximum, value));
@@ -33,6 +40,18 @@ export class SpaceFlight {
     this.shake = 0;
     this.flash = 0;
     this.weaponPulse = 0;
+    this.practice = false;
+    this.tutorial = false;
+    this.tutorialStep = '';
+    this.invulnerable = 0;
+    this.adaptiveAssist = 0;
+    this.correctStreak = 0;
+    this.bestStreak = 0;
+    this.totalCorrect = 0;
+    this.destroyed = 0;
+    this.totalCollisions = 0;
+    this.collisionsThisLeg = 0;
+    this.celebrationParticles = [];
     this.lastFrame = performance.now();
     this.stars = Array.from({ length: 105 }, () => this.createStar());
     this.boundFrame = (time) => this.frame(time);
@@ -65,15 +84,18 @@ export class SpaceFlight {
     this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
   }
 
-  start() {
+  start(options = {}) {
     this.mode = 'running';
+    this.practice = Boolean(options.practice);
+    this.tutorial = Boolean(options.tutorial);
+    this.tutorialStep = this.tutorial ? 'left' : '';
     this.lane = 0;
     this.lanePosition = 0;
-    this.fuel = 62;
+    this.fuel = this.practice ? 78 : 62;
     this.hull = 3;
     this.distance = 0;
     this.checkpoints = 0;
-    this.nextCheckpoint = 280;
+    this.nextCheckpoint = this.tutorial ? 99999 : 280;
     this.ammo = 3;
     this.obstacles = [];
     this.projectiles = [];
@@ -83,7 +105,17 @@ export class SpaceFlight {
     this.shake = 0;
     this.flash = 0;
     this.weaponPulse = 0;
+    this.invulnerable = 0;
+    this.adaptiveAssist = 0;
+    this.correctStreak = 0;
+    this.bestStreak = 0;
+    this.totalCorrect = 0;
+    this.destroyed = 0;
+    this.totalCollisions = 0;
+    this.collisionsThisLeg = 0;
+    this.celebrationParticles = [];
     this.emitHud();
+    if (this.tutorial) this.callbacks.onTutorialStep?.({ step: 'left' });
   }
 
   pause() {
@@ -98,10 +130,20 @@ export class SpaceFlight {
     if (this.mode !== 'running') return;
     this.lane = clamp(this.lane + direction, -1, 1);
     this.callbacks.onSteer?.(this.lane);
+    if (this.tutorial && this.tutorialStep === 'left' && direction < 0) {
+      this.tutorialStep = 'right';
+      this.callbacks.onTutorialStep?.({ step: 'right' });
+    } else if (this.tutorial && this.tutorialStep === 'right' && direction > 0) {
+      this.lane = 0;
+      this.tutorialStep = 'fire';
+      this.obstacles = [{ type: 'meteor', lane: 0, depth: .2, spin: 0, spinSpeed: 1.2, speedFactor: .42, size: 1.05, hit: false, tutorialTarget: true }];
+      this.callbacks.onTutorialStep?.({ step: 'fire' });
+    }
   }
 
   fire() {
     if (this.mode !== 'running') return false;
+    if (this.tutorial && this.tutorialStep !== 'fire') return false;
     if (this.ammo <= 0) {
       this.callbacks.onEmptyFire?.();
       return false;
@@ -137,20 +179,65 @@ export class SpaceFlight {
 
   answerCorrect() {
     if (this.mode !== 'quiz') return;
+    const previousSector = this.getSectorIndex();
     this.checkpoints += 1;
+    this.totalCorrect += 1;
+    this.correctStreak += 1;
+    this.bestStreak = Math.max(this.bestStreak, this.correctStreak);
+    this.adaptiveAssist = Math.max(0, this.adaptiveAssist - (this.collisionsThisLeg === 0 ? .025 : .012));
+    this.collisionsThisLeg = 0;
     this.fuel = Math.min(100, this.fuel + 38);
     this.nextCheckpoint += 330 + this.checkpoints * 12;
     this.spawnTimer = 2;
     this.flash = 1;
+    this.createCelebration();
     this.mode = 'running';
     this.callbacks.onLevelUp?.({ level: this.checkpoints + 1 });
+    if (this.getSectorIndex() !== previousSector) this.callbacks.onSectorChange?.(this.getSector());
     this.emitHud();
+  }
+
+  answerPracticeMistake() {
+    if (this.mode !== 'quiz' || !this.practice) return;
+    const previousSector = this.getSectorIndex();
+    this.checkpoints += 1;
+    this.correctStreak = 0;
+    this.adaptiveAssist = Math.min(.16, this.adaptiveAssist + .04);
+    this.collisionsThisLeg = 0;
+    this.fuel = Math.min(100, this.fuel + 24);
+    this.nextCheckpoint += 330 + this.checkpoints * 12;
+    this.spawnTimer = 2.25;
+    this.mode = 'running';
+    this.callbacks.onLevelUp?.({ level: this.checkpoints + 1 });
+    if (this.getSectorIndex() !== previousSector) this.callbacks.onSectorChange?.(this.getSector());
+    this.emitHud();
+  }
+
+  finishTutorial() {
+    this.tutorial = false;
+    this.tutorialStep = 'complete';
+    this.mode = 'paused';
+    this.createCelebration(64);
+    this.callbacks.onTutorialComplete?.();
   }
 
   strand(reason) {
     if (this.mode === 'gameover') return;
     this.mode = 'gameover';
-    this.callbacks.onGameOver?.({ reason, distance: Math.round(this.distance), checkpoints: this.checkpoints });
+    this.callbacks.onGameOver?.({ reason, ...this.getSummary() });
+  }
+
+  getSummary() {
+    return {
+      distance: Math.round(this.distance),
+      checkpoints: this.checkpoints,
+      correct: this.totalCorrect,
+      bestStreak: this.bestStreak,
+      destroyed: this.destroyed,
+      collisions: this.totalCollisions,
+      sector: this.getSector().name,
+      practice: this.practice
+    };
   }
 
   frame(time) {
@@ -158,6 +245,7 @@ export class SpaceFlight {
     this.lastFrame = time;
     this.updateStars(delta, this.mode === 'running' ? 1 : .18);
     if (this.mode === 'running') this.update(delta);
+    this.updateCelebration(delta);
     this.draw();
     this.frameId = requestAnimationFrame(this.boundFrame);
   }
@@ -174,20 +262,31 @@ export class SpaceFlight {
     this.lanePosition += (this.lane - this.lanePosition) * Math.min(1, delta * 8);
     const difficulty = this.getDifficulty();
     const distanceRate = 17 + this.checkpoints * 1.8;
-    this.distance += distanceRate * delta;
-    this.fuel = Math.max(0, this.fuel - delta * (1.05 + this.checkpoints * .035));
+    if (!this.tutorial) {
+      this.distance += distanceRate * delta;
+      this.fuel = Math.max(0, this.fuel - delta * (1.05 + this.checkpoints * .035) * (this.practice ? .7 : 1));
+    }
     this.flash = Math.max(0, this.flash - delta * 1.8);
     this.shake = Math.max(0, this.shake - delta * 2.5);
     this.weaponPulse = Math.max(0, this.weaponPulse - delta * 5);
+    this.invulnerable = Math.max(0, this.invulnerable - delta);
 
     if (this.fuel <= 0) {
+      if (this.practice) {
+        this.fuel = 45;
+        this.hull = Math.max(1, this.hull);
+        this.adaptiveAssist = Math.min(.16, this.adaptiveAssist + .05);
+        this.callbacks.onPracticeRescue?.({ reason: 'fuel' });
+        this.emitHud();
+        return;
+      }
       this.strand('Se terminó el combustible antes de llegar al puesto de recarga.');
       return;
     }
 
     const remaining = this.nextCheckpoint - this.distance;
     this.spawnTimer -= delta;
-    if (this.spawnTimer <= 0 && remaining > 65) {
+    if (!this.tutorial && this.spawnTimer <= 0 && remaining > 65) {
       this.spawnWave();
       this.spawnTimer = difficulty.spawnInterval + Math.random() * .32;
     }
@@ -195,11 +294,12 @@ export class SpaceFlight {
     for (const obstacle of this.obstacles) {
       obstacle.previousDepth = obstacle.depth;
       obstacle.depth += delta * difficulty.obstacleSpeed * obstacle.speedFactor;
+      if (obstacle.tutorialTarget && obstacle.depth > .66) obstacle.depth = .66;
       obstacle.spin += delta * obstacle.spinSpeed;
     }
     this.updateProjectiles(delta);
     for (const obstacle of this.obstacles) {
-      if (!obstacle.hit && obstacle.depth > .86 && obstacle.depth < .99 && Math.abs(obstacle.lane - this.lanePosition) < .4) {
+      if (!obstacle.hit && !obstacle.tutorialTarget && this.invulnerable <= 0 && obstacle.depth > .86 && obstacle.depth < .99 && Math.abs(obstacle.lane - this.lanePosition) < .4) {
         obstacle.hit = true;
         this.collide(obstacle);
       }
@@ -217,22 +317,34 @@ export class SpaceFlight {
       return;
     }
 
-    if (this.distance >= this.nextCheckpoint) {
+    if (!this.tutorial && this.distance >= this.nextCheckpoint) {
       this.mode = 'quiz';
       this.obstacles = [];
       this.projectiles = [];
-      this.callbacks.onCheckpoint?.({ number: this.checkpoints + 1, fuel: Math.round(this.fuel) });
+      this.callbacks.onCheckpoint?.({ number: this.checkpoints + 1, fuel: Math.round(this.fuel), clean: this.collisionsThisLeg === 0 });
     }
     this.emitHud();
   }
 
   getDifficulty() {
+    const introEase = this.checkpoints < 2 ? (2 - this.checkpoints) * .045 : 0;
+    const hullAssist = Math.max(0, 3 - this.hull) * .018;
+    const practiceEase = this.practice ? .075 : 0;
+    const streakPressure = Math.min(.045, this.correctStreak * .009);
     return {
       level: this.checkpoints + 1,
-      obstacleSpeed: Math.min(.7, .36 + this.checkpoints * .042),
-      spawnInterval: Math.max(.62, 1.42 - this.checkpoints * .085),
-      pairChance: Math.min(.82, .12 + this.checkpoints * .115)
+      obstacleSpeed: clamp(.36 + this.checkpoints * .042 - introEase - this.adaptiveAssist - hullAssist - practiceEase + streakPressure, .26, .7),
+      spawnInterval: clamp(1.42 - this.checkpoints * .085 + introEase * 1.8 + this.adaptiveAssist + practiceEase - streakPressure, .62, 1.75),
+      pairChance: clamp(.12 + this.checkpoints * .115 - this.adaptiveAssist * .8 - practiceEase, .08, .82)
     };
+  }
+
+  getSectorIndex() {
+    return Math.min(SECTORS.length - 1, Math.floor(this.checkpoints / 2));
+  }
+
+  getSector() {
+    return { ...SECTORS[this.getSectorIndex()], index: this.getSectorIndex() };
   }
 
   updateProjectiles(delta) {
@@ -273,22 +385,40 @@ export class SpaceFlight {
 
   collide(obstacle) {
     this.hull -= 1;
+    this.totalCollisions += 1;
+    this.collisionsThisLeg += 1;
+    this.correctStreak = 0;
+    this.adaptiveAssist = Math.min(.16, this.adaptiveAssist + .038);
+    this.invulnerable = .85;
     this.fuel = Math.max(0, this.fuel - 14);
     this.shake = 1;
     this.flash = -.7;
     this.explosions.push({ lane: obstacle.lane, depth: obstacle.depth, age: 0, seed: Math.random() * Math.PI * 2 });
     const names = { planet: 'un planeta', meteor: 'un meteorito', star: 'una estrella ardiente', ship: 'otra nave' };
     this.callbacks.onCollision?.({ name: names[obstacle.type], hull: this.hull });
-    if (this.hull <= 0) this.strand('La nave recibió demasiados golpes y quedó varada.');
+    if (this.hull <= 0) {
+      if (this.practice) {
+        this.hull = 3;
+        this.fuel = Math.max(48, this.fuel);
+        this.callbacks.onPracticeRescue?.({ reason: 'hull' });
+      } else {
+        this.strand('La nave recibió demasiados golpes y quedó varada.');
+      }
+    }
   }
 
   destroyObstacle(obstacle) {
     obstacle.hit = true;
+    this.destroyed += 1;
     this.flash = Math.max(this.flash, .72);
     this.shake = Math.max(this.shake, .24);
     this.explosions.push({ lane: obstacle.lane, depth: obstacle.depth, age: 0, duration: .95, seed: Math.random() * Math.PI * 2, kind: 'plasma', type: obstacle.type });
     const names = { planet: 'PLANETA', meteor: 'METEORITO', star: 'ESTRELLA', ship: 'NAVE RIVAL' };
     this.callbacks.onDestroy?.({ name: names[obstacle.type], ammo: this.ammo, type: obstacle.type });
+    if (this.tutorial && this.tutorialStep === 'fire') {
+      this.tutorialStep = 'question';
+      this.callbacks.onTutorialStep?.({ step: 'question' });
+    }
   }
 
   emitHud() {
@@ -300,8 +430,42 @@ export class SpaceFlight {
       remaining: Math.max(0, Math.round(this.nextCheckpoint - this.distance)),
       level: this.checkpoints + 1,
       speed: Math.round(this.getDifficulty().obstacleSpeed * 100),
-      ammo: this.ammo
+      ammo: this.ammo,
+      streak: this.correctStreak,
+      sector: this.getSector(),
+      practice: this.practice
     });
+  }
+
+  createCelebration(count = 46) {
+    const colors = ['#5ee8ef', '#f7cb62', '#ff7bac', '#8d73ff', '#57e0a0', '#ffffff'];
+    for (let index = 0; index < count; index += 1) {
+      this.celebrationParticles.push({
+        x: this.width * (.18 + Math.random() * .64),
+        y: this.height * (.16 + Math.random() * .25),
+        vx: (Math.random() - .5) * 150,
+        vy: -40 + Math.random() * 95,
+        gravity: 80 + Math.random() * 80,
+        age: 0,
+        duration: 1.2 + Math.random() * .8,
+        size: 3 + Math.random() * 6,
+        spin: Math.random() * Math.PI * 2,
+        spinSpeed: (Math.random() - .5) * 8,
+        color: colors[index % colors.length],
+        star: index % 5 === 0
+      });
+    }
+  }
+
+  updateCelebration(delta) {
+    this.celebrationParticles.forEach((particle) => {
+      particle.age += delta;
+      particle.x += particle.vx * delta;
+      particle.y += particle.vy * delta;
+      particle.vy += particle.gravity * delta;
+      particle.spin += particle.spinSpeed * delta;
+    });
+    this.celebrationParticles = this.celebrationParticles.filter((particle) => particle.age < particle.duration);
   }
 
   project(lane, depth) {
@@ -327,6 +491,7 @@ export class SpaceFlight {
     this.drawShip(ctx);
     sorted.filter((obstacle) => obstacle.depth > .92).forEach((obstacle) => this.drawObstacle(ctx, obstacle));
     this.explosions.forEach((explosion) => this.drawExplosion(ctx, explosion));
+    this.drawCelebration(ctx);
     if (this.flash !== 0) {
       ctx.fillStyle = this.flash > 0 ? `rgba(87,224,160,${this.flash * .22})` : `rgba(255,80,110,${Math.abs(this.flash) * .32})`;
       ctx.fillRect(0, 0, this.width, this.height);
@@ -335,16 +500,17 @@ export class SpaceFlight {
   }
 
   drawSpace(ctx) {
+    const sector = this.getSector();
     const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-    gradient.addColorStop(0, '#09041f');
-    gradient.addColorStop(.48, '#151044');
-    gradient.addColorStop(1, '#08051b');
+    gradient.addColorStop(0, sector.top);
+    gradient.addColorStop(.48, sector.middle);
+    gradient.addColorStop(1, sector.bottom);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, this.width, this.height);
 
     const nebula = ctx.createRadialGradient(this.width * .18, this.height * .34, 0, this.width * .18, this.height * .34, this.width * .42);
-    nebula.addColorStop(0, 'rgba(124,78,255,.19)');
-    nebula.addColorStop(1, 'rgba(124,78,255,0)');
+    nebula.addColorStop(0, `rgba(${sector.glow},.23)`);
+    nebula.addColorStop(1, `rgba(${sector.glow},0)`);
     ctx.fillStyle = nebula;
     ctx.fillRect(0, 0, this.width, this.height);
 
@@ -365,6 +531,7 @@ export class SpaceFlight {
   }
 
   drawRoute(ctx) {
+    const sector = this.getSector();
     const horizonY = this.height * .235;
     const bottomY = this.height;
     ctx.beginPath();
@@ -379,7 +546,7 @@ export class SpaceFlight {
     ctx.fillStyle = route;
     ctx.fill();
 
-    ctx.strokeStyle = 'rgba(94,232,239,.22)';
+    ctx.strokeStyle = `rgba(${sector.route},.25)`;
     ctx.lineWidth = 2;
     [-.5, .5].forEach((divider) => {
       ctx.beginPath();
@@ -519,6 +686,38 @@ export class SpaceFlight {
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 3 * Math.max(.45, head.scale);
     ctx.stroke();
+    ctx.restore();
+  }
+
+  drawCelebration(ctx) {
+    if (!this.celebrationParticles.length) return;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const particle of this.celebrationParticles) {
+      const alpha = clamp(1 - particle.age / particle.duration, 0, 1);
+      ctx.save();
+      ctx.translate(particle.x, particle.y);
+      ctx.rotate(particle.spin);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = particle.color;
+      ctx.shadowColor = particle.color;
+      ctx.shadowBlur = 8;
+      if (particle.star) {
+        ctx.beginPath();
+        for (let point = 0; point < 10; point += 1) {
+          const angle = -Math.PI / 2 + point * Math.PI / 5;
+          const radius = point % 2 ? particle.size * .42 : particle.size;
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+          point ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.fillRect(-particle.size * .65, -particle.size * .22, particle.size * 1.3, particle.size * .44);
+      }
+      ctx.restore();
+    }
     ctx.restore();
   }
 

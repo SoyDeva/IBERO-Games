@@ -8,9 +8,9 @@
   <meta name="theme-color" content="#21144f">
   <title>Misión Nébula · Pilota, responde y avanza</title>
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/styles.css?v=15">
-  <link rel="stylesheet" href="css/accessibility.css?v=15">
-  <link rel="stylesheet" href="css/print.css?v=15" media="print">
+  <link rel="stylesheet" href="css/styles.css?v=16">
+  <link rel="stylesheet" href="css/accessibility.css?v=16">
+  <link rel="stylesheet" href="css/print.css?v=16" media="print">
 </head>
 <body>
   <a class="skip-link" href="#app">Saltar al contenido principal</a>
@@ -41,6 +41,8 @@
     <form method="dialog" class="dialog-card">
       <div class="dialog-heading"><h2 id="settings-title">Configuración</h2><button class="close-button" value="close" aria-label="Cerrar configuración">×</button></div>
       <label class="switch-row"><span><strong>Sonidos</strong><small>Se reproducen solo después de interactuar.</small></span><input type="checkbox" data-setting="sound"></label>
+      <label class="volume-row"><span><strong>🎵 Música</strong><small>Ajusta solo la banda sonora.</small></span><input type="range" min="0" max="100" step="5" value="100" data-volume="musicVolume" aria-label="Volumen de música"><output data-volume-output="musicVolume">100%</output></label>
+      <label class="volume-row"><span><strong>💥 Efectos</strong><small>Disparos, choques y celebraciones.</small></span><input type="range" min="0" max="100" step="5" value="100" data-volume="effectsVolume" aria-label="Volumen de efectos"><output data-volume-output="effectsVolume">100%</output></label>
       <label class="switch-row"><span><strong>Reducir animaciones</strong><small>Disminuye movimientos y transiciones.</small></span><input type="checkbox" data-setting="reducedMotion"></label>
       <label class="switch-row"><span><strong>Alto contraste</strong><small>Refuerza bordes y contraste del contenido.</small></span><input type="checkbox" data-setting="highContrast"></label>
       <label class="switch-row"><span><strong>Texto grande</strong><small>Aumenta el tamaño general del texto.</small></span><input type="checkbox" data-setting="largeText"></label>
@@ -57,6 +59,6 @@
   </dialog>
 
   <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-  <script type="module" src="js/app.js?v=15"></script>
+  <script type="module" src="js/app.js?v=16"></script>
 </body>
 </html>

@@ -18,6 +18,8 @@ La nave Asteria viaja automáticamente por una ruta galáctica. El jugador la mu
 
 El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
 
+Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo práctica donde los errores muestran la explicación, reparan la nave y permiten continuar.
+
 ## Características
 
 - Escena Canvas con perspectiva 2.5D, profundidad y sensación de velocidad.
@@ -29,12 +31,17 @@ El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
 - Indicadores permanentes de combustible, escudos, distancia y siguiente portal.
 - Portales aproximadamente cada 15–20 segundos.
 - 100 preguntas de opción múltiple, sin escritura, organizadas en cinco niveles.
+- Tutorial interactivo paso a paso para movimiento, disparo y preguntas.
+- Modo práctica sin fin de partida por choques, combustible o respuestas incorrectas.
 - Cañón de plasma con 3 cargas por intento, activado con la barra espaciadora o el botón táctil.
 - Categorías: espacio, ciencias, naturaleza, geografía, matemáticas, lenguaje, historia, tecnología y convivencia.
 - Explicación breve después de una respuesta incorrecta.
 - Récord de distancia guardado únicamente en `localStorage`.
-- Música espacial sintetizada que acelera con el nivel y efectos de sonido opcionales.
-- Dificultad progresiva: más velocidad, menor intervalo y oleadas dobles después de cada acierto.
+- Música espacial sintetizada y efectos con controles de volumen independientes.
+- Dificultad adaptativa: progresa con las respuestas y rachas, pero ofrece ayuda temporal después de los choques.
+- Cinco sectores galácticos con ambiente, colores y progresión visual propios.
+- Pausa disponible durante el vuelo y con la tecla `P`.
+- Cinco logros locales, celebraciones con partículas y bitácora educativa al final de cada intento.
 - Paso cercano corregido: los objetos que se esquivan cruzan el primer plano y se desvanecen fuera de cámara.
 - Explosiones visibles en lugar de desapariciones bruscas al chocar.
 - Alto contraste, texto grande y reducción de animaciones de interfaz.
@@ -48,15 +55,16 @@ El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
 2. Usar `←` y `→`, las teclas `A` y `D`, los botones grandes o tocar un lado de la escena.
 3. Pulsar `ESPACIO` o **⚡ DISPARAR** para usar una de las tres cargas de plasma del intento.
 4. Pulsar **⛶ Pantalla completa** para ampliar el juego cuando se desee.
-5. Esquivar los objetos y entrar al portal brillante.
-6. Elegir una de tres respuestas: acertar recarga combustible; fallar termina el intento.
-7. Evitar tres choques y no dejar que el combustible llegue a cero.
+5. Pulsar **⏸ Pausa** o la tecla `P` cuando se necesite un descanso.
+6. Esquivar los objetos y entrar al portal brillante.
+7. Elegir una de tres respuestas: acertar recarga combustible; fallar termina el intento normal.
+8. Evitar tres choques y no dejar que el combustible llegue a cero.
 
 ## Reglas pedagógicas
 
 - Las preguntas están dirigidas a estudiantes de 10 a 12 años y avanzan de reconocimiento básico a razonamiento aplicado.
 - Cada dos portales aumenta el nivel cognitivo de las preguntas, hasta el nivel cinco.
-- Cada respuesta correcta aumenta la velocidad y la frecuencia de los obstáculos.
+- Cada respuesta correcta aumenta gradualmente el reto; los choques y la pérdida de escudos activan asistencia adaptativa.
 - Las oleadas bloquean como máximo dos carriles: siempre queda una ruta posible.
 - Cada pregunta tiene tres opciones y una respuesta definida.
 - El vuelo se detiene por completo mientras se responde.
@@ -123,6 +131,13 @@ GitHub Pages publica la rama `main` desde la raíz del repositorio:
 - [x] Simulación del primer portal y pausa del vuelo.
 - [x] Respuesta correcta: recarga y reanudación.
 - [x] Respuesta incorrecta: nave varada.
+- [x] Tutorial completo: izquierda, derecha, disparo y pregunta con reintento amable.
+- [x] Modo práctica: recuperación de escudos, combustible y respuesta incorrecta sin terminar.
+- [x] Dificultad adaptativa: la asistencia reduce velocidad y frecuencia tras dificultades.
+- [x] Transición entre cinco sectores y actualización del ambiente visual.
+- [x] Pausa, reanudación y reinicio sin perder los controles táctiles.
+- [x] Mezclador independiente de música y efectos, con persistencia local.
+- [x] Logros, celebraciones y bitácora educativa final.
 - [x] Pérdida de escudos y combustible por colisión.
 - [x] Aumento de velocidad, frecuencia y oleadas dobles por nivel.
 - [x] Verificación de que ninguna oleada bloquea los tres carriles.
@@ -135,4 +150,4 @@ GitHub Pages publica la rama `main` desde la raíz del repositorio:
 
 ## Autoría y privacidad
 
-Concepto, interfaz, programación, figuras Canvas y contenido pedagógico originales. Los sonidos se sintetizan dentro del navegador. El proyecto no recopila datos personales; únicamente conserva el récord local de distancia.
+Concepto, interfaz, programación, figuras Canvas y contenido pedagógico originales. Los sonidos se sintetizan dentro del navegador. El proyecto no recopila datos personales; únicamente conserva de forma local el récord, los logros, el tutorial completado y las preferencias de accesibilidad y volumen.

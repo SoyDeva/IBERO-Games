@@ -9,6 +9,10 @@ let musicRequested = false;
 let musicMaster;
 let effectsMaster;
 
+function normalizedVolume(value) {
+  return Math.max(0, Math.min(1, Number(value ?? 1)));
+}
+
 function ensureAudioContext() {
   audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
   if (audioContext.state === 'suspended') audioContext.resume();
@@ -19,7 +23,7 @@ function ensureMusicMaster(context) {
   if (musicMaster) return musicMaster;
   musicMaster = context.createGain();
   const limiter = context.createDynamicsCompressor();
-  musicMaster.gain.setValueAtTime(2.4, context.currentTime);
+  musicMaster.gain.setValueAtTime(2.4 * normalizedVolume(settings.musicVolume), context.currentTime);
   limiter.threshold.setValueAtTime(-2.5, context.currentTime);
   limiter.knee.setValueAtTime(3, context.currentTime);
   limiter.ratio.setValueAtTime(20, context.currentTime);
@@ -33,7 +37,7 @@ function ensureEffectsMaster(context) {
   if (effectsMaster) return effectsMaster;
   effectsMaster = context.createGain();
   const limiter = context.createDynamicsCompressor();
-  effectsMaster.gain.setValueAtTime(1.8, context.currentTime);
+  effectsMaster.gain.setValueAtTime(1.8 * normalizedVolume(settings.effectsVolume), context.currentTime);
   limiter.threshold.setValueAtTime(-1.5, context.currentTime);
   limiter.knee.setValueAtTime(2, context.currentTime);
   limiter.ratio.setValueAtTime(20, context.currentTime);
@@ -94,11 +98,19 @@ function scheduleMusic() {
 
 export function applySettings(next = settings) {
   settings = { ...settings, ...next };
+  settings.musicVolume = normalizedVolume(settings.musicVolume);
+  settings.effectsVolume = normalizedVolume(settings.effectsVolume);
   document.documentElement.classList.toggle('reduced-motion', settings.reducedMotion);
   document.documentElement.classList.toggle('high-contrast', settings.highContrast);
   document.documentElement.classList.toggle('large-text', settings.largeText);
   document.querySelectorAll('[data-setting]').forEach((control) => {
     control.checked = Boolean(settings[control.dataset.setting]);
+  });
+  document.querySelectorAll('[data-volume]').forEach((control) => {
+    control.value = String(Math.round(normalizedVolume(settings[control.dataset.volume]) * 100));
+  });
+  document.querySelectorAll('[data-volume-output]').forEach((output) => {
+    output.textContent = Math.round(normalizedVolume(settings[output.dataset.volumeOutput]) * 100) + '%';
   });
   document.querySelectorAll('[data-sound-label]').forEach((button) => {
     button.setAttribute('aria-label', settings.sound ? 'Silenciar sonidos' : 'Activar sonidos');
@@ -110,6 +122,8 @@ export function applySettings(next = settings) {
     button.innerHTML = settings.sound ? '<span>🎵</span><strong>Música</strong>' : '<span>🔇</span><strong>Activar música</strong>';
   });
   saveSettings(settings);
+  if (audioContext && musicMaster) musicMaster.gain.setTargetAtTime(2.4 * settings.musicVolume, audioContext.currentTime, .025);
+  if (audioContext && effectsMaster) effectsMaster.gain.setTargetAtTime(1.8 * settings.effectsVolume, audioContext.currentTime, .025);
   if (!settings.sound) { window.clearInterval(musicTimer); musicTimer = 0; }
   else if (musicRequested && !musicTimer) scheduleMusic();
   return settings;
@@ -124,6 +138,9 @@ export function bindSettings(root = document) {
   });
   root.querySelectorAll('[data-sound-label]').forEach((button) => {
     button.addEventListener('click', () => applySettings({ sound: !settings.sound }));
+  });
+  root.querySelectorAll('[data-volume]').forEach((control) => {
+    control.addEventListener('input', () => applySettings({ [control.dataset.volume]: Number(control.value) / 100 }));
   });
   applySettings();
 }
@@ -141,14 +158,15 @@ export function playTone(type = 'select') {
     ensureAudioContext();
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
-    const tones = { select: [440, 0.06], complete: [660, 0.18], core: [880, 0.3], alert: [260, 0.22], laser: [1180, .16], blast: [170, .32], empty: [145, .11] };
-    const volumes = { select: .22, complete: .28, core: .32, alert: .34, laser: .3, blast: .38, empty: .24 };
+    const tones = { select: [440, 0.06], complete: [660, 0.18], core: [880, 0.3], alert: [260, 0.22], laser: [1180, .16], blast: [170, .32], empty: [145, .11], achievement: [740, .52] };
+    const volumes = { select: .22, complete: .28, core: .32, alert: .34, laser: .3, blast: .38, empty: .24, achievement: .34 };
     const [frequency, duration] = tones[type] || tones.select;
     oscillator.type = ['alert', 'laser', 'blast'].includes(type) ? 'sawtooth' : 'sine';
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
     if (type === 'core') oscillator.frequency.exponentialRampToValueAtTime(1320, audioContext.currentTime + duration);
     if (type === 'laser') oscillator.frequency.exponentialRampToValueAtTime(260, audioContext.currentTime + duration);
     if (type === 'blast') oscillator.frequency.exponentialRampToValueAtTime(62, audioContext.currentTime + duration);
+    if (type === 'achievement') oscillator.frequency.exponentialRampToValueAtTime(1480, audioContext.currentTime + duration);
     gain.gain.setValueAtTime(0.001, audioContext.currentTime);
     gain.gain.exponentialRampToValueAtTime(volumes[type] || volumes.select, audioContext.currentTime + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);

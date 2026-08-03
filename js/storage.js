@@ -1,7 +1,7 @@
 const SAVE_KEY = 'mision-nebula-save-v1';
 const SETTINGS_KEY = 'mision-nebula-settings-v1';
 
-export const defaultSettings = Object.freeze({ sound: true, reducedMotion: false, highContrast: false, largeText: false });
+export const defaultSettings = Object.freeze({ sound: true, musicVolume: 1, effectsVolume: 1, reducedMotion: false, highContrast: false, largeText: false });
 
 /** @returns {object|null} Partida local guardada o null si no existe. */
 export function loadGame() {
