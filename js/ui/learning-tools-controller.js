@@ -1,6 +1,11 @@
 import { createLearningExport } from '../core/learning-export.js';
+import {
+  readLearningDeviceRestoreDecisions,
+  renderLearningDeviceRestorePreview
+} from './learning-device-restore-panel.js';
 
 const MAX_BACKUP_BYTES = 1024 * 1024;
+const MAX_DEVICE_BACKUP_BYTES = 5 * 1024 * 1024;
 
 function setStatus(root, message) {
   const status = root?.querySelector?.('[data-learning-tools-status]');
@@ -75,8 +80,12 @@ export function bindLearningTools({
   const backupButton = root.querySelector('[data-backup-learning]');
   const deviceBackupButton = root.querySelector('[data-backup-learning-device]');
   const importInput = root.querySelector('[data-import-learning]');
+  const deviceImportInput = root.querySelector('[data-import-learning-device]');
+  const deviceRestoreContainer = root.querySelector('[data-learning-device-restore-preview]');
   const printReport = root.querySelector('[data-print-learning-report]');
   const deleteProfileButtons = Array.from(root.querySelectorAll?.('[data-delete-learning-profile]') || []);
+  let deviceRestoreSource = '';
+  let deviceRestorePreview = null;
 
   goalForm?.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -171,6 +180,82 @@ export function bindLearningTools({
     }
   }
 
+  function clearDeviceRestore() {
+    deviceRestoreSource = '';
+    deviceRestorePreview = null;
+    if (deviceImportInput) deviceImportInput.value = '';
+    if (deviceRestoreContainer) deviceRestoreContainer.innerHTML = '';
+  }
+
+  function cancelDeviceRestore() {
+    clearDeviceRestore();
+    setStatus(root, 'Restauración consolidada cancelada. No se modificaron datos.');
+    return null;
+  }
+
+  function applyDeviceRestore() {
+    if (!deviceRestoreSource || !deviceRestorePreview || !deviceRestoreContainer) return null;
+    const decisions = readLearningDeviceRestoreDecisions(deviceRestoreContainer);
+    const selected = decisions.filter((decision) => decision.action !== 'skip');
+    if (!selected.length) {
+      setStatus(root, 'Selecciona al menos un perfil antes de aplicar la restauración.');
+      return null;
+    }
+    const replacements = selected.filter((decision) => decision.action === 'replace').length;
+    const additions = selected.filter((decision) => decision.action === 'add').length;
+    const confirmed = windowRef?.confirm
+      ? windowRef.confirm('Se añadirán ' + additions + ' perfiles y se reemplazarán ' + replacements + '. Los demás datos locales se conservarán. ¿Aplicar esta selección?')
+      : true;
+    if (!confirmed) {
+      setStatus(root, 'Aplicación cancelada. La vista previa continúa disponible.');
+      return null;
+    }
+
+    try {
+      const result = store.restoreDeviceBackup(deviceRestoreSource, decisions);
+      clearDeviceRestore();
+      onChanged('Restauración consolidada completada: ' + result.added + ' añadidos, ' + result.replaced + ' reemplazados y ' + result.kept + ' conservados.');
+      return result;
+    } catch (error) {
+      setStatus(root, error?.message || 'No fue posible aplicar la restauración consolidada.');
+      return null;
+    }
+  }
+
+  function bindDeviceRestoreActions() {
+    const applyButton = deviceRestoreContainer?.querySelector?.('[data-apply-learning-device-restore]');
+    const cancelButton = deviceRestoreContainer?.querySelector?.('[data-cancel-learning-device-restore]');
+    applyButton?.addEventListener('click', applyDeviceRestore);
+    cancelButton?.addEventListener('click', cancelDeviceRestore);
+  }
+
+  async function previewDeviceRestore() {
+    const file = deviceImportInput?.files?.[0];
+    if (!file) return null;
+    if (Number(file.size) > MAX_DEVICE_BACKUP_BYTES) {
+      clearDeviceRestore();
+      setStatus(root, 'El respaldo consolidado supera el límite de 5 MB.');
+      return null;
+    }
+
+    try {
+      const content = await file.text();
+      const preview = store.previewDeviceBackup(content);
+      deviceRestoreSource = content;
+      deviceRestorePreview = preview;
+      if (deviceRestoreContainer) {
+        deviceRestoreContainer.innerHTML = renderLearningDeviceRestorePreview(preview);
+        bindDeviceRestoreActions();
+      }
+      setStatus(root, 'Vista previa verificada. Revisa la selección antes de aplicar cambios.');
+      return preview;
+    } catch (error) {
+      clearDeviceRestore();
+      setStatus(root, error?.message || 'No fue posible verificar el respaldo consolidado.');
+      return null;
+    }
+  }
+
   function deleteProfile(button) {
     const profileId = button?.dataset?.deleteLearningProfile || '';
     const profileName = button?.dataset?.learningProfileName || 'este perfil';
@@ -198,15 +283,19 @@ export function bindLearningTools({
   backupButton?.addEventListener('click', backupProgress);
   deviceBackupButton?.addEventListener('click', backupDevice);
   importInput?.addEventListener('change', importProgress);
+  deviceImportInput?.addEventListener('change', previewDeviceRestore);
   printReport?.addEventListener('click', () => windowRef?.print?.());
   deleteProfileButtons.forEach((button) => button.addEventListener('click', () => deleteProfile(button)));
 
   return Object.freeze({
-    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || backupButton || deviceBackupButton || importInput || printReport || deleteProfileButtons.length),
+    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || backupButton || deviceBackupButton || importInput || deviceImportInput || printReport || deleteProfileButtons.length),
     exportProgress,
     backupProgress,
     backupDevice,
     importProgress,
+    previewDeviceRestore,
+    applyDeviceRestore,
+    cancelDeviceRestore,
     deleteProfile
   });
 }
