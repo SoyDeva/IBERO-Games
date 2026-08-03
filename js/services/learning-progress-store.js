@@ -1,5 +1,12 @@
 import { STORAGE_KEYS } from '../config/storage-keys.js';
-import { createLearningProgress, normalizeLearningProgress, recordLearningAnswer, summarizeLearningProgress } from '../core/learning-progress.js';
+import {
+  appendLearningSession,
+  createLearningProgress,
+  createLearningSession,
+  normalizeLearningProgress,
+  recordLearningAnswer,
+  summarizeLearningProgress
+} from '../core/learning-progress.js';
 import { readStorageJson, removeStorageValue, writeStorageJson } from './browser-storage.js';
 
 export function createLearningProgressStore({ storage } = {}) {
@@ -17,6 +24,14 @@ export function createLearningProgressStore({ storage } = {}) {
     return save(recordLearningAnswer(load(), answer));
   }
 
+  function completeSession({ baseline, mode, result, completedAt } = {}) {
+    const progress = load();
+    const session = createLearningSession(progress, { baseline, mode, result, completedAt });
+    if (!session) return { progress, session: null };
+    const saved = save(appendLearningSession(progress, session));
+    return { progress: saved, session };
+  }
+
   function summary() {
     return summarizeLearningProgress(load());
   }
@@ -26,5 +41,5 @@ export function createLearningProgressStore({ storage } = {}) {
     return createLearningProgress();
   }
 
-  return Object.freeze({ load, save, record, summary, reset });
+  return Object.freeze({ load, save, record, completeSession, summary, reset });
 }

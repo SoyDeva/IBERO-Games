@@ -46,6 +46,7 @@ let shopMessage = '';
 let runCrystals = 0;
 let viewportResizeFrame = 0;
 let pendingPilotAction = null;
+let learningSessionBaseline = null;
 
 const GAME_RELEASE = new URL(import.meta.url).searchParams.get('v') || 'local';
 const RANKING_PREFIX = 'nebula-ranking-';
@@ -211,6 +212,10 @@ function renderRanking() {
   });
 }
 
+function renderTeacherView() {
+  return renderTeacher({ learning: learningProgressStore.summary(), pilotName: getPilotName() });
+}
+
 function renderFlight() {
   const isTutorial = flightMode === 'tutorial';
   const isPractice = flightMode === 'practice';
@@ -286,7 +291,7 @@ function bindShop() {
 
 function render() {
   const route = navigation.get();
-  const screens = { home: renderHome, flight: renderFlight, shop: renderShop, ranking: renderRanking, instructions: renderInstructions, teacher: renderTeacher, credits: renderCredits };
+  const screens = { home: renderHome, flight: renderFlight, shop: renderShop, ranking: renderRanking, instructions: renderInstructions, teacher: renderTeacherView, credits: renderCredits };
   document.body.classList.toggle('flight-route', route === 'flight');
   app.innerHTML = (screens[route] || renderHome)();
   bindNavigation(app, {
@@ -297,6 +302,7 @@ function render() {
   });
   app.querySelectorAll('[data-change-pilot]').forEach((button) => button.addEventListener('click', () => openPilotDialog(() => render())));
   app.querySelectorAll('[data-refresh-ranking]').forEach((button) => button.addEventListener('click', () => refreshGlobalRanking(true)));
+  app.querySelector('[data-print-learning-report]')?.addEventListener('click', () => window.print());
   if (route === 'flight') bindFlight();
   if (route === 'shop') bindShop();
   if (route === 'ranking' && rankingController.getSnapshot().status === 'idle') window.setTimeout(() => refreshGlobalRanking(), 0);
@@ -411,6 +417,7 @@ function startFlightSession() {
   runCrystals = 0;
   stationSession.reset();
   lastLearnedFact = '';
+  learningSessionBaseline = learningProgressStore.load();
   const economy = loadEconomy();
   flight.start({ practice: flightMode === 'practice', tutorial: flightMode === 'tutorial', skin: economy.activeSkin, trail: economy.activeTrail });
   startMusic(1);
@@ -552,6 +559,12 @@ function answerQuestion(selectedIndex) {
 
 function showGameOver(result) {
   stopMusic();
+  learningProgressStore.completeSession({
+    baseline: learningSessionBaseline,
+    mode: flightMode,
+    result
+  });
+  learningSessionBaseline = null;
   const rankingPromise = recordRanking(result);
   const pilotName = getPilotName() || 'Piloto';
   const summary = createMissionSummary({
