@@ -26,7 +26,9 @@ Ejemplos actuales:
 - catálogo, validación y transiciones del estado de rutas;
 - escape uniforme de contenido dinámico antes de insertarlo en HTML;
 - evaluación de respuestas, mensajes pedagógicos y tiempos de retroalimentación;
-- catálogo de mejoras y sesión de compra única de la Estación Nova.
+- catálogo de mejoras y sesión de compra única de la Estación Nova;
+- pasos, pregunta y evaluación sin penalización del tutorial guiado;
+- normalización de la bitácora de misión, cálculo de récord y estado de sincronización.
 
 ### `js/services/`
 
@@ -46,6 +48,8 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 - `quiz-panel.js` presenta preguntas y opciones, enlaza respuestas y marca visualmente aciertos y errores.
 - `station-panel.js` genera las ofertas, refleja disponibilidad por saldo y administra la presentación de la Estación Nova.
 - `pause-panel.js` sincroniza la tarjeta de pausa, el bloqueo visual del vuelo y las etiquetas accesibles del botón.
+- `tutorial-panel.js` presenta la guía paso a paso, resalta controles y administra la pregunta de entrenamiento.
+- `game-over-screen.js` genera la bitácora, enlaza sus acciones y actualiza el resultado de la Liga Galáctica.
 
 ### Fachadas públicas
 
@@ -53,11 +57,11 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ### Aplicación y presentación
 
-`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas, presentación pedagógica, estado de la Estación Nova y panel de pausa. La siguiente fase separará el tutorial y el cierre de partida.
+`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas, presentación pedagógica, Estación Nova, pausa, tutorial guiado y bitácora de cierre. La siguiente fase iniciará la división interna del motor de vuelo.
 
 ### Motor de vuelo
 
-`js/space-game.js` conserva Canvas, física, entrada y ciclo de juego. Su división se realizará después de estabilizar la capa de aplicación, separando estado, simulación, entrada y renderizado.
+`js/space-game.js` conserva Canvas, física, entrada y ciclo de juego. Su división se realizará separando estado, simulación, entrada y renderizado, con fachadas compatibles durante cada etapa.
 
 ## Reglas del refactor
 
@@ -78,6 +82,6 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 7. Pantallas dinámicas de Inicio, Hangar y Liga. **Completado.**
 8. Barajas, evaluación y presentación de preguntas. **Completado.**
 9. Estación Nova y panel de pausa. **Completado.**
-10. Tutorial y cierre de partida.
+10. Tutorial y cierre de partida. **Completado.**
 11. Motor de vuelo: estado, simulación, entrada y renderizado.
 12. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
