@@ -39,6 +39,18 @@ La interfaz usa una pila local y del sistema para no depender de descargas exter
 - adaptación para móvil;
 - reducción de movimiento.
 
+`css/flight-polish.css` aplica el segundo paquete visual exclusivamente al vuelo y las preguntas:
+
+- HUD compacto con color funcional por métrica;
+- combustible con lectura numérica y barra luminosa;
+- escenario, insignia de sector y controles con mayor profundidad;
+- pregunta central con jerarquía y opciones táctiles amplias;
+- estados visibles `correct` y `wrong`, además del texto pedagógico existente;
+- adaptación a una columna en móvil;
+- animaciones desactivadas mediante `prefers-reduced-motion`.
+
+Esta capa usa selectores y estados que ya genera la aplicación. No añade temporizadores, reglas, eventos ni solicitudes remotas.
+
 ## Reglas
 
 1. No cambiar selectores de navegación ni atributos `data-*` por una mejora visual.
