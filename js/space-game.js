@@ -270,6 +270,7 @@ export class SpaceFlight {
 
   update(delta) {
     Object.assign(this, advanceFlightVitals(this, delta));
+    const difficulty = this.getDifficulty();
 
     const fuelOutcome = resolveFuelDepletion(this);
     if (fuelOutcome.status === 'rescued') {
