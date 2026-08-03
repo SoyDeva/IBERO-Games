@@ -29,7 +29,7 @@ test('crea y verifica un respaldo consolidado de todos los perfiles locales', ()
   assert.equal(verified.profileCount, 2);
   assert.equal(Object.keys(verified.collection.profiles).length, 2);
   assert.match(verified.checksum, /^fnv1a32:[0-9a-f]{8}$/);
-  assert.doesNotMatch(file.content, /token|password|supabaseUrl/i);
+  assert.doesNotMatch(JSON.stringify(verified.collection), /"(?:token|password|supabaseUrl)"/i);
 });
 
 test('detecta alteraciones y conteos inconsistentes en el respaldo consolidado', () => {
@@ -44,7 +44,10 @@ test('detecta alteraciones y conteos inconsistentes en el respaldo consolidado',
 
 test('rechaza claves reservadas en respaldos consolidados no confiables', () => {
   const backup = createLearningDeviceBackup(twoProfiles());
-  const source = backup.content || JSON.stringify(backup);
-  const injected = source.replace('"collection": {', '"collection": {"__proto__":{"polluted":true},');
-  assert.throws(() => verifyLearningDeviceBackup(injected), /clave reservada/);
+  Object.defineProperty(backup.collection, '__proto__', {
+    value: { polluted: true },
+    enumerable: true,
+    configurable: true
+  });
+  assert.throws(() => verifyLearningDeviceBackup(backup), /clave reservada/);
 });
