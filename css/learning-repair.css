@@ -1,0 +1,113 @@
+.learning-repair-panel {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid rgba(255, 198, 92, .38);
+  border-radius: 1rem;
+  background: rgba(55, 39, 24, .68);
+}
+
+.learning-repair-heading,
+.learning-repair-actions {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+}
+
+.learning-repair-heading {
+  justify-content: space-between;
+}
+
+.learning-repair-heading h3,
+.learning-repair-heading .eyebrow {
+  margin: 0;
+}
+
+.learning-repair-heading > span {
+  font-size: 1.5rem;
+}
+
+.learning-repair-panel > p,
+.learning-repair-messages,
+.learning-repair-empty,
+.learning-repair-source-size {
+  line-height: 1.45;
+}
+
+.learning-repair-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .6rem;
+  margin: .8rem 0;
+}
+
+.learning-repair-metrics div {
+  padding: .65rem;
+  border-radius: .75rem;
+  background: rgba(255, 255, 255, .055);
+}
+
+.learning-repair-metrics dt,
+.learning-repair-metrics dd {
+  margin: 0;
+}
+
+.learning-repair-metrics dt {
+  color: var(--muted, #c8c8e8);
+  font-size: .76rem;
+}
+
+.learning-repair-metrics dd {
+  margin-top: .2rem;
+  font-weight: 800;
+}
+
+.learning-repair-messages {
+  margin: .8rem 0;
+  padding-left: 1.2rem;
+  color: #ffe3a3;
+}
+
+.learning-repair-table {
+  min-width: 34rem !important;
+}
+
+.learning-repair-actions {
+  flex-wrap: wrap;
+  margin-top: .85rem;
+}
+
+.learning-repair-actions .button[disabled] {
+  cursor: not-allowed;
+  opacity: .48;
+}
+
+.learning-repair-invalid-json,
+.learning-repair-invalid-shape,
+.learning-repair-unrecoverable,
+.learning-repair-unsafe,
+.learning-repair-oversized {
+  border-color: rgba(255, 117, 117, .42);
+  background: rgba(70, 22, 34, .64);
+}
+
+@media (max-width: 720px) {
+  .learning-repair-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .learning-repair-panel {
+    padding: .7rem;
+  }
+
+  .learning-repair-actions .button {
+    flex: 1 1 100%;
+  }
+}
+
+@media print {
+  .learning-repair-panel {
+    display: none;
+  }
+}
