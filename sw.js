@@ -1,8 +1,8 @@
-const CACHE_NAME = 'mision-nebula-v7';
+const CACHE_NAME = 'mision-nebula-v8';
 const FILES = [
   './', './index.html', './informe-actividad-1.html', './README.md',
-  './css/styles.css', './css/accessibility.css', './css/print.css',
-  './js/app.js', './js/space-game.js', './js/questions.js', './js/game.js', './js/data.js', './js/storage.js',
+  './css/styles.css?v=8', './css/accessibility.css?v=8', './css/print.css?v=8',
+  './js/app.js?v=8', './js/space-game.js', './js/questions.js', './js/game.js', './js/data.js', './js/storage.js',
   './js/canvas.js', './js/evaluation.js', './js/report.js', './js/accessibility.js',
   './assets/icons/favicon.svg'
 ];
@@ -19,9 +19,20 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) return;
+
+  const networkFirst = event.request.mode === 'navigate' || /\.(?:html|css|js)$/.test(requestUrl.pathname);
+  if (networkFirst) {
+    event.respondWith(fetch(event.request).then((response) => {
+      if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+      return response;
+    }).catch(async () => (await caches.match(event.request)) || caches.match('./index.html')));
+    return;
+  }
+
   event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
-    const copy = response.clone();
-    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+    if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
     return response;
-  }).catch(() => caches.match('./index.html'))));
+  })));
 });

@@ -40,7 +40,25 @@ function renderHome() {
 }
 
 function renderFlight() {
-  return '<section class="flight-page" aria-labelledby="flight-title"><h1 id="flight-title" class="sr-only">Vuelo de la nave Asteria</h1><div class="flight-hud"><div class="hud-block fuel-hud"><span>⛽ Combustible</span><div class="fuel-track"><i id="fuel-fill"></i></div><strong id="fuel-value">62%</strong></div><div class="hud-block hull-hud"><span>🛡️ Escudos</span><strong id="hull-value" aria-label="Tres escudos">♥ ♥ ♥</strong></div><div class="hud-block"><span>📍 Distancia</span><strong><b id="distance-value">0</b> km</strong></div><div class="hud-block checkpoint-hud"><span>🌀 Portal <b id="checkpoint-number">1</b></span><strong>A <b id="remaining-value">280</b> km</strong></div><div class="hud-block difficulty-hud"><span>⚡ Dificultad</span><strong>Nivel <b id="level-value">1</b></strong></div><button class="hud-block fullscreen-flight" id="fullscreen-flight" type="button" aria-label="Activar pantalla completa" aria-pressed="false"><span>⛶</span><strong>Ampliar</strong></button></div><div class="flight-stage"><canvas id="flight-canvas" tabindex="0" aria-label="Ruta espacial. Usa flecha izquierda y derecha o los botones para mover la nave entre tres carriles."></canvas><div id="flight-toast" class="flight-toast" hidden></div><div id="flight-overlay" class="flight-overlay"><div class="overlay-card"><p class="eyebrow">Controles de vuelo</p><h2>Muévete entre 3 caminos</h2><div class="control-demo"><span>⬅️<small>Izquierda</small></span><b>🚀</b><span>➡️<small>Derecha</small></span></div><p>Esquiva todo y entra al portal brillante.</p><button class="button primary launch-button" id="start-flight">¡Despegar!</button></div></div><section id="quiz-panel" class="quiz-panel" hidden aria-labelledby="quiz-question"><div class="quiz-card"><p class="quiz-category" id="quiz-category"></p><div class="fuel-question-icon" aria-hidden="true">⛽</div><h2 id="quiz-question"></h2><div id="quiz-options" class="quiz-options"></div><p id="quiz-result" class="quiz-result" aria-live="assertive"></p></div></section></div><div class="touch-controls" aria-label="Controles táctiles"><button id="steer-left" type="button" aria-label="Mover nave a la izquierda">⬅️<span>IZQUIERDA</span></button><button id="steer-right" type="button" aria-label="Mover nave a la derecha"><span>DERECHA</span>➡️</button></div><p class="flight-tip">También puedes tocar el lado izquierdo o derecho del espacio.</p></section>';
+  return `<section class="flight-page" aria-labelledby="flight-title">
+    <h1 id="flight-title" class="sr-only">Vuelo de la nave Asteria</h1>
+    <div class="flight-hud">
+      <div class="hud-block fuel-hud"><span>⛽ Combustible</span><div class="fuel-track"><i id="fuel-fill"></i></div><strong id="fuel-value">62%</strong></div>
+      <div class="hud-block hull-hud"><span>🛡️ Escudos</span><strong id="hull-value" aria-label="Tres escudos">♥ ♥ ♥</strong></div>
+      <div class="hud-block"><span>📍 Distancia</span><strong><b id="distance-value">0</b> km</strong></div>
+      <div class="hud-block checkpoint-hud"><span>🌀 Portal <b id="checkpoint-number">1</b></span><strong>A <b id="remaining-value">280</b> km</strong></div>
+      <div class="hud-block difficulty-hud"><span>⚡ Dificultad</span><strong>Nivel <b id="level-value">1</b></strong></div>
+    </div>
+    <div class="flight-stage">
+      <canvas id="flight-canvas" tabindex="0" aria-label="Ruta espacial. Usa flecha izquierda y derecha o los botones para mover la nave entre tres carriles."></canvas>
+      <button class="fullscreen-flight" id="fullscreen-flight" type="button" aria-label="Activar pantalla completa" aria-pressed="false"><span>⛶</span><strong>Pantalla completa</strong></button>
+      <div id="flight-toast" class="flight-toast" hidden></div>
+      <div id="flight-overlay" class="flight-overlay"><div class="overlay-card"><p class="eyebrow">Controles de vuelo</p><h2>Muévete entre 3 caminos</h2><div class="control-demo"><span>⬅️<small>Izquierda</small></span><b>🚀</b><span>➡️<small>Derecha</small></span></div><p>Esquiva todo y entra al portal brillante.</p><button class="button primary launch-button" id="start-flight">¡Despegar!</button></div></div>
+      <section id="quiz-panel" class="quiz-panel" hidden aria-labelledby="quiz-question"><div class="quiz-card"><p class="quiz-category" id="quiz-category"></p><div class="fuel-question-icon" aria-hidden="true">⛽</div><h2 id="quiz-question"></h2><div id="quiz-options" class="quiz-options"></div><p id="quiz-result" class="quiz-result" aria-live="assertive"></p></div></section>
+    </div>
+    <div class="touch-controls" aria-label="Controles táctiles"><button id="steer-left" type="button" aria-label="Mover nave a la izquierda">⬅️<span>IZQUIERDA</span></button><button id="steer-right" type="button" aria-label="Mover nave a la derecha"><span>DERECHA</span>➡️</button></div>
+    <p class="flight-tip">También puedes tocar el lado izquierdo o derecho del espacio.</p>
+  </section>`;
 }
 
 function renderInstructions() {
@@ -168,7 +186,7 @@ function updateFullscreenButton() {
   const expanded = Boolean(document.fullscreenElement || document.webkitFullscreenElement || page.classList.contains('pseudo-fullscreen'));
   button.setAttribute('aria-pressed', String(expanded));
   button.setAttribute('aria-label', expanded ? 'Salir de pantalla completa' : 'Activar pantalla completa');
-  button.innerHTML = expanded ? '<span>⤢</span><strong>Reducir</strong>' : '<span>⛶</span><strong>Ampliar</strong>';
+  button.innerHTML = expanded ? '<span>⤢</span><strong>Salir de pantalla completa</strong>' : '<span>⛶</span><strong>Pantalla completa</strong>';
   window.setTimeout(() => flight?.resize(), 80);
 }
 
