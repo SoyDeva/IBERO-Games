@@ -40,3 +40,9 @@ test('rechaza importar el respaldo de otro piloto', () => {
 test('rechaza documentos JSON que no usan el esquema de respaldo', () => {
   assert.throws(() => verifyLearningBackup('{"schema":"otro-formato"}'), /formato de respaldo compatible/);
 });
+
+test('rechaza claves reservadas antes de normalizar contenido importado', () => {
+  const source = '{"schema":"mision-nebula-learning-backup-v1","__proto__":{"polluted":true}}';
+  assert.throws(() => verifyLearningBackup(source), /clave reservada/);
+  assert.equal({}.polluted, undefined);
+});
