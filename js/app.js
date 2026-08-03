@@ -1,6 +1,6 @@
 import { SpaceFlight } from './space-game.js';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
-import { bindSettings, applySettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js';
+import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
@@ -51,7 +51,10 @@ function renderFlight() {
     </div>
     <div class="flight-stage">
       <canvas id="flight-canvas" tabindex="0" aria-label="Ruta espacial. Usa flecha izquierda y derecha o los botones para mover la nave entre tres carriles."></canvas>
-      <button class="fullscreen-flight" id="fullscreen-flight" type="button" aria-label="Activar pantalla completa" aria-pressed="false"><span>⛶</span><strong>Pantalla completa</strong></button>
+      <div class="flight-stage-actions">
+        <button class="music-flight" id="music-flight" data-music-label type="button" aria-label="Silenciar música y sonidos" aria-pressed="true"><span>🎵</span><strong>Música</strong></button>
+        <button class="fullscreen-flight" id="fullscreen-flight" type="button" aria-label="Activar pantalla completa" aria-pressed="false"><span>⛶</span><strong>Pantalla completa</strong></button>
+      </div>
       <div id="flight-toast" class="flight-toast" hidden></div>
       <div id="flight-overlay" class="flight-overlay"><div class="overlay-card"><p class="eyebrow">Controles de vuelo</p><h2>Muévete entre 3 caminos</h2><div class="control-demo"><span>⬅️<small>Izquierda</small></span><b>🚀</b><span>➡️<small>Derecha</small></span></div><p>Esquiva todo y entra al portal brillante.</p><button class="button primary launch-button" id="start-flight">¡Despegar!</button></div></div>
       <section id="quiz-panel" class="quiz-panel" hidden aria-labelledby="quiz-question"><div class="quiz-card"><p class="quiz-category" id="quiz-category"></p><div class="fuel-question-icon" aria-hidden="true">⛽</div><h2 id="quiz-question"></h2><div id="quiz-options" class="quiz-options"></div><p id="quiz-result" class="quiz-result" aria-live="assertive"></p></div></section>
@@ -234,11 +237,19 @@ function bindFlight() {
     flight.start();
     startMusic(1);
     playTone('complete');
+    showToast(getSettings().sound ? '🎵 MÚSICA ESPACIAL ACTIVADA' : '🔇 Música apagada · toca MÚSICA para activarla', getSettings().sound ? 'success' : 'normal');
     canvas.focus();
   });
   document.getElementById('steer-left').addEventListener('click', () => flight.moveLane(-1));
   document.getElementById('steer-right').addEventListener('click', () => flight.moveLane(1));
+  document.getElementById('music-flight').addEventListener('click', () => {
+    const enabled = !getSettings().sound;
+    applySettings({ sound: enabled });
+    if (enabled) playTone('complete');
+    showToast(enabled ? '🎵 MÚSICA ACTIVADA' : '🔇 MÚSICA SILENCIADA', enabled ? 'success' : 'normal');
+  });
   document.getElementById('fullscreen-flight').addEventListener('click', toggleFullscreen);
+  applySettings();
 }
 
 document.querySelectorAll('.site-header [data-nav]').forEach((button) => button.addEventListener('click', (event) => {

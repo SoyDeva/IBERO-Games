@@ -6,6 +6,7 @@ let musicTimer = 0;
 let musicStep = 0;
 let musicLevel = 1;
 let musicRequested = false;
+let musicMaster;
 
 function ensureAudioContext() {
   audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
@@ -13,32 +14,48 @@ function ensureAudioContext() {
   return audioContext;
 }
 
+function ensureMusicMaster(context) {
+  if (musicMaster) return musicMaster;
+  musicMaster = context.createGain();
+  musicMaster.gain.setValueAtTime(.72, context.currentTime);
+  musicMaster.connect(context.destination);
+  return musicMaster;
+}
+
+function scheduleSynthNote(context, destination, frequency, start, duration, volume, type = 'triangle') {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+  gain.gain.setValueAtTime(.001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + .025);
+  gain.gain.exponentialRampToValueAtTime(.001, start + duration);
+  oscillator.connect(gain).connect(destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration + .03);
+}
+
 function playMusicNote() {
   if (!settings.sound || !musicRequested) return;
   try {
     const context = ensureAudioContext();
-    const sequence = [110, 146.83, 164.81, 220, 196, 164.81, 146.83, 130.81];
-    const frequency = sequence[musicStep % sequence.length] * (musicLevel >= 6 && musicStep % 4 === 3 ? 2 : 1);
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    oscillator.type = musicLevel >= 4 ? 'triangle' : 'sine';
-    oscillator.frequency.setValueAtTime(frequency, context.currentTime);
-    gain.gain.setValueAtTime(0.001, context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.035, context.currentTime + .025);
-    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + .24);
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start();
-    oscillator.stop(context.currentTime + .26);
+    const master = ensureMusicMaster(context);
+    const now = context.currentTime + .015;
+    const melody = [220, 261.63, 329.63, 293.66, 392, 329.63, 261.63, 246.94, 220, 293.66, 349.23, 329.63, 440, 392, 329.63, 261.63];
+    const roots = [110, 87.31, 130.81, 98];
+    const frequency = melody[musicStep % melody.length] * (musicLevel >= 6 && musicStep % 8 === 7 ? 2 : 1);
+    const beatSeconds = Math.max(.19, .38 - Math.min(musicLevel, 8) * .018);
+
+    scheduleSynthNote(context, master, frequency, now, beatSeconds * .82, .075, musicLevel >= 4 ? 'square' : 'triangle');
+    if (musicStep % 2 === 0) {
+      const root = roots[Math.floor(musicStep / 4) % roots.length];
+      scheduleSynthNote(context, master, root, now, beatSeconds * 1.75, .07, 'sine');
+    }
     if (musicStep % 4 === 0) {
-      const pulse = context.createOscillator();
-      const pulseGain = context.createGain();
-      pulse.type = 'sawtooth';
-      pulse.frequency.setValueAtTime(55 + Math.min(musicLevel, 8) * 2, context.currentTime);
-      pulseGain.gain.setValueAtTime(.022, context.currentTime);
-      pulseGain.gain.exponentialRampToValueAtTime(.001, context.currentTime + .12);
-      pulse.connect(pulseGain).connect(context.destination);
-      pulse.start();
-      pulse.stop(context.currentTime + .14);
+      const root = roots[Math.floor(musicStep / 4) % roots.length];
+      scheduleSynthNote(context, master, root * 2, now, beatSeconds * 3.6, .032, 'sine');
+      scheduleSynthNote(context, master, root * 2.5, now, beatSeconds * 3.6, .025, 'sine');
+      scheduleSynthNote(context, master, 62 + Math.min(musicLevel, 8) * 2, now, .13, .09, 'sawtooth');
     }
     musicStep += 1;
   } catch (error) {
@@ -65,6 +82,11 @@ export function applySettings(next = settings) {
   document.querySelectorAll('[data-sound-label]').forEach((button) => {
     button.setAttribute('aria-label', settings.sound ? 'Silenciar sonidos' : 'Activar sonidos');
     button.textContent = settings.sound ? '🔊 Sonido' : '🔇 Silencio';
+  });
+  document.querySelectorAll('[data-music-label]').forEach((button) => {
+    button.setAttribute('aria-label', settings.sound ? 'Silenciar música y sonidos' : 'Activar música y sonidos');
+    button.setAttribute('aria-pressed', String(settings.sound));
+    button.innerHTML = settings.sound ? '<span>🎵</span><strong>Música</strong>' : '<span>🔇</span><strong>Activar música</strong>';
   });
   saveSettings(settings);
   if (!settings.sound) { window.clearInterval(musicTimer); musicTimer = 0; }
@@ -118,7 +140,13 @@ export function startMusic(level = 1) {
   musicRequested = true;
   musicLevel = Math.max(1, Number(level) || 1);
   musicStep = 0;
-  scheduleMusic();
+  try {
+    const context = ensureAudioContext();
+    const resume = context.state === 'suspended' ? context.resume() : Promise.resolve();
+    Promise.resolve(resume).then(scheduleMusic);
+  } catch (error) {
+    console.warn('La música no está disponible en este navegador.', error);
+  }
 }
 
 export function setMusicIntensity(level) {

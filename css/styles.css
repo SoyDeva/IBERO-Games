@@ -476,11 +476,15 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 .checkpoint-hud strong { color: var(--cyan); }
 .difficulty-hud { border-color: color-mix(in srgb, var(--danger) calc(var(--danger-level, 0) * 100%), var(--border)); background: linear-gradient(135deg, rgba(255,109,125,calc(var(--danger-level, 0) * .18)), rgba(22,13,59,.9)); }
 .difficulty-hud strong { color: var(--gold); }
-.fullscreen-flight { position: absolute; z-index: 9; top: .75rem; right: .75rem; min-height: 46px; display: flex; align-items: center; gap: .5rem; padding: .55rem .8rem; border: 2px solid var(--cyan); border-radius: 14px; color: white; background: rgba(13,8,43,.94); box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 0 18px rgba(94,232,239,.2); cursor: pointer; }
-.fullscreen-flight:hover { background: rgba(46,38,99,.98); transform: translateY(-1px); }
-.fullscreen-flight:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
-.fullscreen-flight > span { color: var(--cyan); font-size: 1.4rem; line-height: 1; }
-.fullscreen-flight > strong { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.flight-stage-actions { position: absolute; z-index: 9; top: .75rem; right: .75rem; display: flex; gap: .45rem; }
+.fullscreen-flight, .music-flight { min-height: 46px; display: flex; align-items: center; gap: .5rem; padding: .55rem .8rem; border: 2px solid var(--cyan); border-radius: 14px; color: white; background: rgba(13,8,43,.94); box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 0 18px rgba(94,232,239,.2); cursor: pointer; }
+.music-flight { border-color: var(--gold); box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 0 18px rgba(247,203,98,.2); }
+.fullscreen-flight:hover, .music-flight:hover { background: rgba(46,38,99,.98); transform: translateY(-1px); }
+.fullscreen-flight:focus-visible, .music-flight:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.fullscreen-flight > span, .music-flight > span { color: var(--cyan); font-size: 1.4rem; line-height: 1; }
+.fullscreen-flight > strong, .music-flight > strong { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.music-flight[aria-pressed="true"] { background: rgba(86,58,33,.95); animation: musicGlow 1.8s ease-in-out infinite; }
+@keyframes musicGlow { 50% { box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 0 28px rgba(247,203,98,.48); } }
 .flight-stage { position: relative; overflow: hidden; border: 2px solid color-mix(in srgb, var(--pink) calc(var(--danger-level, 0) * 70%), rgba(141,115,255,.42)); border-radius: 24px; background: #07031b; box-shadow: 0 24px 70px rgba(2,0,15,.55), 0 0 calc(40px + var(--danger-level, 0) * 35px) rgba(255,80,125,calc(.08 + var(--danger-level, 0) * .15)); transition: border-color .3s, box-shadow .3s; }
 #flight-canvas { width: 100%; height: clamp(560px, calc(100svh - 225px), 900px); min-height: 0; display: block; touch-action: none; cursor: crosshair; }
 .flight-overlay, .quiz-panel { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow: hidden; padding: .65rem; background: rgba(4,2,18,.66); backdrop-filter: blur(6px); }
@@ -557,8 +561,9 @@ body.flight-screen-locked { overflow: hidden; }
   .hud-block > strong { font-size: .82rem; }
   #flight-canvas { min-height: 470px; height: calc(100svh - 190px); }
   .flight-stage { border-radius: 17px; }
-  .fullscreen-flight { top: .45rem; right: .45rem; min-width: 48px; min-height: 44px; justify-content: center; padding: .35rem; }
-  .fullscreen-flight > strong { display: none; }
+  .flight-stage-actions { top: .45rem; right: .45rem; gap: .3rem; }
+  .fullscreen-flight, .music-flight { min-width: 48px; min-height: 44px; justify-content: center; padding: .35rem; }
+  .fullscreen-flight > strong, .music-flight > strong { display: none; }
   .flight-overlay, .quiz-panel { padding: .55rem; }
   .overlay-card, .quiz-card { padding: .7rem; border-radius: 20px; }
   .quiz-card h2 { font-size: clamp(1.2rem, 4.8vw, 1.5rem); }
