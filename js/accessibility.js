@@ -18,12 +18,12 @@ function ensureMusicMaster(context) {
   if (musicMaster) return musicMaster;
   musicMaster = context.createGain();
   const limiter = context.createDynamicsCompressor();
-  musicMaster.gain.setValueAtTime(.98, context.currentTime);
-  limiter.threshold.setValueAtTime(-5, context.currentTime);
-  limiter.knee.setValueAtTime(8, context.currentTime);
-  limiter.ratio.setValueAtTime(12, context.currentTime);
-  limiter.attack.setValueAtTime(.003, context.currentTime);
-  limiter.release.setValueAtTime(.18, context.currentTime);
+  musicMaster.gain.setValueAtTime(2.4, context.currentTime);
+  limiter.threshold.setValueAtTime(-2.5, context.currentTime);
+  limiter.knee.setValueAtTime(3, context.currentTime);
+  limiter.ratio.setValueAtTime(20, context.currentTime);
+  limiter.attack.setValueAtTime(.001, context.currentTime);
+  limiter.release.setValueAtTime(.14, context.currentTime);
   musicMaster.connect(limiter).connect(context.destination);
   return musicMaster;
 }
@@ -52,16 +52,16 @@ function playMusicNote() {
     const frequency = melody[musicStep % melody.length] * (musicLevel >= 6 && musicStep % 8 === 7 ? 2 : 1);
     const beatSeconds = Math.max(.19, .38 - Math.min(musicLevel, 8) * .018);
 
-    scheduleSynthNote(context, master, frequency, now, beatSeconds * .82, .13, musicLevel >= 4 ? 'square' : 'triangle');
+    scheduleSynthNote(context, master, frequency, now, beatSeconds * .82, .22, musicLevel >= 4 ? 'square' : 'triangle');
     if (musicStep % 2 === 0) {
       const root = roots[Math.floor(musicStep / 4) % roots.length];
-      scheduleSynthNote(context, master, root, now, beatSeconds * 1.75, .115, 'sine');
+      scheduleSynthNote(context, master, root, now, beatSeconds * 1.75, .18, 'sine');
     }
     if (musicStep % 4 === 0) {
       const root = roots[Math.floor(musicStep / 4) % roots.length];
-      scheduleSynthNote(context, master, root * 2, now, beatSeconds * 3.6, .052, 'sine');
-      scheduleSynthNote(context, master, root * 2.5, now, beatSeconds * 3.6, .042, 'sine');
-      scheduleSynthNote(context, master, 62 + Math.min(musicLevel, 8) * 2, now, .13, .14, 'sawtooth');
+      scheduleSynthNote(context, master, root * 2, now, beatSeconds * 3.6, .085, 'sine');
+      scheduleSynthNote(context, master, root * 2.5, now, beatSeconds * 3.6, .065, 'sine');
+      scheduleSynthNote(context, master, 62 + Math.min(musicLevel, 8) * 2, now, .13, .22, 'sawtooth');
     }
     musicStep += 1;
   } catch (error) {
