@@ -9,19 +9,20 @@ import { createRouteState } from './core/routes.js?v=23';
 import { createAchievementStore } from './services/achievement-store.js?v=23';
 import { createEconomyStore } from './services/economy-store.js?v=23';
 import { createRankingController } from './services/ranking-controller.js?v=23';
+import { createQuestionSession } from './services/question-session.js?v=23';
 import { cleanPilotName, getPilotName, getPilotSession, loadRememberedPilot, savePilot } from './services/pilot-profile-store.js?v=23';
 import { bindNavigation } from './ui/navigation-bindings.js?v=23';
 import { renderHangarScreen } from './ui/hangar-screen.js?v=23';
 import { renderHomeScreen } from './ui/home-screen.js?v=23';
 import { renderRankingScreen } from './ui/ranking-screen.js?v=23';
 import { renderCredits, renderInstructions, renderTeacher } from './ui/static-screens.js?v=23';
+import { presentQuizPanel, resetQuizPanel, revealQuizAnswer } from './ui/quiz-panel.js?v=23';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
 const pilotDialog = document.getElementById('pilot-dialog');
 const navigation = createRouteState('home');
 let flight = null;
-const questionDecks = new Map();
 let currentQuestion = null;
 let toastTimer = 0;
 let quizTimer = 0;
@@ -52,6 +53,11 @@ const economyStore = createEconomyStore({ skins: SHIP_SKINS, trails: SHIP_TRAILS
 const achievementStore = createAchievementStore();
 const hangarCatalogs = { skins: SHIP_SKINS, trails: SHIP_TRAILS };
 const rankingController = createRankingController({ loadLeaderboard: getGalacticLeaderboard, submitScore: submitGalacticScore });
+const questionSession = createQuestionSession({
+  resolveLevel: levelForPortal,
+  createDeck: shuffledQuestions,
+  shuffleOptions: shuffledQuestionOptions
+});
 const loadEconomy = () => economyStore.load();
 const saveEconomy = (economy) => economyStore.save(economy);
 const loadAchievements = () => achievementStore.load();
@@ -536,30 +542,10 @@ function togglePause(forceResume = false) {
   }
 }
 
-function nextQuestion(portalNumber) {
-  const level = levelForPortal(portalNumber);
-  let deck = questionDecks.get(level);
-  if (!deck?.length) {
-    deck = shuffledQuestions(level);
-    questionDecks.set(level, deck);
-  }
-  currentQuestion = shuffledQuestionOptions(deck.pop());
-  return currentQuestion;
-}
-
 function showQuiz(meta) {
-  const question = nextQuestion(meta.number);
+  const question = questionSession.next(meta.number);
   currentCheckpointClean = Boolean(meta.clean && meta.number > 1);
-  const panel = document.getElementById('quiz-panel');
-  panel.dataset.answered = 'false';
-  document.getElementById('quiz-category').textContent = question.icon + ' ' + question.category + ' · Pregunta nivel ' + question.level;
-  document.getElementById('quiz-question').textContent = question.text;
-  document.getElementById('quiz-result').textContent = '';
-  const options = document.getElementById('quiz-options');
-  options.innerHTML = question.options.map((option, index) => '<button type="button" data-answer="' + index + '"><span>' + String.fromCharCode(65 + index) + '</span>' + escapeHtml(option) + '</button>').join('');
-  options.querySelectorAll('[data-answer]').forEach((button) => button.addEventListener('click', () => answerQuestion(Number(button.dataset.answer))));
-  panel.hidden = false;
-  options.querySelector('button')?.focus();
+  presentQuizPanel({ documentRef: document, question, onAnswer: answerQuestion });
   playTone('complete');
   announce('Puesto de recarga. Responde la pregunta para continuar.');
 }
@@ -567,17 +553,16 @@ function showQuiz(meta) {
 function answerQuestion(selectedIndex) {
   const panel = document.getElementById('quiz-panel');
   if (!panel || panel.dataset.answered === 'true') return;
-  panel.dataset.answered = 'true';
-  const buttons = [...panel.querySelectorAll('[data-answer]')];
-  buttons.forEach((button) => { button.disabled = true; });
-  buttons[currentQuestion.answer].classList.add('correct');
-  lastLearnedFact = currentQuestion.fact;
-  if (selectedIndex === currentQuestion.answer) {
-    document.getElementById('quiz-result').textContent = '✅ ¡Correcto! Combustible recargado.';
+  const outcome = questionSession.answer(selectedIndex, flightMode);
+  if (!outcome) return;
+
+  revealQuizAnswer({ documentRef: document, outcome });
+  lastLearnedFact = outcome.fact;
+
+  if (outcome.correct) {
     playTone('core');
     quizTimer = window.setTimeout(() => {
-      panel.hidden = true;
-      panel.dataset.answered = 'false';
+      resetQuizPanel({ documentRef: document });
       const progress = flight.answerCorrect();
       const earnedCrystals = awardCrystals(12);
       if (flight.totalCorrect >= 1) unlockAchievement('first_portal');
@@ -594,15 +579,12 @@ function answerQuestion(selectedIndex) {
         showToast('⛽ +38% · NIVEL ' + (flight.checkpoints + 1) + ' · +' + earnedCrystals + ' 💎', 'success');
       }
       document.getElementById('flight-canvas')?.focus();
-    }, 1050);
+    }, outcome.delayMs);
   } else {
-    buttons[selectedIndex].classList.add('wrong');
-    document.getElementById('quiz-result').textContent = (flightMode === 'practice' ? '💡 Aprendimos: ' : '❌ ') + currentQuestion.fact;
     playTone('alert');
     quizTimer = window.setTimeout(() => {
-      panel.hidden = true;
-      panel.dataset.answered = 'false';
-      if (flightMode === 'practice') {
+      resetQuizPanel({ documentRef: document });
+      if (outcome.practice) {
         const progress = flight.answerPracticeMistake();
         if (progress?.ammoRecharged) {
           showToast('⚡ PRÁCTICA NIVEL ' + progress.completedLevel + ' · PLASMA RECARGADO', 'plasma');
@@ -613,9 +595,9 @@ function answerQuestion(selectedIndex) {
         }
         document.getElementById('flight-canvas')?.focus();
       } else {
-        flight.strand('La respuesta no fue correcta. ' + currentQuestion.fact);
+        flight.strand('La respuesta no fue correcta. ' + outcome.fact);
       }
-    }, flightMode === 'practice' ? 2100 : 1700);
+    }, outcome.delayMs);
   }
 }
 
