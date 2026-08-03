@@ -85,7 +85,11 @@ export function inspectLearningRecoveryPoint(source, currentCollection, {
   now = new Date().toISOString()
 } = {}) {
   if (!source || typeof source !== 'object') return null;
-  assertSafeKeys(source);
+  try {
+    assertSafeKeys(source);
+  } catch (error) {
+    return null;
+  }
   if (source.schema !== LEARNING_RECOVERY_SCHEMA || !Object.hasOwn(ACTIONS, source.action)) return null;
   if (!source.integrity || source.integrity.checksum !== fnv1a32(payloadWithoutIntegrity(source))) return null;
   const createdAt = normalizeDate(source.createdAt);
