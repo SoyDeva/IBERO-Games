@@ -6,7 +6,7 @@ Misión Nébula utiliza módulos ES nativos y no requiere compilación. La reest
 
 ### `js/config/`
 
-Contiene valores de configuración sin lógica de negocio, por ejemplo la URL pública de Supabase, la clave publicable y los tiempos límite de red.
+Contiene valores de configuración sin lógica de negocio, por ejemplo la URL pública de Supabase, las claves de `localStorage`, la clave publicable y los tiempos límite de red.
 
 ### `js/core/`
 
@@ -17,15 +17,18 @@ Ejemplos actuales:
 - normalización del código de temporada;
 - construcción del resultado que se envía a la Liga;
 - transformación de filas de Supabase al modelo de la interfaz;
-- catálogo de errores comprensibles.
+- catálogo de errores comprensibles;
+- valores predeterminados y normalización de accesibilidad.
 
 ### `js/services/`
 
-Coordina recursos externos. Esta capa conoce `fetch`, Supabase y los nombres de las funciones RPC, pero no conoce las pantallas del juego.
+Coordina recursos externos. Esta capa conoce `fetch`, Supabase y `localStorage`, pero no conoce las pantallas del juego.
+
+El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. `game-storage.js` aplica ese adaptador a partidas y ajustes.
 
 ### Fachadas públicas
 
-Los archivos históricos que ya importa la aplicación, como `js/galactic-league.js`, se conservan como fachadas pequeñas. De esta manera, `app.js` no necesita cambiar mientras la implementación interna se reorganiza.
+Los archivos históricos que ya importa la aplicación, como `js/galactic-league.js` y `js/storage.js`, se conservan como fachadas pequeñas. De esta manera, los consumidores no necesitan cambiar mientras la implementación interna se reorganiza.
 
 ### Aplicación y presentación
 
@@ -45,9 +48,9 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ## Ruta de migración
 
-1. Liga Galáctica: dominio, transporte y servicio.
-2. Perfil del piloto y persistencia local.
-3. Economía, hangar y logros.
+1. Liga Galáctica: dominio, transporte y servicio. **Completado.**
+2. Persistencia local de partidas y ajustes. **Completado.**
+3. Perfil del piloto, economía, hangar y logros.
 4. Navegación y renderizado de pantallas.
 5. Orquestación de la misión y preguntas.
 6. Motor de vuelo: estado, simulación, entrada y renderizado.
