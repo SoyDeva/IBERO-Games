@@ -11,7 +11,7 @@ function normalizeStats(value = {}) {
   const correct = Math.min(attempts, safeCount(value.correct));
   const incorrect = Math.max(0, attempts - correct);
   const currentStreak = Math.min(correct, safeCount(value.currentStreak));
-  const bestStreak = Math.max(currentStreak, safeCount(value.bestStreak));
+  const bestStreak = Math.min(correct, Math.max(currentStreak, safeCount(value.bestStreak)));
   return { attempts, correct, incorrect, currentStreak, bestStreak };
 }
 
@@ -45,7 +45,7 @@ export function normalizeLearningProgress(value) {
   const attempts = useCategoryTotals ? categoryTotals.attempts : sourceTotals.attempts;
   const correct = Math.min(attempts, useCategoryTotals ? categoryTotals.correct : sourceTotals.correct);
   const currentStreak = Math.min(correct, sourceTotals.currentStreak);
-  const bestStreak = Math.max(currentStreak, sourceTotals.bestStreak, categoryTotals.bestStreak);
+  const bestStreak = Math.min(correct, Math.max(currentStreak, sourceTotals.bestStreak, categoryTotals.bestStreak));
 
   return {
     version: PROGRESS_VERSION,
