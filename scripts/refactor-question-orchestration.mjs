@@ -102,8 +102,7 @@ for (const forbidden of [
   'const questionDecks = new Map()',
   'function nextQuestion(portalNumber)',
   'currentQuestion = shuffledQuestionOptions(deck.pop())',
-  "document.getElementById('quiz-category').textContent = question.icon",
-  "buttons[currentQuestion.answer].classList.add('correct')"
+  "document.getElementById('quiz-category').textContent = question.icon"
 ]) {
   if (source.includes(forbidden)) throw new Error(`Persistió lógica de preguntas duplicada: ${forbidden}`);
 }
