@@ -4,12 +4,16 @@ import { bindSettings, applySettings, getSettings, announce, playTone, startMusi
 import { claimGalacticPilot, getGalacticLeaderboard, submitGalacticScore } from './galactic-league.js?v=23';
 import { ACHIEVEMENTS } from './core/achievements.js?v=23';
 import { equipHangarItem, purchaseHangarItem } from './core/hangar.js?v=23';
+import { escapeHtml } from './core/html.js?v=23';
 import { createRouteState } from './core/routes.js?v=23';
 import { createAchievementStore } from './services/achievement-store.js?v=23';
 import { createEconomyStore } from './services/economy-store.js?v=23';
 import { createRankingController } from './services/ranking-controller.js?v=23';
 import { cleanPilotName, getPilotName, getPilotSession, loadRememberedPilot, savePilot } from './services/pilot-profile-store.js?v=23';
 import { bindNavigation } from './ui/navigation-bindings.js?v=23';
+import { renderHangarScreen } from './ui/hangar-screen.js?v=23';
+import { renderHomeScreen } from './ui/home-screen.js?v=23';
+import { renderRankingScreen } from './ui/ranking-screen.js?v=23';
 import { renderCredits, renderInstructions, renderTeacher } from './ui/static-screens.js?v=23';
 
 const app = document.getElementById('app');
@@ -90,10 +94,6 @@ function unlockAchievement(id) {
   achievementTimer = window.setTimeout(() => { pop.hidden = true; }, 3200);
 }
 
-function escapeHtml(value = '') {
-  return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
-}
-
 function openPilotDialog(action = null) {
   if (!pilotDialog) return;
   pendingPilotAction = action;
@@ -169,71 +169,35 @@ function setRoute(next) {
 }
 
 function renderHome() {
-  const best = Number(localStorage.getItem('nebula-flight-best') || 0);
-  const unlocked = loadAchievements();
   const economy = loadEconomy();
-  const activeSkin = SHIP_SKINS[economy.activeSkin];
-  const pilotName = getPilotName();
-  const achievementShelf = Object.entries(ACHIEVEMENTS).map(([id, achievement]) => '<span class="' + (unlocked.includes(id) ? 'unlocked' : 'locked') + '" title="' + escapeHtml(achievement.title) + '"><b>' + (unlocked.includes(id) ? achievement.icon : '✦') + '</b><small>' + escapeHtml(achievement.title) + '</small></span>').join('');
-  const learned = localStorage.getItem('nebula-tutorial-complete') === 'true';
-  return '<section class="screen flight-home" aria-labelledby="home-title"><div class="flight-home-copy"><p class="eyebrow">🚀 Aventura educativa 2.5D</p><div class="pilot-welcome"><span>👨‍🚀</span><p><small>PILOTO ACTUAL</small><strong>' + escapeHtml(pilotName || 'Sin registrar') + '</strong></p><button type="button" data-change-pilot>' + (pilotName ? 'Cambiar' : 'Registrar') + '</button></div><h1 id="home-title">Pilota la <span>Asteria</span></h1><p class="lead">Esquiva, dispara y supera desafíos de conocimiento en cinco sectores galácticos.</p><div class="mission-formula"><span><b>🕹️</b><small>Esquiva</small></span><i>→</i><span><b>🌀</b><small>Llega</small></span><i>→</i><span><b>🧠</b><small>Responde</small></span><i>→</i><span><b>✨</b><small>Celebra</small></span></div><div class="home-actions"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Jugar misión</button><button class="button shop-button" data-nav="shop">🛸 Hangar Estelar</button><button class="button ranking-button" data-nav="ranking">🏆 Liga Galáctica</button><button class="button tutorial-button" data-nav="flight" data-mode="tutorial">🎮 ' + (learned ? 'Repetir tutorial' : 'Tutorial de 30 s') + '</button><button class="button ghost" data-nav="flight" data-mode="practice">🧪 Modo práctica</button><button class="button text-button" data-nav="instructions">Ver reglas</button></div><div class="home-records">' + (best ? '<span>🏆 <strong>' + best + '</strong> km</span>' : '<span>🏆 Sin récord aún</span>') + '<span>🏅 <strong>' + unlocked.length + '</strong>/5 logros</span><span class="crystal-chip">💎 <strong data-crystal-balance>' + economy.credits + '</strong> cristales</span></div><div class="achievement-shelf" aria-label="Logros de la misión">' + achievementShelf + '</div></div><div class="home-orbit" aria-hidden="true" style="--active-body:' + activeSkin.body + ';--active-wing:' + activeSkin.wing + ';--active-glow:' + activeSkin.glow + '"><div class="orbit-planet"></div><div class="orbit-ship">▲<i></i><b>' + activeSkin.icon + '</b></div><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span></div></section>';
-}
-
-function skinPreviewMarkup(skin) {
-  return '<div class="skin-preview" aria-hidden="true" style="--skin-body:' + skin.body + ';--skin-wing:' + skin.wing + ';--skin-glass:' + skin.glass + ';--skin-flame:' + skin.flame + ';--skin-glow:' + skin.glow + '"><i></i><span></span><b></b></div>';
-}
-
-function trailPreviewMarkup(trail) {
-  return '<div class="trail-preview" aria-hidden="true" style="--trail-one:' + trail.primary + ';--trail-two:' + trail.secondary + '"><span>▲</span><i></i><i></i><i></i><i></i></div>';
-}
-
-function catalogAction(kind, id, item, owned, active) {
-  if (active) return '<button class="button equipped" type="button" disabled>✓ En uso</button>';
-  if (owned) return '<button class="button secondary" type="button" data-equip-item data-kind="' + kind + '" data-item="' + id + '">Usar ahora</button>';
-  return '<button class="button primary" type="button" data-buy-item data-kind="' + kind + '" data-item="' + id + '">💎 ' + item.price + ' · Desbloquear</button>';
+  return renderHomeScreen({
+    best: Number(localStorage.getItem('nebula-flight-best') || 0),
+    unlocked: loadAchievements(),
+    economy,
+    activeSkin: SHIP_SKINS[economy.activeSkin],
+    pilotName: getPilotName(),
+    learned: localStorage.getItem('nebula-tutorial-complete') === 'true',
+    achievements: ACHIEVEMENTS
+  });
 }
 
 function renderShop() {
-  const economy = loadEconomy();
-  const shipCards = Object.entries(SHIP_SKINS).map(([id, skin]) => {
-    const owned = economy.ownedSkins.includes(id);
-    const active = economy.activeSkin === id;
-    const action = catalogAction('skin', id, skin, owned, active);
-    return '<article class="skin-card ' + (active ? 'active' : '') + '">' + skinPreviewMarkup(skin) + '<p class="skin-rarity">' + skin.icon + ' ESTILO DE NAVE</p><h2>' + escapeHtml(skin.name) + '</h2><p>' + escapeHtml(skin.description) + '</p>' + action + '</article>';
-  }).join('');
-  const trailCards = Object.entries(SHIP_TRAILS).map(([id, trail]) => {
-    const owned = economy.ownedTrails.includes(id);
-    const active = economy.activeTrail === id;
-    return '<article class="trail-card ' + (active ? 'active' : '') + '">' + trailPreviewMarkup(trail) + '<div><p class="skin-rarity">' + trail.icon + ' ESTELA DE MOTOR</p><h3>' + escapeHtml(trail.name) + '</h3><p>' + escapeHtml(trail.description) + '</p></div>' + catalogAction('trail', id, trail, owned, active) + '</article>';
-  }).join('');
-  const message = shopMessage ? '<p class="shop-message" role="status">' + escapeHtml(shopMessage) + '</p>' : '';
-  return '<section class="screen screen-narrow orbital-shop" aria-labelledby="shop-title"><div class="hangar-hero"><div class="hangar-satellite" aria-hidden="true">🛰️</div><div><p class="eyebrow">🛸 Centro de personalización</p><h1 id="shop-title">Hangar Estelar</h1><p class="lead">Construye una Asteria única. Todo es cosmético: el conocimiento y la habilidad siguen mandando.</p></div><div class="shop-wallet"><span>Tu energía estelar</span><strong>💎 <b data-crystal-balance>' + economy.credits + '</b></strong><small>Sin dinero real</small></div></div>' + message + '<div class="hangar-section-title"><span>🚀</span><div><p>PINTURA Y FUSELAJE</p><h2>Escoge tu nave</h2></div><small>' + economy.ownedSkins.length + '/' + Object.keys(SHIP_SKINS).length + ' desbloqueadas</small></div><div class="skin-grid">' + shipCards + '</div><div class="hangar-section-title"><span>✨</span><div><p>EFECTOS DE VUELO</p><h2>Estelas de motor</h2></div><small>' + economy.ownedTrails.length + '/' + Object.keys(SHIP_TRAILS).length + ' desbloqueadas</small></div><div class="trail-grid">' + trailCards + '</div><div class="shop-note"><span>💡</span><p><strong>Consigue energía estelar:</strong> gana 12 cristales por respuesta correcta y 3 por objeto destruido en una misión real.</p></div><div class="button-row"><button class="button primary" data-nav="flight" data-mode="mission">🚀 Volar con mi diseño</button><button class="button ranking-button" data-nav="ranking">🏆 Ver Liga Galáctica</button><button class="button ghost" data-nav="home">Volver</button></div></section>';
+  return renderHangarScreen({
+    economy: loadEconomy(),
+    skins: SHIP_SKINS,
+    trails: SHIP_TRAILS,
+    message: shopMessage
+  });
 }
 
 function renderRanking() {
-  const { ranking, status: rankingStatus, error: rankingError } = rankingController.getSnapshot();
-  const pilotName = getPilotName();
-  const isCurrentPilot = (name) => name?.toLocaleLowerCase('es') === pilotName?.toLocaleLowerCase('es');
-  const medals = ['🥇', '🥈', '🥉'];
-  const podium = [1, 0, 2].map((index) => {
-    const entry = ranking[index];
-    const place = index + 1;
-    if (!entry) return '<div class="podium-place place-' + place + ' empty"><span>' + medals[index] + '</span><strong>Disponible</strong><small>¡Puede ser tu lugar!</small><i>' + place + '</i></div>';
-    const skin = SHIP_SKINS[entry.skin] || SHIP_SKINS.nebula;
-    return '<div class="podium-place place-' + place + (isCurrentPilot(entry.name) ? ' current' : '') + '"><span>' + medals[index] + '</span><b>' + skin.icon + '</b><strong>' + escapeHtml(entry.name) + '</strong><small>' + entry.distance + ' km · ' + entry.correct + ' aciertos</small><i>' + place + '</i></div>';
-  }).join('');
-  const rows = ranking.map((entry, index) => {
-    const skin = SHIP_SKINS[entry.skin] || SHIP_SKINS.nebula;
-    const trail = SHIP_TRAILS[entry.trail] || SHIP_TRAILS.pulse;
-    return '<li class="ranking-row' + (isCurrentPilot(entry.name) ? ' current' : '') + '"><span class="ranking-position">' + (index < 3 ? medals[index] : index + 1) + '</span><span class="ranking-pilot"><b>' + skin.icon + '</b><span><strong>' + escapeHtml(entry.name) + '</strong><small>' + trail.icon + ' ' + escapeHtml(trail.name) + '</small></span></span><span><strong>' + entry.distance + ' km</strong><small>Distancia</small></span><span><strong>' + entry.checkpoints + '</strong><small>Portales</small></span><span><strong>' + entry.correct + '</strong><small>Aciertos</small></span></li>';
-  }).join('');
-  const waiting = rankingStatus === 'loading'
-    ? '<div class="ranking-empty ranking-loading"><span>🛰️</span><h2>Conectando con la galaxia…</h2><p>Estamos reuniendo los mejores vuelos de todos los dispositivos.</p></div>'
-    : rankingStatus === 'error'
-      ? '<div class="ranking-empty ranking-error"><span>📡</span><h2>Se perdió la señal espacial</h2><p>' + escapeHtml(rankingError) + '</p><button class="button ghost" type="button" data-refresh-ranking>🔄 Intentar otra vez</button></div>'
-      : '<div class="ranking-empty"><span>🪐</span><h2>La galaxia espera a su primera leyenda</h2><p>Completa una misión real para inaugurar esta temporada mundial.</p></div>';
-  const onlineStatus = rankingStatus === 'ready' ? '🟢 EN LÍNEA' : rankingStatus === 'error' ? '🔴 SIN SEÑAL' : '🟡 CONECTANDO';
-  return '<section class="screen screen-narrow galaxy-ranking" aria-labelledby="ranking-title"><div class="ranking-hero"><div><p class="eyebrow">🌎 Temporada mundial · ' + escapeHtml(SEASON_NAME) + '</p><h1 id="ranking-title">Liga Galáctica</h1><p class="lead">Los diez mejores vuelos, sin importar desde qué dispositivo jueguen.</p><span class="league-online-status">' + onlineStatus + '</span></div><div class="season-core" aria-hidden="true"><span>★</span><i></i><i></i></div></div><p class="season-rule"><span>🔄</span><strong>Clasificación justa:</strong> cada actualización abre una temporada nueva y vacía. Los apodos son únicos y solo se conserva el mejor vuelo de cada piloto.</p><div class="space-podium">' + podium + '</div>' + (ranking.length ? '<ol class="ranking-list">' + rows + '</ol>' : waiting) + '<div class="button-row"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Mejorar mi posición</button><button class="button ghost" type="button" data-refresh-ranking>🔄 Actualizar tabla</button><button class="button shop-button" data-nav="shop">🛸 Visitar Hangar</button><button class="button ghost" data-nav="home">Volver</button></div></section>';
+  return renderRankingScreen({
+    snapshot: rankingController.getSnapshot(),
+    pilotName: getPilotName(),
+    seasonName: SEASON_NAME,
+    skins: SHIP_SKINS,
+    trails: SHIP_TRAILS
+  });
 }
 
 function renderFlight() {

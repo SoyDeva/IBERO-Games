@@ -23,7 +23,8 @@ Ejemplos actuales:
 - normalización de créditos, fuselajes y estelas adquiridas;
 - catálogo y normalización de logros;
 - compras y equipamiento del Hangar Estelar sin mutar el estado anterior;
-- catálogo, validación y transiciones del estado de rutas.
+- catálogo, validación y transiciones del estado de rutas;
+- escape uniforme de contenido dinámico antes de insertarlo en HTML.
 
 ### `js/services/`
 
@@ -33,10 +34,13 @@ El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y 
 
 ### `js/ui/`
 
-Contiene renderizadores y enlaces de interacción que conocen el DOM, pero no administran reglas de negocio ni conexiones remotas.
+Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados y no administra reglas de negocio, almacenamiento ni conexiones remotas.
 
 - `navigation-bindings.js` enlaza de forma uniforme los botones `data-nav`, aplica el modo de vuelo y protege el acceso a una misión cuando falta el piloto.
-- `static-screens.js` genera las pantallas de instrucciones, guía docente y créditos sin depender del estado global de la aplicación.
+- `static-screens.js` genera las pantallas de instrucciones, guía docente y créditos.
+- `home-screen.js` representa perfil, récord, logros, cristales y nave activa.
+- `hangar-screen.js` representa fuselajes, estelas, saldo y acciones de compra o equipamiento.
+- `ranking-screen.js` representa estados de carga, error, podio y tabla mundial.
 
 ### Fachadas públicas
 
@@ -44,7 +48,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ### Aplicación y presentación
 
-`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación y pantallas informativas. Las siguientes fases separarán las pantallas dinámicas y la orquestación de la misión.
+`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación y renderizado de las pantallas externas a la misión. La siguiente fase separará la orquestación de preguntas y el flujo de vuelo.
 
 ### Motor de vuelo
 
@@ -66,7 +70,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 4. Reglas del Hangar Estelar. **Completado.**
 5. Clasificación y estado remoto de la Liga. **Completado.**
 6. Navegación y pantallas informativas. **Completado.**
-7. Pantallas dinámicas de inicio, Hangar y Liga.
+7. Pantallas dinámicas de Inicio, Hangar y Liga. **Completado.**
 8. Orquestación de la misión y preguntas.
 9. Motor de vuelo: estado, simulación, entrada y renderizado.
 10. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
