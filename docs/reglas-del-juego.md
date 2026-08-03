@@ -6,14 +6,15 @@ Pilotar la nave Asteria, superar puestos de recarga y viajar la mayor distancia 
 
 ## Ciclo de juego
 
-Pilotar → esquivar → llegar al portal → responder → recargar → continuar.
+Pilotar → esquivar o disparar → llegar al portal → responder → recargar → continuar.
 
 ## Controles
 
 - Teclado: flechas izquierda y derecha o teclas A y D.
+- Disparo: barra espaciadora; hay tres cargas en todo el intento.
 - Pantalla táctil: botones grandes bajo la escena.
 - Toque directo: tocar el lado izquierdo o derecho del espacio.
-- Pantalla completa: pulsar **⛶ Ampliar**; el mismo botón permite regresar al tamaño normal.
+- Pantalla completa: pulsar **⛶ Pantalla completa**; el mismo botón permite regresar al tamaño normal.
 
 La nave se mueve entre tres carriles. Avanza automáticamente.
 

@@ -46,11 +46,11 @@ El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
 
 1. Pulsar **Despegar**.
 2. Usar `←` y `→`, las teclas `A` y `D`, los botones grandes o tocar un lado de la escena.
-3. Pulsar **⛶ Ampliar** para jugar a pantalla completa cuando se desee.
-4. Cambiar de carril para esquivar todos los objetos.
-5. Entrar al portal brillante.
-6. Elegir una de tres respuestas.
-7. Acertar para recargar combustible y continuar.
+3. Pulsar `ESPACIO` o **⚡ DISPARAR** para usar una de las tres cargas de plasma del intento.
+4. Pulsar **⛶ Pantalla completa** para ampliar el juego cuando se desee.
+5. Esquivar los objetos y entrar al portal brillante.
+6. Elegir una de tres respuestas: acertar recarga combustible; fallar termina el intento.
+7. Evitar tres choques y no dejar que el combustible llegue a cero.
 
 ## Reglas pedagógicas
 
