@@ -17,7 +17,11 @@ Misión Nébula combina coordinación visomotora, atención sostenida, toma ráp
 
 ## Conocimientos incluidos
 
-La baraja contiene 24 preguntas de espacio, ciencias, naturaleza, geografía, matemáticas, lenguaje, historia, tecnología y convivencia. Cada una presenta tres respuestas posibles y una explicación breve del dato correcto.
+La baraja contiene 100 preguntas de espacio, ciencias, naturaleza, geografía, matemáticas, lenguaje, historia, tecnología y convivencia. Cada una presenta tres respuestas posibles y una explicación breve del dato correcto.
+
+Las preguntas se distribuyen en cinco niveles de 20 preguntas. Los portales 1 y 2 usan el nivel 1; los portales 3 y 4, el nivel 2; y así sucesivamente hasta el nivel 5. Después de cada respuesta correcta también aumenta la velocidad de los objetos, disminuye el intervalo entre oleadas y crece la posibilidad de encontrar dos obstáculos simultáneos. El sistema nunca bloquea los tres carriles en una misma oleada.
+
+La música espacial se sintetiza dentro del navegador y acelera gradualmente para comunicar el aumento de dificultad. Puede desactivarse con el control de sonido.
 
 ## Mediación
 

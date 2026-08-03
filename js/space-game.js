@@ -25,6 +25,7 @@ export class SpaceFlight {
     this.checkpoints = 0;
     this.nextCheckpoint = 280;
     this.obstacles = [];
+    this.explosions = [];
     this.spawnTimer = 1.8;
     this.elapsed = 0;
     this.shake = 0;
@@ -71,6 +72,7 @@ export class SpaceFlight {
     this.checkpoints = 0;
     this.nextCheckpoint = 280;
     this.obstacles = [];
+    this.explosions = [];
     this.spawnTimer = 2.1;
     this.elapsed = 0;
     this.shake = 0;
@@ -117,6 +119,7 @@ export class SpaceFlight {
     this.spawnTimer = 2;
     this.flash = 1;
     this.mode = 'running';
+    this.callbacks.onLevelUp?.({ level: this.checkpoints + 1 });
     this.emitHud();
   }
 
@@ -137,7 +140,7 @@ export class SpaceFlight {
 
   updateStars(delta, pace) {
     this.stars.forEach((star) => {
-      star.depth += delta * (.18 + this.checkpoints * .012) * pace;
+      star.depth += delta * (.2 + this.checkpoints * .022) * pace;
       if (star.depth > 1) Object.assign(star, this.createStar(), { depth: .02 });
     });
   }
@@ -145,7 +148,8 @@ export class SpaceFlight {
   update(delta) {
     this.elapsed += delta;
     this.lanePosition += (this.lane - this.lanePosition) * Math.min(1, delta * 8);
-    const distanceRate = 17 + this.checkpoints * 1.25;
+    const difficulty = this.getDifficulty();
+    const distanceRate = 17 + this.checkpoints * 1.8;
     this.distance += distanceRate * delta;
     this.fuel = Math.max(0, this.fuel - delta * (1.05 + this.checkpoints * .035));
     this.flash = Math.max(0, this.flash - delta * 1.8);
@@ -159,20 +163,25 @@ export class SpaceFlight {
     const remaining = this.nextCheckpoint - this.distance;
     this.spawnTimer -= delta;
     if (this.spawnTimer <= 0 && remaining > 65) {
-      this.spawnObstacle();
-      this.spawnTimer = Math.max(.82, 1.55 - this.checkpoints * .07) + Math.random() * .45;
+      this.spawnWave();
+      this.spawnTimer = difficulty.spawnInterval + Math.random() * .32;
     }
 
     for (const obstacle of this.obstacles) {
-      obstacle.depth += delta * (.34 + this.checkpoints * .018);
+      obstacle.depth += delta * difficulty.obstacleSpeed * obstacle.speedFactor;
       obstacle.spin += delta * obstacle.spinSpeed;
-      if (!obstacle.hit && obstacle.depth > .82 && obstacle.depth < 1.02 && Math.abs(obstacle.lane - this.lanePosition) < .42) {
+      if (!obstacle.hit && obstacle.depth > .86 && obstacle.depth < .99 && Math.abs(obstacle.lane - this.lanePosition) < .4) {
         obstacle.hit = true;
         this.collide(obstacle);
       }
       if (this.mode === 'gameover') break;
     }
-    this.obstacles = this.obstacles.filter((obstacle) => obstacle.depth < 1.14 && !obstacle.hit);
+    this.explosions.forEach((explosion) => {
+      explosion.age += delta;
+      explosion.depth += delta * difficulty.obstacleSpeed * .5;
+    });
+    this.explosions = this.explosions.filter((explosion) => explosion.age < .7);
+    this.obstacles = this.obstacles.filter((obstacle) => obstacle.depth < 1.24 && !obstacle.hit);
     if (this.mode !== 'running') {
       this.emitHud();
       return;
@@ -186,18 +195,31 @@ export class SpaceFlight {
     this.emitHud();
   }
 
-  spawnObstacle() {
-    const type = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
-    const lane = LANES[Math.floor(Math.random() * LANES.length)];
-    this.obstacles.push({
-      type,
-      lane,
-      depth: .04,
-      spin: Math.random() * Math.PI * 2,
-      spinSpeed: (Math.random() - .5) * 2.2,
-      size: .82 + Math.random() * .34,
-      hit: false
-    });
+  getDifficulty() {
+    return {
+      level: this.checkpoints + 1,
+      obstacleSpeed: Math.min(.7, .36 + this.checkpoints * .042),
+      spawnInterval: Math.max(.62, 1.42 - this.checkpoints * .085),
+      pairChance: Math.min(.82, .12 + this.checkpoints * .115)
+    };
+  }
+
+  spawnWave() {
+    const difficulty = this.getDifficulty();
+    const lanes = [...LANES].sort(() => Math.random() - .5);
+    const count = Math.random() < difficulty.pairChance ? 2 : 1;
+    for (let index = 0; index < count; index += 1) {
+      this.obstacles.push({
+        type: OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)],
+        lane: lanes[index],
+        depth: .035 + (index === 1 && this.checkpoints > 4 && Math.random() < .45 ? .1 : 0),
+        spin: Math.random() * Math.PI * 2,
+        spinSpeed: (Math.random() - .5) * 2.8,
+        speedFactor: .92 + Math.random() * .16,
+        size: .84 + Math.random() * .32,
+        hit: false
+      });
+    }
   }
 
   collide(obstacle) {
@@ -205,6 +227,7 @@ export class SpaceFlight {
     this.fuel = Math.max(0, this.fuel - 14);
     this.shake = 1;
     this.flash = -.7;
+    this.explosions.push({ lane: obstacle.lane, depth: obstacle.depth, age: 0, seed: Math.random() * Math.PI * 2 });
     const names = { planet: 'un planeta', meteor: 'un meteorito', star: 'una estrella ardiente', ship: 'otra nave' };
     this.callbacks.onCollision?.({ name: names[obstacle.type], hull: this.hull });
     if (this.hull <= 0) this.strand('La nave recibió demasiados golpes y quedó varada.');
@@ -216,7 +239,9 @@ export class SpaceFlight {
       hull: this.hull,
       distance: Math.round(this.distance),
       checkpoint: this.checkpoints + 1,
-      remaining: Math.max(0, Math.round(this.nextCheckpoint - this.distance))
+      remaining: Math.max(0, Math.round(this.nextCheckpoint - this.distance)),
+      level: this.checkpoints + 1,
+      speed: Math.round(this.getDifficulty().obstacleSpeed * 100)
     });
   }
 
@@ -237,8 +262,11 @@ export class SpaceFlight {
     this.drawSpace(ctx);
     this.drawRoute(ctx);
     this.drawCheckpoint(ctx);
-    [...this.obstacles].sort((a, b) => a.depth - b.depth).forEach((obstacle) => this.drawObstacle(ctx, obstacle));
+    const sorted = [...this.obstacles].sort((a, b) => a.depth - b.depth);
+    sorted.filter((obstacle) => obstacle.depth <= .92).forEach((obstacle) => this.drawObstacle(ctx, obstacle));
     this.drawShip(ctx);
+    sorted.filter((obstacle) => obstacle.depth > .92).forEach((obstacle) => this.drawObstacle(ctx, obstacle));
+    this.explosions.forEach((explosion) => this.drawExplosion(ctx, explosion));
     if (this.flash !== 0) {
       ctx.fillStyle = this.flash > 0 ? `rgba(87,224,160,${this.flash * .22})` : `rgba(255,80,110,${Math.abs(this.flash) * .32})`;
       ctx.fillRect(0, 0, this.width, this.height);
@@ -300,7 +328,7 @@ export class SpaceFlight {
       ctx.stroke();
     });
 
-    const offset = (this.elapsed * .58) % .14;
+    const offset = (this.elapsed * (.62 + this.checkpoints * .055)) % .14;
     for (let depth = .08 + offset; depth < 1; depth += .14) {
       const y = horizonY + easeIn(depth) * (bottomY - horizonY);
       const half = this.width * (.045 + easeIn(depth) * .44);
@@ -342,12 +370,42 @@ export class SpaceFlight {
     const point = this.project(obstacle.lane, obstacle.depth);
     const base = 48 * point.scale * obstacle.size;
     ctx.save();
+    if (obstacle.depth > 1.04) ctx.globalAlpha = clamp((1.24 - obstacle.depth) / .2, 0, 1);
     ctx.translate(point.x, point.y);
     ctx.rotate(obstacle.spin);
     if (obstacle.type === 'planet') this.drawPlanet(ctx, base);
     if (obstacle.type === 'meteor') this.drawMeteor(ctx, base);
     if (obstacle.type === 'star') this.drawHotStar(ctx, base);
     if (obstacle.type === 'ship') this.drawRivalShip(ctx, base);
+    ctx.restore();
+  }
+
+  drawExplosion(ctx, explosion) {
+    const point = this.project(explosion.lane, explosion.depth);
+    const progress = explosion.age / .7;
+    const radius = 24 + progress * 86;
+    ctx.save();
+    ctx.translate(point.x, point.y);
+    ctx.globalAlpha = 1 - progress;
+    ctx.globalCompositeOperation = 'lighter';
+    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+    glow.addColorStop(0, '#ffffff');
+    glow.addColorStop(.2, '#ffe36e');
+    glow.addColorStop(.55, '#ff6d7d');
+    glow.addColorStop(1, 'rgba(255,70,120,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#8cf4ff';
+    ctx.lineWidth = Math.max(1, 5 * (1 - progress));
+    for (let index = 0; index < 10; index += 1) {
+      const angle = explosion.seed + index * Math.PI * .2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * radius * .2, Math.sin(angle) * radius * .2);
+      ctx.lineTo(Math.cos(angle) * radius * 1.35, Math.sin(angle) * radius * 1.35);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 

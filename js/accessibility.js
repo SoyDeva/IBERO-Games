@@ -2,6 +2,57 @@ import { loadSettings, saveSettings } from './storage.js';
 
 let settings = loadSettings();
 let audioContext;
+let musicTimer = 0;
+let musicStep = 0;
+let musicLevel = 1;
+let musicRequested = false;
+
+function ensureAudioContext() {
+  audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+  if (audioContext.state === 'suspended') audioContext.resume();
+  return audioContext;
+}
+
+function playMusicNote() {
+  if (!settings.sound || !musicRequested) return;
+  try {
+    const context = ensureAudioContext();
+    const sequence = [110, 146.83, 164.81, 220, 196, 164.81, 146.83, 130.81];
+    const frequency = sequence[musicStep % sequence.length] * (musicLevel >= 6 && musicStep % 4 === 3 ? 2 : 1);
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = musicLevel >= 4 ? 'triangle' : 'sine';
+    oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+    gain.gain.setValueAtTime(0.001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.035, context.currentTime + .025);
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + .24);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + .26);
+    if (musicStep % 4 === 0) {
+      const pulse = context.createOscillator();
+      const pulseGain = context.createGain();
+      pulse.type = 'sawtooth';
+      pulse.frequency.setValueAtTime(55 + Math.min(musicLevel, 8) * 2, context.currentTime);
+      pulseGain.gain.setValueAtTime(.022, context.currentTime);
+      pulseGain.gain.exponentialRampToValueAtTime(.001, context.currentTime + .12);
+      pulse.connect(pulseGain).connect(context.destination);
+      pulse.start();
+      pulse.stop(context.currentTime + .14);
+    }
+    musicStep += 1;
+  } catch (error) {
+    console.warn('La música no está disponible en este navegador.', error);
+  }
+}
+
+function scheduleMusic() {
+  window.clearInterval(musicTimer);
+  musicTimer = 0;
+  if (!settings.sound || !musicRequested) return;
+  playMusicNote();
+  musicTimer = window.setInterval(playMusicNote, Math.max(165, 340 - Math.min(musicLevel, 8) * 20));
+}
 
 export function applySettings(next = settings) {
   settings = { ...settings, ...next };
@@ -16,6 +67,8 @@ export function applySettings(next = settings) {
     button.textContent = settings.sound ? '🔊 Sonido' : '🔇 Silencio';
   });
   saveSettings(settings);
+  if (!settings.sound) { window.clearInterval(musicTimer); musicTimer = 0; }
+  else if (musicRequested && !musicTimer) scheduleMusic();
   return settings;
 }
 export function getSettings() {
@@ -42,7 +95,7 @@ export function announce(message) {
 export function playTone(type = 'select') {
   if (!settings.sound) return;
   try {
-    audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+    ensureAudioContext();
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
     const tones = { select: [440, 0.06], complete: [660, 0.18], core: [880, 0.3], alert: [260, 0.22] };
@@ -59,4 +112,24 @@ export function playTone(type = 'select') {
   } catch (error) {
     console.warn('El sonido no está disponible en este navegador.', error);
   }
+}
+
+export function startMusic(level = 1) {
+  musicRequested = true;
+  musicLevel = Math.max(1, Number(level) || 1);
+  musicStep = 0;
+  scheduleMusic();
+}
+
+export function setMusicIntensity(level) {
+  const nextLevel = Math.max(1, Number(level) || 1);
+  if (nextLevel === musicLevel) return;
+  musicLevel = nextLevel;
+  if (musicRequested) scheduleMusic();
+}
+
+export function stopMusic() {
+  musicRequested = false;
+  window.clearInterval(musicTimer);
+  musicTimer = 0;
 }

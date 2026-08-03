@@ -16,6 +16,8 @@ Pilotar → esquivar → llegar al portal → responder → recargar → continu
 
 La nave se mueve entre tres carriles. Avanza automáticamente.
 
+Después de cada respuesta correcta aumenta el nivel: los objetos se acercan más rápido, aparecen con mayor frecuencia y pueden formar oleadas que ocupan dos carriles. Siempre queda al menos un carril libre.
+
 ## Obstáculos
 
 - Planetas.
@@ -34,6 +36,8 @@ Un portal aparece aproximadamente cada 15–20 segundos. Al alcanzarlo:
 3. Una respuesta correcta recarga 38 % de combustible.
 4. Una respuesta incorrecta deja la nave varada y termina el intento.
 5. Antes de reiniciar se muestra el dato correcto.
+
+El banco contiene 100 preguntas divididas en cinco niveles. Cada dos portales aumenta la dificultad de las preguntas. La música también acelera para acompañar el cambio de nivel.
 
 También termina el intento cuando se pierden los tres escudos o se agota el combustible.
 

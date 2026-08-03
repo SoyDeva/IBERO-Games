@@ -26,11 +26,15 @@ El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
 - Tres escudos para que el aprendizaje inicial sea amable.
 - Indicadores permanentes de combustible, escudos, distancia y siguiente portal.
 - Portales aproximadamente cada 15–20 segundos.
-- 24 preguntas de opción múltiple, sin escritura.
+- 100 preguntas de opción múltiple, sin escritura, organizadas en cinco niveles.
 - Categorías: espacio, ciencias, naturaleza, geografía, matemáticas, lenguaje, historia, tecnología y convivencia.
 - Explicación breve después de una respuesta incorrecta.
 - Récord de distancia guardado únicamente en `localStorage`.
-- Sonido opcional, alto contraste, texto grande y reducción de animaciones de interfaz.
+- Música espacial sintetizada que acelera con el nivel y efectos de sonido opcionales.
+- Dificultad progresiva: más velocidad, menor intervalo y oleadas dobles después de cada acierto.
+- Paso cercano corregido: los objetos que se esquivan cruzan el primer plano y se desvanecen fuera de cámara.
+- Explosiones visibles en lugar de desapariciones bruscas al chocar.
+- Alto contraste, texto grande y reducción de animaciones de interfaz.
 - Diseño adaptable a computador, tableta y teléfono.
 - Funcionamiento sin cuentas, publicidad, analítica ni servicios externos.
 - Caché sin conexión mediante Service Worker.
@@ -46,7 +50,10 @@ El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
 
 ## Reglas pedagógicas
 
-- Las preguntas están dirigidas a estudiantes de 10 a 12 años.
+- Las preguntas están dirigidas a estudiantes de 10 a 12 años y avanzan de reconocimiento básico a razonamiento aplicado.
+- Cada dos portales aumenta el nivel cognitivo de las preguntas, hasta el nivel cinco.
+- Cada respuesta correcta aumenta la velocidad y la frecuencia de los obstáculos.
+- Las oleadas bloquean como máximo dos carriles: siempre queda una ruta posible.
 - Cada pregunta tiene tres opciones y una respuesta definida.
 - El vuelo se detiene por completo mientras se responde.
 - El récord es una motivación personal y no una calificación.
@@ -107,11 +114,16 @@ GitHub Pages publica la rama `main` desde la raíz del repositorio:
 ## Verificaciones
 
 - [x] Sintaxis de todos los módulos JavaScript.
-- [x] Integridad de 24 preguntas, opciones y respuestas.
+- [x] Integridad de 100 preguntas únicas: 20 por cada nivel.
+- [x] Progresión de preguntas 1–1, 2–2, 3–3, 4–4 y 5–5 por portal.
 - [x] Simulación del primer portal y pausa del vuelo.
 - [x] Respuesta correcta: recarga y reanudación.
 - [x] Respuesta incorrecta: nave varada.
 - [x] Pérdida de escudos y combustible por colisión.
+- [x] Aumento de velocidad, frecuencia y oleadas dobles por nivel.
+- [x] Verificación de que ninguna oleada bloquea los tres carriles.
+- [x] Explosión de impacto y desvanecimiento de objetos en primer plano.
+- [x] Música dinámica y liberación de sus temporizadores.
 - [x] Carga local de portada, estilos, motor y preguntas.
 - [x] Rutas relativas compatibles con GitHub Pages.
 - [x] Controles accesibles por teclado y pantalla táctil.
