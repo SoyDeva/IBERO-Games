@@ -23,6 +23,11 @@
   background: rgba(94, 232, 239, .05);
 }
 
+.learning-device-import-control {
+  border-color: rgba(141, 115, 255, .42);
+  background: rgba(141, 115, 255, .07);
+}
+
 .learning-import-control > span {
   display: grid;
   gap: .2rem;
@@ -125,10 +130,138 @@
   font-size: .76rem;
 }
 
+.learning-device-restore {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(94, 232, 239, .32);
+  border-radius: 1rem;
+  background: rgba(10, 9, 36, .82);
+}
+
+.learning-device-restore-heading,
+.learning-restore-profile-heading,
+.learning-restore-profile-heading label {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+}
+
+.learning-device-restore-heading {
+  justify-content: space-between;
+}
+
+.learning-device-restore-heading h4,
+.learning-device-restore-heading .eyebrow {
+  margin: 0;
+}
+
+.learning-device-restore-heading > span {
+  font-size: 1.5rem;
+}
+
+.learning-restore-warning {
+  padding: .55rem .7rem;
+  border-radius: .7rem;
+  background: rgba(255, 198, 92, .1);
+  color: #ffe3a3;
+}
+
+.learning-restore-profiles {
+  display: grid;
+  gap: .75rem;
+  margin: .85rem 0;
+}
+
+.learning-restore-profile {
+  padding: .8rem;
+  border: 1px solid rgba(141, 115, 255, .25);
+  border-radius: .8rem;
+  background: rgba(26, 21, 69, .62);
+}
+
+.learning-restore-profile-heading label {
+  cursor: pointer;
+}
+
+.learning-restore-profile-heading input {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.learning-restore-profile-heading span,
+.learning-restore-profile-heading small {
+  display: block;
+}
+
+.learning-restore-profile-heading small {
+  margin-top: .3rem;
+}
+
+.learning-restore-badge {
+  display: inline-flex;
+  margin-right: .35rem;
+  padding: .18rem .45rem;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 700;
+}
+
+.learning-restore-badge.active {
+  background: rgba(87, 224, 160, .14);
+  color: #b9ffd9;
+}
+
+.learning-restore-badge.conflict {
+  background: rgba(255, 198, 92, .14);
+  color: #ffe3a3;
+}
+
+.learning-restore-badge.new {
+  background: rgba(94, 232, 239, .13);
+  color: #bffbff;
+}
+
+.learning-restore-comparison {
+  display: grid;
+  gap: .3rem;
+  margin: .7rem 0;
+}
+
+.learning-restore-comparison p,
+.learning-restore-resolution-note {
+  margin: 0;
+  color: var(--muted, #c8c8e8);
+  line-height: 1.4;
+}
+
+.learning-restore-resolution {
+  display: grid;
+  gap: .35rem;
+}
+
+.learning-restore-resolution select {
+  width: 100%;
+  padding: .55rem;
+  border-radius: .65rem;
+  background: rgba(10, 9, 36, .9);
+  color: inherit;
+}
+
+.learning-restore-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+
 @media (max-width: 620px) {
   .learning-import-control,
-  .learning-profile-administration {
+  .learning-profile-administration,
+  .learning-device-restore {
     padding: .7rem;
+  }
+
+  .learning-restore-actions .button {
+    flex: 1 1 100%;
   }
 }
 
@@ -140,7 +273,9 @@
     color: #111;
   }
 
-  .learning-profile-delete {
+  .learning-profile-delete,
+  .learning-device-import-control,
+  .learning-device-restore {
     display: none;
   }
 

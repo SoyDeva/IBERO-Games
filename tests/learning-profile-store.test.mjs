@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { STORAGE_KEYS } from '../js/config/storage-keys.js';
+import { createLearningDeviceBackupFile } from '../js/core/learning-device-backup.js';
 import { recordLearningAnswer } from '../js/core/learning-progress.js';
+import {
+  createLearningProfileCollection,
+  createLearningProfileId,
+  upsertLearningProfile
+} from '../js/core/learning-profiles.js';
 import { createLearningProgressStore } from '../js/services/learning-progress-store.js';
 
 function createMemoryStorage(initial = {}) {
@@ -61,4 +67,93 @@ test('restaura un respaldo únicamente sobre el piloto correspondiente', () => {
 
   pilotName = 'Nova';
   assert.throws(() => store.importBackup(backup.content), /pertenece a Luna/);
+});
+
+test('previsualiza sin escribir y aplica únicamente la selección consolidada', () => {
+  const storage = createMemoryStorage();
+  let pilotName = 'Luna';
+  const store = createLearningProgressStore({ storage, resolvePilotName: () => pilotName });
+  store.record({ question: { category: 'Ciencias' }, correct: true, mode: 'practice' });
+
+  let incoming = createLearningProfileCollection();
+  incoming = upsertLearningProfile(incoming, {
+    pilotName: 'Luna',
+    progress: recordLearningAnswer(undefined, {
+      question: { category: 'Lenguaje' }, correct: false, mode: 'practice'
+    })
+  });
+  incoming = upsertLearningProfile(incoming, {
+    pilotName: 'Nova',
+    progress: recordLearningAnswer(undefined, {
+      question: { category: 'Matemáticas' }, correct: true, mode: 'practice'
+    })
+  });
+  const backup = createLearningDeviceBackupFile(incoming).content;
+  const beforePreview = storage.getItem(STORAGE_KEYS.learningProfiles);
+  const preview = store.previewDeviceBackup(backup);
+
+  assert.equal(storage.getItem(STORAGE_KEYS.learningProfiles), beforePreview);
+  assert.equal(preview.conflictCount, 1);
+  assert.equal(preview.newProfileCount, 1);
+
+  const result = store.restoreDeviceBackup(backup, [
+    { profileId: createLearningProfileId('Luna'), action: 'keep' },
+    { profileId: createLearningProfileId('Nova'), action: 'add' }
+  ]);
+  assert.equal(result.added, 1);
+  assert.equal(result.kept, 1);
+
+  assert.equal(store.load().categories.Ciencias.correct, 1);
+  assert.equal(store.load().categories.Lenguaje, undefined);
+  pilotName = 'Nova';
+  assert.equal(store.load().categories.Matemáticas.correct, 1);
+});
+
+test('la vista previa no persiste una migración heredada', () => {
+  const legacy = recordLearningAnswer(undefined, {
+    question: { category: 'Lenguaje' }, correct: true, mode: 'practice'
+  });
+  const storage = createMemoryStorage({
+    [STORAGE_KEYS.learningProgress]: JSON.stringify(legacy)
+  });
+  const incoming = upsertLearningProfile(createLearningProfileCollection(), {
+    pilotName: 'Nova',
+    progress: recordLearningAnswer(undefined, {
+      question: { category: 'Ciencias' }, correct: true, mode: 'practice'
+    })
+  });
+  const store = createLearningProgressStore({ storage, resolvePilotName: () => 'Cometa' });
+  const preview = store.previewDeviceBackup(createLearningDeviceBackupFile(incoming).content);
+
+  assert.equal(preview.currentProfileCount, 1);
+  assert.equal(storage.getItem(STORAGE_KEYS.learningProfiles), null);
+  assert.notEqual(storage.getItem(STORAGE_KEYS.learningProgress), null);
+});
+
+test('rechaza la restauración cuando el navegador bloquea la escritura', () => {
+  const local = upsertLearningProfile(createLearningProfileCollection(), {
+    pilotName: 'Luna',
+    progress: recordLearningAnswer(undefined, {
+      question: { category: 'Ciencias' }, correct: true, mode: 'practice'
+    })
+  });
+  const values = new Map([[STORAGE_KEYS.learningProfiles, JSON.stringify(local)]]);
+  const storage = {
+    getItem: (key) => values.has(key) ? values.get(key) : null,
+    setItem() { throw new Error('bloqueado'); },
+    removeItem: (key) => values.delete(key)
+  };
+  const incoming = upsertLearningProfile(createLearningProfileCollection(), {
+    pilotName: 'Nova',
+    progress: recordLearningAnswer(undefined, {
+      question: { category: 'Matemáticas' }, correct: true, mode: 'practice'
+    })
+  });
+  const store = createLearningProgressStore({ storage, resolvePilotName: () => 'Luna' });
+  const source = createLearningDeviceBackupFile(incoming).content;
+
+  assert.throws(() => store.restoreDeviceBackup(source, [
+    { profileId: createLearningProfileId('Nova'), action: 'add' }
+  ]), /bloqueó el guardado/);
+  assert.equal(JSON.parse(values.get(STORAGE_KEYS.learningProfiles)).profiles[createLearningProfileId('Nova')], undefined);
 });
