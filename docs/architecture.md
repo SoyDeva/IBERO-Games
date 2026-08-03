@@ -38,13 +38,15 @@ Ejemplos actuales:
 - selección adaptativa moderada sin excluir preguntas del nivel;
 - historial normalizado de sesiones y metas pedagógicas derivadas del desempeño;
 - configuración de metas, límites de retención y comparación longitudinal por bloques;
-- construcción de exportaciones JSON y CSV sin conexiones de red.
+- construcción de exportaciones JSON y CSV sin conexiones de red;
+- registro versionado de perfiles pedagógicos locales, con identidad derivada del apodo y sin almacenar tokens;
+- creación y verificación de respaldos JSON mediante suma de integridad para detectar daños accidentales.
 
 ### `js/services/`
 
 Coordina recursos externos o estado de aplicación que no pertenece al DOM. Esta capa no conoce la estructura visual de las pantallas.
 
-El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla. `learning-progress-store.js` persiste localmente aciertos, errores, rachas, sesiones recientes, metas configurables y la preferencia de seguimiento ampliado, con tolerancia a almacenamiento bloqueado. `flight-input-controller.js` interpreta teclado y puntero, enlaza los eventos del navegador y los traduce a operaciones públicas de `SpaceFlight`.
+El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla. `learning-progress-store.js` persiste localmente aciertos, errores, rachas, sesiones, metas y preferencias dentro de perfiles separados por piloto. Migra el documento pedagógico anterior al primer piloto activo, permite respaldar o restaurar únicamente el perfil actual y tolera almacenamiento bloqueado. `flight-input-controller.js` interpreta teclado y puntero, enlaza los eventos del navegador y los traduce a operaciones públicas de `SpaceFlight`.
 
 ### `js/ui/`
 
@@ -53,9 +55,9 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 - `navigation-bindings.js` enlaza de forma uniforme los botones `data-nav`, aplica el modo de vuelo y protege el acceso a una misión cuando falta el piloto.
 - `static-screens.js` genera las pantallas de instrucciones, guía docente y créditos.
 - `home-screen.js` representa perfil, récord, logros, cristales, nave activa y el resumen pedagógico.
-- `learning-progress-panel.js` muestra métricas, fortalezas, temas de refuerzo, metas, última sesión y tendencia opcional.
-- `teacher-learning-report.js` genera una lectura local por categorías y sesiones, preparada para impresión y sin convertir porcentajes en calificaciones.
-- `learning-tools-controller.js` enlaza la configuración de metas, la preferencia longitudinal, la impresión y las descargas voluntarias.
+- `learning-progress-panel.js` muestra el perfil activo, métricas, fortalezas, temas de refuerzo, metas, última sesión y tendencia opcional.
+- `teacher-learning-report.js` genera una lectura local por categorías y sesiones, identifica el perfil pedagógico activo y ofrece controles de respaldo e importación.
+- `learning-tools-controller.js` enlaza la configuración de metas, la preferencia longitudinal, la impresión, las exportaciones y el respaldo local verificable. La importación requiere una acción explícita y no usa red.
 - `hangar-screen.js` representa fuselajes, estelas, saldo y acciones de compra o equipamiento.
 - `ranking-screen.js` representa estados de carga, error, podio y tabla mundial.
 - `quiz-panel.js` presenta preguntas y opciones, enlaza respuestas y marca visualmente aciertos y errores.
@@ -65,13 +67,21 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 - `game-over-screen.js` genera la bitácora, enlaza sus acciones y actualiza el resultado de la Liga Galáctica.
 - `flight-renderer.js` dibuja fondo, estrellas, ruta, portal, obstáculos, plasma, explosiones, celebraciones y nave a partir del estado actual del vuelo.
 
+### Perfiles y respaldo pedagógico
+
+El progreso ya no utiliza un único documento compartido. `nebula-learning-profiles-v1` guarda una colección local con un máximo defensivo de perfiles normalizados. Cada perfil contiene únicamente apodo visible, fecha de actualización y progreso pedagógico; no contiene contraseña, token de la Liga ni configuración de Supabase.
+
+Durante la primera lectura, el antiguo `nebula-learning-progress-v1` se mueve a un perfil temporal. Cuando se identifica el primer piloto, ese perfil se adopta una sola vez. Los pilotos posteriores comienzan con progreso independiente.
+
+Los respaldos utilizan el esquema `mision-nebula-learning-backup-v1`. La suma FNV-1a permite detectar truncamientos o cambios accidentales, pero se presenta explícitamente como control de integridad, no como firma digital ni prueba de autoría. La importación valida esquema, suma e identidad del piloto antes de reemplazar solamente el perfil activo.
+
 ### Fachadas públicas
 
 Los archivos históricos que ya importa la aplicación, como `js/galactic-league.js`, `js/storage.js` y `js/space-game.js`, se conservan como fachadas pequeñas. De esta manera, los consumidores no necesitan cambiar mientras la implementación interna se reorganiza.
 
 ### Aplicación y presentación
 
-`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas, presentación pedagógica, registro de desempeño por categoría, selección adaptativa moderada, inicio y cierre de sesiones pedagógicas, configuración y exportación local del progreso, Estación Nova, pausa, tutorial guiado y bitácora de cierre.
+`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas, presentación pedagógica, registro de desempeño por categoría, selección adaptativa moderada, inicio y cierre de sesiones pedagógicas, configuración, perfiles y respaldo local del progreso, Estación Nova, pausa, tutorial guiado y bitácora de cierre.
 
 ### Motor de vuelo
 
@@ -104,3 +114,4 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 15. Panel pedagógico y adaptación por categorías sobre la arquitectura modular. **Completado.**
 16. Historial por sesiones, metas pedagógicas y herramientas para docentes. **Completado.**
 17. Metas configurables, exportación voluntaria y seguimiento longitudinal opcional. **Completado.**
+18. Perfiles pedagógicos por piloto, respaldo verificable e importación local. **Completado.**

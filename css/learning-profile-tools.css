@@ -1,0 +1,62 @@
+.learning-profile-chip,
+.learning-profile-context {
+  margin: 0 0 .8rem;
+  padding: .55rem .7rem;
+  border-radius: .75rem;
+  background: rgba(94, 232, 239, .08);
+  color: var(--muted, #c8c8e8);
+  line-height: 1.4;
+}
+
+.learning-profile-chip strong,
+.learning-profile-context strong {
+  color: inherit;
+}
+
+.learning-import-control {
+  display: grid;
+  gap: .55rem;
+  margin-top: .85rem;
+  padding: .8rem;
+  border: 1px dashed rgba(94, 232, 239, .35);
+  border-radius: .8rem;
+  background: rgba(94, 232, 239, .05);
+}
+
+.learning-import-control > span {
+  display: grid;
+  gap: .2rem;
+}
+
+.learning-import-control small,
+.learning-integrity-note {
+  color: var(--muted, #c8c8e8);
+  line-height: 1.45;
+}
+
+.learning-import-control input[type='file'] {
+  width: 100%;
+  padding: .55rem;
+  border-radius: .65rem;
+  background: rgba(10, 9, 36, .72);
+  color: inherit;
+}
+
+.learning-integrity-note {
+  margin: .45rem 0 0;
+  font-size: .78rem;
+}
+
+@media (max-width: 620px) {
+  .learning-import-control {
+    padding: .7rem;
+  }
+}
+
+@media print {
+  .learning-profile-context {
+    border: 1px solid #bbb;
+    background: transparent;
+    color: #111;
+  }
+}
