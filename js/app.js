@@ -4,6 +4,7 @@ import { bindSettings, applySettings, getSettings, announce, playTone, startMusi
 import { claimGalacticPilot, getGalacticLeaderboard, submitGalacticScore } from './galactic-league.js?v=23';
 import { ACHIEVEMENTS } from './core/achievements.js?v=23';
 import { equipHangarItem, purchaseHangarItem } from './core/hangar.js?v=23';
+import { adaptiveQuestionIndex } from './core/question-adaptation.js?v=23';
 import { escapeHtml } from './core/html.js?v=23';
 import { createMissionSummary } from './core/mission-summary.js?v=23';
 import { evaluateTutorialAnswer, TUTORIAL_COMPLETION, TUTORIAL_QUESTION, tutorialStep } from './core/tutorial.js?v=23';
@@ -11,6 +12,7 @@ import { createRouteState } from './core/routes.js?v=23';
 import { createStationSession, STATION_OFFERS } from './core/station.js?v=23';
 import { createAchievementStore } from './services/achievement-store.js?v=23';
 import { createEconomyStore } from './services/economy-store.js?v=23';
+import { createLearningProgressStore } from './services/learning-progress-store.js?v=23';
 import { createRankingController } from './services/ranking-controller.js?v=23';
 import { createQuestionSession } from './services/question-session.js?v=23';
 import { cleanPilotName, getPilotName, getPilotSession, loadRememberedPilot, savePilot } from './services/pilot-profile-store.js?v=23';
@@ -52,10 +54,12 @@ const economyStore = createEconomyStore({ skins: SHIP_SKINS, trails: SHIP_TRAILS
 const achievementStore = createAchievementStore();
 const hangarCatalogs = { skins: SHIP_SKINS, trails: SHIP_TRAILS };
 const rankingController = createRankingController({ loadLeaderboard: getGalacticLeaderboard, submitScore: submitGalacticScore });
+const learningProgressStore = createLearningProgressStore();
 const questionSession = createQuestionSession({
   resolveLevel: levelForPortal,
   createDeck: shuffledQuestions,
-  shuffleOptions: shuffledQuestionOptions
+  shuffleOptions: shuffledQuestionOptions,
+  selectQuestion: (deck, context) => adaptiveQuestionIndex(deck, { progress: context.progress })
 });
 const stationSession = createStationSession();
 const loadEconomy = () => economyStore.load();
@@ -183,7 +187,8 @@ function renderHome() {
     activeSkin: SHIP_SKINS[economy.activeSkin],
     pilotName: getPilotName(),
     learned: localStorage.getItem('nebula-tutorial-complete') === 'true',
-    achievements: ACHIEVEMENTS
+    achievements: ACHIEVEMENTS,
+    learning: learningProgressStore.summary()
   });
 }
 
@@ -482,7 +487,7 @@ function togglePause(forceResume = false) {
 }
 
 function showQuiz(meta) {
-  const question = questionSession.next(meta.number);
+  const question = questionSession.next(meta.number, { progress: learningProgressStore.load() });
   currentCheckpointClean = Boolean(meta.clean && meta.number > 1);
   presentQuizPanel({ documentRef: document, question, onAnswer: answerQuestion });
   playTone('complete');
@@ -494,6 +499,11 @@ function answerQuestion(selectedIndex) {
   if (!panel || panel.dataset.answered === 'true') return;
   const outcome = questionSession.answer(selectedIndex, flightMode);
   if (!outcome) return;
+  learningProgressStore.record({
+    question: questionSession.getCurrent(),
+    correct: outcome.correct,
+    mode: flightMode
+  });
 
   revealQuizAnswer({ documentRef: document, outcome });
   lastLearnedFact = outcome.fact;

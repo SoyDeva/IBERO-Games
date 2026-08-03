@@ -33,13 +33,15 @@ Ejemplos actuales:
 - avance continuo, agotamiento de combustible y rescates de práctica;
 - movimiento y limpieza de obstáculos, proyectiles y explosiones;
 - generación de oleadas, detección de impactos, colisiones y destrucciones;
-- límites, perspectiva y redimensionamiento de la superficie de vuelo.
+- límites, perspectiva y redimensionamiento de la superficie de vuelo;
+- normalización del progreso pedagógico, rachas, fortalezas y categorías de refuerzo;
+- selección adaptativa moderada sin excluir preguntas del nivel.
 
 ### `js/services/`
 
 Coordina recursos externos o estado de aplicación que no pertenece al DOM. Esta capa no conoce la estructura visual de las pantallas.
 
-El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla. `flight-input-controller.js` interpreta teclado y puntero, enlaza los eventos del navegador y los traduce a operaciones públicas de `SpaceFlight`.
+El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla. `learning-progress-store.js` persiste localmente aciertos, errores y rachas por categoría, con tolerancia a almacenamiento bloqueado. `flight-input-controller.js` interpreta teclado y puntero, enlaza los eventos del navegador y los traduce a operaciones públicas de `SpaceFlight`.
 
 ### `js/ui/`
 
@@ -47,7 +49,8 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 
 - `navigation-bindings.js` enlaza de forma uniforme los botones `data-nav`, aplica el modo de vuelo y protege el acceso a una misión cuando falta el piloto.
 - `static-screens.js` genera las pantallas de instrucciones, guía docente y créditos.
-- `home-screen.js` representa perfil, récord, logros, cristales y nave activa.
+- `home-screen.js` representa perfil, récord, logros, cristales, nave activa y el resumen pedagógico.
+- `learning-progress-panel.js` muestra métricas, fortalezas, temas de refuerzo y la recomendación para la siguiente práctica.
 - `hangar-screen.js` representa fuselajes, estelas, saldo y acciones de compra o equipamiento.
 - `ranking-screen.js` representa estados de carga, error, podio y tabla mundial.
 - `quiz-panel.js` presenta preguntas y opciones, enlaza respuestas y marca visualmente aciertos y errores.
@@ -63,7 +66,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ### Aplicación y presentación
 
-`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas, presentación pedagógica, Estación Nova, pausa, tutorial guiado y bitácora de cierre.
+`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas, presentación pedagógica, registro de desempeño por categoría, selección adaptativa moderada, Estación Nova, pausa, tutorial guiado y bitácora de cierre.
 
 ### Motor de vuelo
 
@@ -93,4 +96,5 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 12. Motor de vuelo: simulación, colisiones y oleadas. **Completado.**
 13. Motor de vuelo: entrada de teclado, puntero y controles. **Completado.**
 14. Motor de vuelo: renderizado y utilidades de Canvas. **Completado.**
-15. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
+15. Panel pedagógico y adaptación por categorías sobre la arquitectura modular. **Completado.**
+16. Historial por sesiones, metas pedagógicas y herramientas para docentes.
