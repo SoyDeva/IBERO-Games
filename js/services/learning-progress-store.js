@@ -1,5 +1,6 @@
 import { STORAGE_KEYS } from '../config/storage-keys.js';
 import { createLearningBackupFile, verifyLearningBackup } from '../core/learning-backup.js';
+import { createLearningDeviceBackupFile } from '../core/learning-device-backup.js';
 import {
   appendLearningSession,
   clearLearningGoal,
@@ -20,6 +21,7 @@ import {
   normalizeLearningProfileCollection,
   readLearningProfile,
   removeLearningProfile,
+  removeLearningProfileById,
   upsertLearningProfile
 } from '../core/learning-profiles.js';
 import { getPilotName } from './pilot-profile-store.js';
@@ -108,7 +110,7 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     return {
       id: createLearningProfileId(pilotName),
       pilotName: normalizeLearningPilotName(pilotName),
-      profiles: listLearningProfiles(collection)
+      profiles: listLearningProfiles(collection, { activePilotName: pilotName })
     };
   }
 
@@ -130,10 +132,29 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     });
   }
 
+  function createDeviceBackup({ exportedAt } = {}) {
+    return createLearningDeviceBackupFile(loadCollection(), { exportedAt });
+  }
+
   function importBackup(source) {
     const verified = verifyLearningBackup(source, { expectedPilotName: activePilotName() });
     const progress = save(verified.progress);
     return { ...verified, progress };
+  }
+
+  function removeProfile(profileId) {
+    const activeProfileId = createLearningProfileId(activePilotName());
+    const result = removeLearningProfileById(loadCollection(), profileId, {
+      protectedProfileId: activeProfileId
+    });
+    if (!result.removed) throw new Error('No se encontró el perfil pedagógico solicitado.');
+
+    if (Object.keys(result.collection.profiles).length) writeCollection(result.collection);
+    else removeStorageValue(STORAGE_KEYS.learningProfiles, options);
+    return {
+      removed: result.removed,
+      profiles: listLearningProfiles(result.collection, { activePilotName: activePilotName() })
+    };
   }
 
   function reset() {
@@ -154,7 +175,9 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     summary,
     profileInfo,
     createBackup,
+    createDeviceBackup,
     importBackup,
+    removeProfile,
     reset
   });
 }
