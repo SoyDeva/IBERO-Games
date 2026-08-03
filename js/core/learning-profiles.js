@@ -1,7 +1,7 @@
 import { createLearningProgress, normalizeLearningProgress, summarizeLearningProgress } from './learning-progress.js';
 
 const PROFILE_COLLECTION_VERSION = 1;
-const MAX_PROFILES = 50;
+export const MAX_LEARNING_PROFILES = 50;
 
 function safeText(value, maximum = 80) {
   return String(value || '').trim().slice(0, maximum);
@@ -48,7 +48,7 @@ export function normalizeLearningProfileCollection(value) {
   const source = value && typeof value === 'object' ? value : {};
   const profiles = {};
   const entries = source.profiles && typeof source.profiles === 'object'
-    ? Object.entries(source.profiles).slice(0, MAX_PROFILES)
+    ? Object.entries(source.profiles).slice(0, MAX_LEARNING_PROFILES)
     : [];
 
   for (const [sourceId, candidate] of entries) {
