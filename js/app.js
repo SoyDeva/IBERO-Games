@@ -3,8 +3,10 @@ import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './qu
 import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=23';
 import { claimGalacticPilot, getGalacticLeaderboard, submitGalacticScore } from './galactic-league.js?v=23';
 import { ACHIEVEMENTS } from './core/achievements.js?v=23';
+import { equipHangarItem, purchaseHangarItem } from './core/hangar.js?v=23';
 import { createAchievementStore } from './services/achievement-store.js?v=23';
 import { createEconomyStore } from './services/economy-store.js?v=23';
+import { createRankingController } from './services/ranking-controller.js?v=23';
 import { cleanPilotName, getPilotName, getPilotSession, loadRememberedPilot, savePilot } from './services/pilot-profile-store.js?v=23';
 
 const app = document.getElementById('app');
@@ -29,10 +31,6 @@ let stationPurchased = false;
 let runCrystals = 0;
 let viewportResizeFrame = 0;
 let pendingPilotAction = null;
-let globalRanking = [];
-let rankingStatus = 'idle';
-let rankingError = '';
-let rankingUpdatedAt = 0;
 
 const GAME_RELEASE = new URL(import.meta.url).searchParams.get('v') || 'local';
 const RANKING_PREFIX = 'nebula-ranking-';
@@ -45,6 +43,8 @@ const STATION_OFFERS = {
 
 const economyStore = createEconomyStore({ skins: SHIP_SKINS, trails: SHIP_TRAILS });
 const achievementStore = createAchievementStore();
+const hangarCatalogs = { skins: SHIP_SKINS, trails: SHIP_TRAILS };
+const rankingController = createRankingController({ loadLeaderboard: getGalacticLeaderboard, submitScore: submitGalacticScore });
 const loadEconomy = () => economyStore.load();
 const saveEconomy = (economy) => economyStore.save(economy);
 const loadAchievements = () => achievementStore.load();
@@ -115,26 +115,12 @@ function purgePreviousRankings() {
   } catch (error) { /* El juego continúa aunque el navegador limite el almacenamiento. */ }
 }
 
-function loadRanking() {
-  return globalRanking;
-}
-
 async function refreshGlobalRanking(force = false) {
-  if (rankingStatus === 'loading') return globalRanking;
-  if (!force && rankingStatus === 'ready' && Date.now() - rankingUpdatedAt < 15000) return globalRanking;
-  rankingStatus = 'loading';
-  rankingError = '';
+  const request = rankingController.refresh({ season: GAME_RELEASE, limit: 10, force });
   if (route === 'ranking') render();
-  try {
-    globalRanking = await getGalacticLeaderboard(GAME_RELEASE, 10);
-    rankingStatus = 'ready';
-    rankingUpdatedAt = Date.now();
-  } catch (error) {
-    rankingStatus = 'error';
-    rankingError = error.message;
-  }
+  const { ranking } = await request;
   if (route === 'ranking') render();
-  return globalRanking;
+  return ranking;
 }
 
 async function recordRanking(result) {
@@ -143,7 +129,7 @@ async function recordRanking(result) {
   if (!session?.token) return { position: null, error: 'Registra tu apodo para entrar en la Liga Galáctica.' };
   const economy = loadEconomy();
   try {
-    const response = await submitGalacticScore({
+    const response = await rankingController.submit({
       token: session.token,
       season: GAME_RELEASE,
       seasonName: SEASON_NAME,
@@ -151,7 +137,6 @@ async function recordRanking(result) {
       skin: economy.activeSkin,
       trail: economy.activeTrail
     });
-    rankingStatus = 'idle';
     refreshGlobalRanking(true);
     return { position: Number(response?.position) || null, updated: Boolean(response?.updated) };
   } catch (error) {
@@ -223,7 +208,7 @@ function renderShop() {
 }
 
 function renderRanking() {
-  const ranking = loadRanking();
+  const { ranking, status: rankingStatus, error: rankingError } = rankingController.getSnapshot();
   const pilotName = getPilotName();
   const isCurrentPilot = (name) => name?.toLocaleLowerCase('es') === pilotName?.toLocaleLowerCase('es');
   const medals = ['🥇', '🥈', '🥉'];
@@ -310,40 +295,24 @@ function renderCredits() {
 
 function bindShop() {
   document.querySelectorAll('[data-buy-item]').forEach((button) => button.addEventListener('click', () => {
-    const id = button.dataset.item;
-    const kind = button.dataset.kind;
-    const catalog = kind === 'trail' ? SHIP_TRAILS : SHIP_SKINS;
-    const item = catalog[id];
-    if (!item) return;
-    const economy = loadEconomy();
-    const ownedKey = kind === 'trail' ? 'ownedTrails' : 'ownedSkins';
-    const activeKey = kind === 'trail' ? 'activeTrail' : 'activeSkin';
-    if (economy[ownedKey].includes(id)) return;
-    if (economy.credits < item.price) {
-      shopMessage = 'Te faltan ' + (item.price - economy.credits) + ' cristales para desbloquear ' + item.name + '.';
+    const result = purchaseHangarItem(loadEconomy(), { kind: button.dataset.kind, id: button.dataset.item }, hangarCatalogs);
+    if (result.status === 'invalid' || result.status === 'owned') return;
+    if (result.status === 'insufficient') {
+      shopMessage = 'Te faltan ' + result.missing + ' cristales para desbloquear ' + result.item.name + '.';
       playTone('empty');
       render();
       return;
     }
-    economy.credits -= item.price;
-    economy[ownedKey].push(id);
-    economy[activeKey] = id;
-    saveEconomy(economy);
-    shopMessage = item.icon + ' ¡' + item.name + ' desbloqueada y activada!';
+    saveEconomy(result.economy);
+    shopMessage = result.item.icon + ' ¡' + result.item.name + ' desbloqueada y activada!';
     playTone('achievement');
     render();
   }));
   document.querySelectorAll('[data-equip-item]').forEach((button) => button.addEventListener('click', () => {
-    const id = button.dataset.item;
-    const kind = button.dataset.kind;
-    const catalog = kind === 'trail' ? SHIP_TRAILS : SHIP_SKINS;
-    const ownedKey = kind === 'trail' ? 'ownedTrails' : 'ownedSkins';
-    const activeKey = kind === 'trail' ? 'activeTrail' : 'activeSkin';
-    const economy = loadEconomy();
-    if (!catalog[id] || !economy[ownedKey].includes(id)) return;
-    economy[activeKey] = id;
-    saveEconomy(economy);
-    shopMessage = catalog[id].icon + ' ' + catalog[id].name + ' está en uso.';
+    const result = equipHangarItem(loadEconomy(), { kind: button.dataset.kind, id: button.dataset.item }, hangarCatalogs);
+    if (result.status !== 'equipped') return;
+    saveEconomy(result.economy);
+    shopMessage = result.item.icon + ' ' + result.item.name + ' está en uso.';
     playTone('complete');
     render();
   }));
@@ -365,7 +334,7 @@ function render() {
   app.querySelectorAll('[data-refresh-ranking]').forEach((button) => button.addEventListener('click', () => refreshGlobalRanking(true)));
   if (route === 'flight') bindFlight();
   if (route === 'shop') bindShop();
-  if (route === 'ranking' && rankingStatus === 'idle') window.setTimeout(() => refreshGlobalRanking(), 0);
+  if (route === 'ranking' && rankingController.getSnapshot().status === 'idle') window.setTimeout(() => refreshGlobalRanking(), 0);
   applySettings();
 }
 
@@ -893,7 +862,7 @@ document.getElementById('pilot-form')?.addEventListener('submit', async (event) 
     playTone('achievement');
     const action = pendingPilotAction;
     pendingPilotAction = null;
-    rankingStatus = 'idle';
+    rankingController.invalidate();
     if (action) action();
     else render();
   } catch (error) {

@@ -21,13 +21,14 @@ Ejemplos actuales:
 - valores predeterminados y normalización de accesibilidad;
 - limpieza y normalización del perfil del piloto;
 - normalización de créditos, fuselajes y estelas adquiridas;
-- catálogo y normalización de logros.
+- catálogo y normalización de logros;
+- compras y equipamiento del Hangar Estelar sin mutar el estado anterior.
 
 ### `js/services/`
 
 Coordina recursos externos. Esta capa conoce `fetch`, Supabase y `localStorage`, pero no conoce las pantallas del juego.
 
-El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros.
+El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida.
 
 ### Fachadas públicas
 
@@ -35,7 +36,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ### Aplicación y presentación
 
-`js/app.js` continúa coordinando navegación, pantallas y eventos. Ya delega identidad del piloto, persistencia económica y logros en módulos independientes. Las siguientes fases separarán los controladores del hangar, la clasificación, la navegación y la misión.
+`js/app.js` continúa coordinando navegación, pantallas y eventos. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar y estado remoto de la Liga en módulos independientes. Las siguientes fases separarán navegación, renderizado y orquestación de la misión.
 
 ### Motor de vuelo
 
@@ -54,8 +55,9 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 1. Liga Galáctica: dominio, transporte y servicio. **Completado.**
 2. Persistencia local de partidas y ajustes. **Completado.**
 3. Perfil del piloto, economía y logros. **Completado.**
-4. Hangar, navegación y renderizado de pantallas.
-5. Clasificación y estado remoto de la Liga.
-6. Orquestación de la misión y preguntas.
-7. Motor de vuelo: estado, simulación, entrada y renderizado.
-8. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
+4. Reglas del Hangar Estelar. **Completado.**
+5. Clasificación y estado remoto de la Liga. **Completado.**
+6. Navegación y renderizado de pantallas.
+7. Orquestación de la misión y preguntas.
+8. Motor de vuelo: estado, simulación, entrada y renderizado.
+9. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
