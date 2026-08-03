@@ -253,14 +253,54 @@
   gap: .6rem;
 }
 
+.learning-recovery-panel {
+  display: grid;
+  gap: .8rem;
+  margin-top: .9rem;
+  padding: .85rem;
+  border: 1px solid rgba(87, 224, 160, .38);
+  border-radius: .85rem;
+  background: rgba(87, 224, 160, .08);
+}
+
+.learning-recovery-panel > div:first-child {
+  display: flex;
+  align-items: flex-start;
+  gap: .7rem;
+}
+
+.learning-recovery-panel > div:first-child > span {
+  font-size: 1.35rem;
+}
+
+.learning-recovery-panel strong,
+.learning-recovery-panel p {
+  display: block;
+  margin: 0;
+}
+
+.learning-recovery-panel p {
+  margin-top: .25rem;
+  color: var(--muted, #c8c8e8);
+  line-height: 1.45;
+}
+
+.learning-recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+}
+
 @media (max-width: 620px) {
   .learning-import-control,
   .learning-profile-administration,
-  .learning-device-restore {
+  .learning-device-restore,
+  .learning-recovery-panel {
     padding: .7rem;
   }
 
-  .learning-restore-actions .button {
+  .learning-restore-actions .button,
+  .learning-recovery-actions .button {
     flex: 1 1 100%;
   }
 }
@@ -275,7 +315,8 @@
 
   .learning-profile-delete,
   .learning-device-import-control,
-  .learning-device-restore {
+  .learning-device-restore,
+  .learning-recovery-panel {
     display: none;
   }
 
