@@ -38,7 +38,7 @@ Ejemplos actuales:
 
 Coordina recursos externos o estado de aplicación que no pertenece al DOM. Esta capa no conoce la estructura visual de las pantallas.
 
-El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla.
+El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla. `flight-input-controller.js` interpreta teclado y puntero, enlaza los eventos del navegador y los traduce a operaciones públicas de `SpaceFlight`.
 
 ### `js/ui/`
 
@@ -65,7 +65,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ### Motor de vuelo
 
-`js/space-game.js` conserva la fachada `SpaceFlight`, el ciclo de animación, la entrada y el renderizado. Delega en `js/core/flight-state.js` la creación del estado, dificultad, sectores, recarga, HUD y resumen; y en `js/core/flight-simulation.js` el avance continuo, combustible, rescates, oleadas, proyectiles, colisiones, destrucciones y limpieza de objetos. Las siguientes fases separarán primero la entrada y después el dibujo en Canvas.
+`js/space-game.js` conserva la fachada `SpaceFlight`, el ciclo de animación y el renderizado. Delega en `js/core/flight-state.js` la creación del estado, dificultad, sectores, recarga, HUD y resumen; en `js/core/flight-simulation.js` el avance continuo, combustible, rescates, oleadas, proyectiles, colisiones, destrucciones y limpieza de objetos; y en `js/services/flight-input-controller.js` la entrada de teclado y puntero. La siguiente fase separará el dibujo y las utilidades de Canvas.
 
 ## Reglas del refactor
 
@@ -89,6 +89,6 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 10. Tutorial y cierre de partida. **Completado.**
 11. Motor de vuelo: estado y reglas derivadas. **Completado.**
 12. Motor de vuelo: simulación, colisiones y oleadas. **Completado.**
-13. Motor de vuelo: entrada de teclado, puntero y controles.
+13. Motor de vuelo: entrada de teclado, puntero y controles. **Completado.**
 14. Motor de vuelo: renderizado y utilidades de Canvas.
 15. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
