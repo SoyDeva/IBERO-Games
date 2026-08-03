@@ -6,16 +6,19 @@ import { ACHIEVEMENTS } from './core/achievements.js?v=23';
 import { equipHangarItem, purchaseHangarItem } from './core/hangar.js?v=23';
 import { escapeHtml } from './core/html.js?v=23';
 import { createRouteState } from './core/routes.js?v=23';
+import { createStationSession, STATION_OFFERS } from './core/station.js?v=23';
 import { createAchievementStore } from './services/achievement-store.js?v=23';
 import { createEconomyStore } from './services/economy-store.js?v=23';
 import { createRankingController } from './services/ranking-controller.js?v=23';
 import { createQuestionSession } from './services/question-session.js?v=23';
 import { cleanPilotName, getPilotName, getPilotSession, loadRememberedPilot, savePilot } from './services/pilot-profile-store.js?v=23';
 import { bindNavigation } from './ui/navigation-bindings.js?v=23';
+import { applyPausePanelState } from './ui/pause-panel.js?v=23';
 import { renderHangarScreen } from './ui/hangar-screen.js?v=23';
 import { renderHomeScreen } from './ui/home-screen.js?v=23';
 import { renderRankingScreen } from './ui/ranking-screen.js?v=23';
 import { renderCredits, renderInstructions, renderTeacher } from './ui/static-screens.js?v=23';
+import { closeStationPanel, openStationPanel, renderStationOffers, setStationResult, updateStationButtons } from './ui/station-panel.js?v=23';
 import { presentQuizPanel, resetQuizPanel, revealQuizAnswer } from './ui/quiz-panel.js?v=23';
 
 const app = document.getElementById('app');
@@ -35,7 +38,6 @@ let lastLearnedFact = '';
 let runAchievements = [];
 let currentCheckpointClean = false;
 let shopMessage = '';
-let stationPurchased = false;
 let runCrystals = 0;
 let viewportResizeFrame = 0;
 let pendingPilotAction = null;
@@ -43,12 +45,6 @@ let pendingPilotAction = null;
 const GAME_RELEASE = new URL(import.meta.url).searchParams.get('v') || 'local';
 const RANKING_PREFIX = 'nebula-ranking-';
 const SEASON_NAME = 'Expedición Horizonte ' + GAME_RELEASE;
-const STATION_OFFERS = {
-  repair: { icon: '🛡️', name: 'Reparación total', description: 'Restaura los escudos y suma 20% de combustible.', price: 20 },
-  plasma: { icon: '⚡', name: 'Superplasma', description: 'Carga 5 disparos para el siguiente tramo.', price: 25 },
-  stabilizer: { icon: '🧭', name: 'Estabilizador', description: 'Hace más lento y tranquilo el próximo tramo.', price: 30 }
-};
-
 const economyStore = createEconomyStore({ skins: SHIP_SKINS, trails: SHIP_TRAILS });
 const achievementStore = createAchievementStore();
 const hangarCatalogs = { skins: SHIP_SKINS, trails: SHIP_TRAILS };
@@ -58,6 +54,7 @@ const questionSession = createQuestionSession({
   createDeck: shuffledQuestions,
   shuffleOptions: shuffledQuestionOptions
 });
+const stationSession = createStationSession();
 const loadEconomy = () => economyStore.load();
 const saveEconomy = (economy) => economyStore.save(economy);
 const loadAchievements = () => achievementStore.load();
@@ -220,7 +217,7 @@ function renderFlight() {
   const modeBadge = isTutorial ? '🎮 TUTORIAL' : isPractice ? '🧪 PRÁCTICA' : '🚀 MISIÓN';
   const economy = loadEconomy();
   const pilotName = getPilotName() || 'Piloto';
-  const stationOffers = Object.entries(STATION_OFFERS).map(([id, offer]) => '<button class="station-offer" type="button" data-station-buy="' + id + '" data-price="' + offer.price + '"><span>' + offer.icon + '</span><strong>' + offer.name + '</strong><small>' + offer.description + '</small><b>💎 ' + offer.price + '</b></button>').join('');
+  const stationOffers = renderStationOffers(STATION_OFFERS);
   return `<section class="flight-page" aria-labelledby="flight-title">
     <h1 id="flight-title" class="sr-only">Vuelo de la nave Asteria</h1>
     <div class="flight-hud">
@@ -437,27 +434,19 @@ function completeTutorial() {
 function startFlightSession() {
   window.clearTimeout(quizTimer);
   const overlay = document.getElementById('flight-overlay');
-  const pausePanel = document.getElementById('pause-panel');
   const quizPanel = document.getElementById('quiz-panel');
-  const stationPanel = document.getElementById('station-panel');
-  document.querySelector('.flight-page')?.classList.remove('is-paused');
   if (overlay) overlay.hidden = true;
-  if (pausePanel) pausePanel.hidden = true;
-  if (stationPanel) stationPanel.hidden = true;
+  applyPausePanelState({ documentRef: document, paused: false });
+  closeStationPanel({ documentRef: document });
   if (quizPanel) {
     quizPanel.hidden = true;
     quizPanel.dataset.answered = 'false';
   }
   const achievementPop = document.getElementById('achievement-pop');
   if (achievementPop) achievementPop.hidden = true;
-  const pauseButton = document.getElementById('pause-flight');
-  if (pauseButton) {
-    pauseButton.innerHTML = '<span>⏸</span><strong>Pausa</strong>';
-    pauseButton.setAttribute('aria-label', 'Pausar vuelo');
-  }
   runAchievements = [];
   runCrystals = 0;
-  stationPurchased = false;
+  stationSession.reset();
   lastLearnedFact = '';
   const economy = loadEconomy();
   flight.start({ practice: flightMode === 'practice', tutorial: flightMode === 'tutorial', skin: economy.activeSkin, trail: economy.activeTrail });
@@ -469,52 +458,52 @@ function startFlightSession() {
 }
 
 function refreshStationButtons() {
-  const credits = loadEconomy().credits;
-  document.querySelectorAll('[data-station-buy]').forEach((button) => {
-    const price = Number(button.dataset.price);
-    button.disabled = stationPurchased || credits < price;
-    button.classList.toggle('unaffordable', !stationPurchased && credits < price);
+  updateStationButtons({
+    documentRef: document,
+    credits: loadEconomy().credits,
+    purchased: stationSession.hasPurchased()
   });
 }
 
 function showStation(progress) {
-  const panel = document.getElementById('station-panel');
-  if (!panel) return;
-  stationPurchased = false;
+  if (!document.getElementById('station-panel')) return;
+  stationSession.reset();
   flight.enterStation();
-  document.getElementById('station-level').textContent = '✨ NIVEL ' + progress.completedLevel + ' SUPERADO';
-  document.getElementById('station-title').textContent = 'Estación Nova-' + progress.completedLevel;
-  document.getElementById('station-result').textContent = 'Ganaste acceso a la estación. Elige una ayuda o guarda tus cristales.';
   updateCrystalDisplays();
   refreshStationButtons();
-  panel.hidden = false;
+  openStationPanel({ documentRef: document, progress });
   playTone('achievement');
   announce('Llegaste a la Estación Nova. Puedes elegir una mejora o continuar la misión.');
-  panel.querySelector('button:not([disabled])')?.focus();
 }
 
 function buyStationItem(id) {
-  if (stationPurchased || !STATION_OFFERS[id] || flight?.mode !== 'station') return;
-  const offer = STATION_OFFERS[id];
-  if (!spendCrystals(offer.price)) {
-    document.getElementById('station-result').textContent = 'Necesitas más cristales para comprar esa mejora.';
+  if (flight?.mode !== 'station') return;
+  const decision = stationSession.inspect(id, loadEconomy().credits);
+  if (decision.status === 'invalid' || decision.status === 'completed') return;
+  if (decision.status === 'insufficient') {
+    setStationResult('Necesitas más cristales para comprar esa mejora.', { documentRef: document });
+    playTone('empty');
+    refreshStationButtons();
+    return;
+  }
+  if (!spendCrystals(decision.offer.price)) {
+    setStationResult('Necesitas más cristales para comprar esa mejora.', { documentRef: document });
     playTone('empty');
     refreshStationButtons();
     return;
   }
   if (!flight.applyStationPurchase(id)) return;
-  stationPurchased = true;
+  stationSession.confirm(id);
   refreshStationButtons();
-  document.getElementById('station-result').textContent = '✅ ' + offer.name + ' instalada. ¡La Asteria está lista!';
+  setStationResult('✅ ' + decision.offer.name + ' instalada. ¡La Asteria está lista!', { documentRef: document });
   playTone('core');
 }
 
 function leaveStation() {
-  const panel = document.getElementById('station-panel');
-  if (!panel || flight?.mode !== 'station') return;
-  panel.hidden = true;
+  if (!document.getElementById('station-panel') || flight?.mode !== 'station') return;
+  closeStationPanel({ documentRef: document });
   flight.leaveStation();
-  showToast(stationPurchased ? '🛰️ MEJORA INSTALADA · ¡SIGUE LA MISIÓN!' : '💎 CRISTALES GUARDADOS · ¡SIGUE LA MISIÓN!', 'success');
+  showToast(stationSession.hasPurchased() ? '🛰️ MEJORA INSTALADA · ¡SIGUE LA MISIÓN!' : '💎 CRISTALES GUARDADOS · ¡SIGUE LA MISIÓN!', 'success');
   document.getElementById('flight-canvas')?.focus();
 }
 
@@ -522,23 +511,15 @@ function togglePause(forceResume = false) {
   if (!flight || ['idle', 'gameover', 'quiz'].includes(flight.mode)) return;
   if (!document.getElementById('station-panel')?.hidden) return;
   const panel = document.getElementById('pause-panel');
-  const button = document.getElementById('pause-flight');
   const shouldResume = forceResume || !panel?.hidden;
   if (shouldResume) {
-    document.querySelector('.flight-page')?.classList.remove('is-paused');
-    panel.hidden = true;
+    applyPausePanelState({ documentRef: document, paused: false });
     flight.resume();
     startMusic(flight.checkpoints + 1);
-    button.innerHTML = '<span>⏸</span><strong>Pausa</strong>';
-    button.setAttribute('aria-label', 'Pausar vuelo');
   } else {
-    document.querySelector('.flight-page')?.classList.add('is-paused');
     flight.pause();
     stopMusic();
-    panel.hidden = false;
-    button.innerHTML = '<span>▶</span><strong>Continuar</strong>';
-    button.setAttribute('aria-label', 'Continuar vuelo');
-    document.getElementById('resume-flight')?.focus();
+    applyPausePanelState({ documentRef: document, paused: true });
   }
 }
 
