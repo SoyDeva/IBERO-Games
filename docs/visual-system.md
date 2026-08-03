@@ -64,6 +64,18 @@ Esta capa usa selectores y estados que ya genera la aplicación. No añade tempo
 
 La bitácora conserva exactamente los valores, textos, identificadores y eventos que entrega `game-over-screen.js`. La hoja no calcula resultados ni altera recompensas.
 
+`css/hangar-polish.css` aplica el cuarto paquete visual al Hangar Estelar:
+
+- cabecera de hangar con mayor profundidad, identidad espacial y saldo visible;
+- tarjetas de nave con vista previa ampliada y jerarquía de nombre, descripción y acción;
+- estados diferenciados para bloquear, desbloquear, equipar y mantener un diseño en uso;
+- estelas de motor presentadas como colección compacta y comparable;
+- etiquetas visuales `EQUIPADA` y `EN USO` derivadas del estado que ya entrega la interfaz;
+- navegación final más clara para volar, consultar la Liga o volver;
+- adaptación a escritorio, tableta, móvil y reducción de movimiento.
+
+La capa no modifica precios, saldos, identificadores del catálogo ni eventos de compra o equipamiento. Los estados visuales proceden de clases y atributos ya generados por `hangar-screen.js`.
+
 ## Reglas
 
 1. No cambiar selectores de navegación ni atributos `data-*` por una mejora visual.
