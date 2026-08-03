@@ -20,7 +20,7 @@ function leagueError(code) {
 }
 
 export function normalizeSeasonCode(value) {
-  const cleanValue = String(value || 'local').trim().replace(/^v+/i, '');
+  const cleanValue = String(value || 'local').trim().replace(/^v+(?=[0-9])/i, '');
   const safeValue = cleanValue.replace(/[^0-9A-Za-z._-]/g, '').slice(0, 31) || 'local';
   return `v${safeValue}`;
 }
