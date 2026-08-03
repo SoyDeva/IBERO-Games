@@ -141,12 +141,14 @@ export function playTone(type = 'select') {
     ensureAudioContext();
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
-    const tones = { select: [440, 0.06], complete: [660, 0.18], core: [880, 0.3], alert: [260, 0.22] };
-    const volumes = { select: .22, complete: .28, core: .32, alert: .34 };
+    const tones = { select: [440, 0.06], complete: [660, 0.18], core: [880, 0.3], alert: [260, 0.22], laser: [1180, .16], blast: [170, .32], empty: [145, .11] };
+    const volumes = { select: .22, complete: .28, core: .32, alert: .34, laser: .3, blast: .38, empty: .24 };
     const [frequency, duration] = tones[type] || tones.select;
-    oscillator.type = type === 'alert' ? 'sawtooth' : 'sine';
+    oscillator.type = ['alert', 'laser', 'blast'].includes(type) ? 'sawtooth' : 'sine';
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
     if (type === 'core') oscillator.frequency.exponentialRampToValueAtTime(1320, audioContext.currentTime + duration);
+    if (type === 'laser') oscillator.frequency.exponentialRampToValueAtTime(260, audioContext.currentTime + duration);
+    if (type === 'blast') oscillator.frequency.exponentialRampToValueAtTime(62, audioContext.currentTime + duration);
     gain.gain.setValueAtTime(0.001, audioContext.currentTime);
     gain.gain.exponentialRampToValueAtTime(volumes[type] || volumes.select, audioContext.currentTime + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);

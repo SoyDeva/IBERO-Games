@@ -40,6 +40,8 @@ Un portal aparece aproximadamente cada 15–20 segundos. Al alcanzarlo:
 
 El banco contiene 100 preguntas divididas en cinco niveles. Cada dos portales aumenta la dificultad de las preguntas. La música también acelera para acompañar el cambio de nivel.
 
+La nave dispone de tres cargas de plasma por intento. La barra espaciadora o el botón DISPARAR lanza un proyectil por el carril actual; cada carga puede destruir solamente el primer obstáculo que alcance y las cargas no se recuperan en los portales.
+
 También termina el intento cuando se pierden los tres escudos o se agota el combustible.
 
 ## Récord

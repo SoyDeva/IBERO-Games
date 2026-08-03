@@ -24,12 +24,15 @@ export class SpaceFlight {
     this.distance = 0;
     this.checkpoints = 0;
     this.nextCheckpoint = 280;
+    this.ammo = 3;
     this.obstacles = [];
+    this.projectiles = [];
     this.explosions = [];
     this.spawnTimer = 1.8;
     this.elapsed = 0;
     this.shake = 0;
     this.flash = 0;
+    this.weaponPulse = 0;
     this.lastFrame = performance.now();
     this.stars = Array.from({ length: 105 }, () => this.createStar());
     this.boundFrame = (time) => this.frame(time);
@@ -71,12 +74,15 @@ export class SpaceFlight {
     this.distance = 0;
     this.checkpoints = 0;
     this.nextCheckpoint = 280;
+    this.ammo = 3;
     this.obstacles = [];
+    this.projectiles = [];
     this.explosions = [];
     this.spawnTimer = 2.1;
     this.elapsed = 0;
     this.shake = 0;
     this.flash = 0;
+    this.weaponPulse = 0;
     this.emitHud();
   }
 
@@ -94,6 +100,20 @@ export class SpaceFlight {
     this.callbacks.onSteer?.(this.lane);
   }
 
+  fire() {
+    if (this.mode !== 'running') return false;
+    if (this.ammo <= 0) {
+      this.callbacks.onEmptyFire?.();
+      return false;
+    }
+    this.ammo -= 1;
+    this.weaponPulse = 1;
+    this.projectiles.push({ lane: this.lane, depth: .79, previousDepth: .79, age: 0, hit: false });
+    this.callbacks.onFire?.({ ammo: this.ammo });
+    this.emitHud();
+    return true;
+  }
+
   onKey(event) {
     if (['ArrowLeft', 'a', 'A'].includes(event.key)) {
       event.preventDefault();
@@ -102,6 +122,10 @@ export class SpaceFlight {
     if (['ArrowRight', 'd', 'D'].includes(event.key)) {
       event.preventDefault();
       this.moveLane(1);
+    }
+    if ((event.code === 'Space' || event.key === ' ') && this.mode === 'running') {
+      event.preventDefault();
+      if (!event.repeat) this.fire();
     }
   }
 
@@ -154,6 +178,7 @@ export class SpaceFlight {
     this.fuel = Math.max(0, this.fuel - delta * (1.05 + this.checkpoints * .035));
     this.flash = Math.max(0, this.flash - delta * 1.8);
     this.shake = Math.max(0, this.shake - delta * 2.5);
+    this.weaponPulse = Math.max(0, this.weaponPulse - delta * 5);
 
     if (this.fuel <= 0) {
       this.strand('Se terminó el combustible antes de llegar al puesto de recarga.');
@@ -168,8 +193,12 @@ export class SpaceFlight {
     }
 
     for (const obstacle of this.obstacles) {
+      obstacle.previousDepth = obstacle.depth;
       obstacle.depth += delta * difficulty.obstacleSpeed * obstacle.speedFactor;
       obstacle.spin += delta * obstacle.spinSpeed;
+    }
+    this.updateProjectiles(delta);
+    for (const obstacle of this.obstacles) {
       if (!obstacle.hit && obstacle.depth > .86 && obstacle.depth < .99 && Math.abs(obstacle.lane - this.lanePosition) < .4) {
         obstacle.hit = true;
         this.collide(obstacle);
@@ -180,7 +209,8 @@ export class SpaceFlight {
       explosion.age += delta;
       explosion.depth += delta * difficulty.obstacleSpeed * .5;
     });
-    this.explosions = this.explosions.filter((explosion) => explosion.age < .7);
+    this.explosions = this.explosions.filter((explosion) => explosion.age < (explosion.duration || .7));
+    this.projectiles = this.projectiles.filter((projectile) => !projectile.hit && projectile.depth > .015 && projectile.age < .9);
     this.obstacles = this.obstacles.filter((obstacle) => obstacle.depth < 1.24 && !obstacle.hit);
     if (this.mode !== 'running') {
       this.emitHud();
@@ -190,6 +220,7 @@ export class SpaceFlight {
     if (this.distance >= this.nextCheckpoint) {
       this.mode = 'quiz';
       this.obstacles = [];
+      this.projectiles = [];
       this.callbacks.onCheckpoint?.({ number: this.checkpoints + 1, fuel: Math.round(this.fuel) });
     }
     this.emitHud();
@@ -202,6 +233,24 @@ export class SpaceFlight {
       spawnInterval: Math.max(.62, 1.42 - this.checkpoints * .085),
       pairChance: Math.min(.82, .12 + this.checkpoints * .115)
     };
+  }
+
+  updateProjectiles(delta) {
+    for (const projectile of this.projectiles) {
+      projectile.previousDepth = projectile.depth;
+      projectile.depth -= delta * 1.72;
+      projectile.age += delta;
+      for (const obstacle of this.obstacles) {
+        if (projectile.hit || obstacle.hit || obstacle.lane !== projectile.lane) continue;
+        const previousGap = projectile.previousDepth - (obstacle.previousDepth ?? obstacle.depth);
+        const currentGap = projectile.depth - obstacle.depth;
+        const crossed = previousGap >= 0 && currentGap <= 0;
+        if (crossed || Math.abs(currentGap) < .075) {
+          projectile.hit = true;
+          this.destroyObstacle(obstacle);
+        }
+      }
+    }
   }
 
   spawnWave() {
@@ -233,6 +282,15 @@ export class SpaceFlight {
     if (this.hull <= 0) this.strand('La nave recibió demasiados golpes y quedó varada.');
   }
 
+  destroyObstacle(obstacle) {
+    obstacle.hit = true;
+    this.flash = Math.max(this.flash, .72);
+    this.shake = Math.max(this.shake, .24);
+    this.explosions.push({ lane: obstacle.lane, depth: obstacle.depth, age: 0, duration: .95, seed: Math.random() * Math.PI * 2, kind: 'plasma', type: obstacle.type });
+    const names = { planet: 'PLANETA', meteor: 'METEORITO', star: 'ESTRELLA', ship: 'NAVE RIVAL' };
+    this.callbacks.onDestroy?.({ name: names[obstacle.type], ammo: this.ammo, type: obstacle.type });
+  }
+
   emitHud() {
     this.callbacks.onHud?.({
       fuel: Math.round(this.fuel),
@@ -241,7 +299,8 @@ export class SpaceFlight {
       checkpoint: this.checkpoints + 1,
       remaining: Math.max(0, Math.round(this.nextCheckpoint - this.distance)),
       level: this.checkpoints + 1,
-      speed: Math.round(this.getDifficulty().obstacleSpeed * 100)
+      speed: Math.round(this.getDifficulty().obstacleSpeed * 100),
+      ammo: this.ammo
     });
   }
 
@@ -264,6 +323,7 @@ export class SpaceFlight {
     this.drawCheckpoint(ctx);
     const sorted = [...this.obstacles].sort((a, b) => a.depth - b.depth);
     sorted.filter((obstacle) => obstacle.depth <= .92).forEach((obstacle) => this.drawObstacle(ctx, obstacle));
+    this.projectiles.forEach((projectile) => this.drawProjectile(ctx, projectile));
     this.drawShip(ctx);
     sorted.filter((obstacle) => obstacle.depth > .92).forEach((obstacle) => this.drawObstacle(ctx, obstacle));
     this.explosions.forEach((explosion) => this.drawExplosion(ctx, explosion));
@@ -382,22 +442,23 @@ export class SpaceFlight {
 
   drawExplosion(ctx, explosion) {
     const point = this.project(explosion.lane, explosion.depth);
-    const progress = explosion.age / .7;
-    const radius = 24 + progress * 86;
+    const progress = explosion.age / (explosion.duration || .7);
+    const radius = (24 + progress * 92) * Math.max(.55, point.scale);
+    const plasma = explosion.kind === 'plasma';
     ctx.save();
     ctx.translate(point.x, point.y);
     ctx.globalAlpha = 1 - progress;
     ctx.globalCompositeOperation = 'lighter';
     const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
     glow.addColorStop(0, '#ffffff');
-    glow.addColorStop(.2, '#ffe36e');
-    glow.addColorStop(.55, '#ff6d7d');
-    glow.addColorStop(1, 'rgba(255,70,120,0)');
+    glow.addColorStop(.2, plasma ? '#74f7ff' : '#ffe36e');
+    glow.addColorStop(.55, plasma ? '#886dff' : '#ff6d7d');
+    glow.addColorStop(1, plasma ? 'rgba(94,232,239,0)' : 'rgba(255,70,120,0)');
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#8cf4ff';
+    ctx.strokeStyle = plasma ? '#ffffff' : '#8cf4ff';
     ctx.lineWidth = Math.max(1, 5 * (1 - progress));
     for (let index = 0; index < 10; index += 1) {
       const angle = explosion.seed + index * Math.PI * .2;
@@ -406,6 +467,58 @@ export class SpaceFlight {
       ctx.lineTo(Math.cos(angle) * radius * 1.35, Math.sin(angle) * radius * 1.35);
       ctx.stroke();
     }
+    if (plasma) {
+      const fragmentColors = {
+        planet: ['#ffd97f', '#e8688f', '#6f43ad'],
+        meteor: ['#ff9b5f', '#8f5d61', '#4f344b'],
+        star: ['#fff3a8', '#ffd75e', '#ff8b58'],
+        ship: ['#ec6ca5', '#8cecff', '#8d73ff']
+      }[explosion.type] || ['#ffffff', '#5ee8ef', '#8d73ff'];
+      ctx.globalAlpha = Math.max(0, 1 - progress * .85);
+      for (let index = 0; index < 14; index += 1) {
+        const angle = explosion.seed + index * (Math.PI * 2 / 14);
+        const travel = radius * (.35 + progress * (1.1 + (index % 3) * .18));
+        const shard = Math.max(3, radius * (.1 + (index % 2) * .035) * (1 - progress * .45));
+        ctx.save();
+        ctx.translate(Math.cos(angle) * travel, Math.sin(angle) * travel);
+        ctx.rotate(angle + progress * (index % 2 ? 5 : -5));
+        ctx.fillStyle = fragmentColors[index % fragmentColors.length];
+        ctx.beginPath();
+        ctx.moveTo(shard, 0);
+        ctx.lineTo(-shard * .65, shard * .48);
+        ctx.lineTo(-shard * .35, -shard * .55);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+  }
+
+  drawProjectile(ctx, projectile) {
+    const head = this.project(projectile.lane, clamp(projectile.depth, .01, .98));
+    const tail = this.project(projectile.lane, clamp(projectile.depth + .115, .02, .98));
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round';
+    ctx.shadowColor = '#5ee8ef';
+    ctx.shadowBlur = 24;
+    ctx.strokeStyle = 'rgba(94,232,239,.42)';
+    ctx.lineWidth = 18 * Math.max(.45, head.scale);
+    ctx.beginPath();
+    ctx.moveTo(tail.x, tail.y);
+    ctx.lineTo(head.x, head.y);
+    ctx.stroke();
+    ctx.shadowColor = '#d896ff';
+    ctx.shadowBlur = 14;
+    ctx.strokeStyle = '#d896ff';
+    ctx.lineWidth = 8 * Math.max(.45, head.scale);
+    ctx.stroke();
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 8;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3 * Math.max(.45, head.scale);
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -487,6 +600,17 @@ export class SpaceFlight {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate((this.lane - this.lanePosition) * .13);
+    if (this.weaponPulse > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = `rgba(255,255,255,${this.weaponPulse})`;
+      ctx.shadowColor = '#5ee8ef';
+      ctx.shadowBlur = 34;
+      ctx.beginPath();
+      ctx.arc(0, -size * .74, size * (.12 + this.weaponPulse * .15), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
     const flame = 20 + Math.sin(this.elapsed * 18) * 6;
     ctx.shadowColor = '#5ee8ef';
     ctx.shadowBlur = 25;

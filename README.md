@@ -29,6 +29,7 @@ El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
 - Indicadores permanentes de combustible, escudos, distancia y siguiente portal.
 - Portales aproximadamente cada 15–20 segundos.
 - 100 preguntas de opción múltiple, sin escritura, organizadas en cinco niveles.
+- Cañón de plasma con 3 cargas por intento, activado con la barra espaciadora o el botón táctil.
 - Categorías: espacio, ciencias, naturaleza, geografía, matemáticas, lenguaje, historia, tecnología y convivencia.
 - Explicación breve después de una respuesta incorrecta.
 - Récord de distancia guardado únicamente en `localStorage`.

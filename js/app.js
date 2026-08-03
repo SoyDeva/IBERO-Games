@@ -1,6 +1,6 @@
-import { SpaceFlight } from './space-game.js';
+import { SpaceFlight } from './space-game.js?v=13';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
-import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=12';
+import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=13';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
@@ -48,24 +48,25 @@ function renderFlight() {
       <div class="hud-block"><span>📍 Distancia</span><strong><b id="distance-value">0</b> km</strong></div>
       <div class="hud-block checkpoint-hud"><span>🌀 Portal <b id="checkpoint-number">1</b></span><strong>A <b id="remaining-value">280</b> km</strong></div>
       <div class="hud-block difficulty-hud"><span>⚡ Dificultad</span><strong>Nivel <b id="level-value">1</b></strong></div>
+      <div class="hud-block ammo-hud"><span>💥 Plasma</span><strong><b id="ammo-value">3</b> disparos</strong></div>
     </div>
     <div class="flight-stage">
-      <canvas id="flight-canvas" tabindex="0" aria-label="Ruta espacial. Usa flecha izquierda y derecha o los botones para mover la nave entre tres carriles."></canvas>
+      <canvas id="flight-canvas" tabindex="0" aria-label="Ruta espacial. Usa flecha izquierda y derecha para cambiar de carril, y la barra espaciadora para disparar una de las tres cargas de plasma."></canvas>
       <div class="flight-stage-actions">
         <button class="music-flight" id="music-flight" data-music-label type="button" aria-label="Silenciar música y sonidos" aria-pressed="true"><span>🎵</span><strong>Música</strong></button>
         <button class="fullscreen-flight" id="fullscreen-flight" type="button" aria-label="Activar pantalla completa" aria-pressed="false"><span>⛶</span><strong>Pantalla completa</strong></button>
       </div>
       <div id="flight-toast" class="flight-toast" hidden></div>
-      <div id="flight-overlay" class="flight-overlay"><div class="overlay-card"><p class="eyebrow">Controles de vuelo</p><h2>Muévete entre 3 caminos</h2><div class="control-demo"><span>⬅️<small>Izquierda</small></span><b>🚀</b><span>➡️<small>Derecha</small></span></div><p>Esquiva todo y entra al portal brillante.</p><button class="button primary launch-button" id="start-flight">¡Despegar!</button></div></div>
+      <div id="flight-overlay" class="flight-overlay"><div class="overlay-card"><p class="eyebrow">Controles de vuelo</p><h2>Muévete entre 3 caminos</h2><div class="control-demo"><span>⬅️<small>Izquierda</small></span><b>🚀</b><span>➡️<small>Derecha</small></span></div><p>Esquiva todo y entra al portal brillante.</p><p class="fire-hint">⚡ <strong>ESPACIO</strong> dispara · Solo tienes <strong>3 cargas</strong></p><button class="button primary launch-button" id="start-flight">¡Despegar!</button></div></div>
       <section id="quiz-panel" class="quiz-panel" hidden aria-labelledby="quiz-question"><div class="quiz-card"><p class="quiz-category" id="quiz-category"></p><div class="fuel-question-icon" aria-hidden="true">⛽</div><h2 id="quiz-question"></h2><div id="quiz-options" class="quiz-options"></div><p id="quiz-result" class="quiz-result" aria-live="assertive"></p></div></section>
     </div>
-    <div class="touch-controls" aria-label="Controles táctiles"><button id="steer-left" type="button" aria-label="Mover nave a la izquierda">⬅️<span>IZQUIERDA</span></button><button id="steer-right" type="button" aria-label="Mover nave a la derecha"><span>DERECHA</span>➡️</button></div>
-    <p class="flight-tip">También puedes tocar el lado izquierdo o derecho del espacio.</p>
+    <div class="touch-controls" aria-label="Controles táctiles"><button id="steer-left" type="button" aria-label="Mover nave a la izquierda">⬅️<span>IZQUIERDA</span></button><button class="fire-control" id="fire-plasma" type="button" aria-label="Disparar plasma. Quedan tres disparos">⚡<span>DISPARAR</span><small>ESPACIO</small></button><button id="steer-right" type="button" aria-label="Mover nave a la derecha"><span>DERECHA</span>➡️</button></div>
+    <p class="flight-tip">Toca los lados para moverte · Pulsa ESPACIO para disparar.</p>
   </section>`;
 }
 
 function renderInstructions() {
-  return '<article class="screen screen-narrow flight-info" aria-labelledby="instructions-title"><p class="eyebrow">Cómo jugar</p><h1 id="instructions-title">Una misión. Cuatro reglas.</h1><div class="instruction-grid"><article><b>1</b><span>🕹️</span><h2>Pilota</h2><p>Muévete a izquierda o derecha.</p></article><article><b>2</b><span>☄️</span><h2>Esquiva</h2><p>Busca el carril que queda libre.</p></article><article><b>3</b><span>🌀</span><h2>Llega</h2><p>Entra al portal de recarga.</p></article><article><b>4</b><span>⚡</span><h2>Resiste</h2><p>Cada acierto acelera la galaxia.</p></article></div><div class="rule-banner"><span>⚠️</span><p><strong>Si fallas una pregunta, la nave queda varada.</strong><br>Las preguntas suben por cinco niveles y las oleadas siguen acelerando.</p></div><div class="button-row"><button class="button primary launch-button" data-nav="flight">🚀 Jugar ahora</button><button class="button ghost" data-nav="home">Volver</button></div></article>';
+  return '<article class="screen screen-narrow flight-info" aria-labelledby="instructions-title"><p class="eyebrow">Cómo jugar</p><h1 id="instructions-title">Una misión. Cuatro reglas.</h1><div class="instruction-grid"><article><b>1</b><span>🕹️</span><h2>Pilota</h2><p>Muévete a izquierda o derecha.</p></article><article><b>2</b><span>⚡</span><h2>Dispara</h2><p>ESPACIO lanza plasma. Solo hay 3 cargas.</p></article><article><b>3</b><span>🌀</span><h2>Llega</h2><p>Entra al portal de recarga.</p></article><article><b>4</b><span>🧠</span><h2>Responde</h2><p>Cada acierto acelera la galaxia.</p></article></div><div class="rule-banner"><span>⚠️</span><p><strong>Si fallas una pregunta, la nave queda varada.</strong><br>Esquiva todo lo posible y guarda el plasma para una emergencia.</p></div><div class="button-row"><button class="button primary launch-button" data-nav="flight">🚀 Jugar ahora</button><button class="button ghost" data-nav="home">Volver</button></div></article>';
 }
 
 function renderTeacher() {
@@ -106,6 +107,14 @@ function updateHud(state) {
   document.getElementById('checkpoint-number').textContent = state.checkpoint;
   document.getElementById('remaining-value').textContent = state.remaining;
   document.getElementById('level-value').textContent = state.level;
+  const ammoValue = document.getElementById('ammo-value');
+  if (ammoValue) ammoValue.textContent = state.ammo;
+  const fireButton = document.getElementById('fire-plasma');
+  if (fireButton) {
+    fireButton.classList.toggle('empty', state.ammo <= 0);
+    fireButton.setAttribute('aria-label', state.ammo > 0 ? 'Disparar plasma. Quedan ' + state.ammo + ' disparos' : 'Sin cargas de plasma');
+  }
+  document.querySelector('.ammo-hud')?.classList.toggle('empty', state.ammo <= 0);
   document.querySelector('.flight-page')?.style.setProperty('--danger-level', Math.min(1, (state.level - 1) / 8));
 }
 
@@ -229,7 +238,19 @@ function bindFlight() {
     },
     onGameOver: showGameOver,
     onLevelUp: ({ level }) => setMusicIntensity(level),
-    onSteer: () => playTone('select')
+    onSteer: () => playTone('select'),
+    onFire: ({ ammo }) => {
+      playTone('laser');
+      showToast('⚡ DISPARO DE PLASMA · QUEDAN ' + ammo, 'plasma');
+    },
+    onDestroy: ({ name }) => {
+      playTone('blast');
+      showToast('💥 ' + name + ' DESTRUIDO', 'destroy');
+    },
+    onEmptyFire: () => {
+      playTone('empty');
+      showToast('⚠️ SIN PLASMA · ¡ESQUIVA!', 'danger');
+    }
   });
   const overlay = document.getElementById('flight-overlay');
   document.getElementById('start-flight').addEventListener('click', () => {
@@ -242,6 +263,7 @@ function bindFlight() {
   });
   document.getElementById('steer-left').addEventListener('click', () => flight.moveLane(-1));
   document.getElementById('steer-right').addEventListener('click', () => flight.moveLane(1));
+  document.getElementById('fire-plasma').addEventListener('click', () => flight.fire());
   document.getElementById('music-flight').addEventListener('click', () => {
     const enabled = !getSettings().sound;
     applySettings({ sound: enabled });

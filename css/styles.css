@@ -463,7 +463,7 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 @keyframes shipCruise { 50% { transform: translate(14px,-12px) rotate(50deg); } }
 
 .flight-page { width: calc(100% - .5rem); max-width: none; margin: 0 auto; padding: .25rem 0 1rem; }
-.flight-hud { display: grid; grid-template-columns: 1.55fr .8fr .85fr 1fr .82fr; gap: .55rem; margin-bottom: .55rem; }
+.flight-hud { display: grid; grid-template-columns: 1.5fr .72fr .8fr .92fr .75fr .78fr; gap: .55rem; margin-bottom: .55rem; }
 .hud-block { min-height: 64px; display: grid; align-content: center; padding: .55rem .8rem; border: 1px solid var(--border); border-radius: 15px; background: rgba(22,13,59,.88); box-shadow: 0 8px 24px rgba(4,1,22,.22); }
 .hud-block > span { color: var(--muted); font-size: .72rem; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
 .hud-block > strong { font-size: 1.05rem; }
@@ -476,6 +476,9 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 .checkpoint-hud strong { color: var(--cyan); }
 .difficulty-hud { border-color: color-mix(in srgb, var(--danger) calc(var(--danger-level, 0) * 100%), var(--border)); background: linear-gradient(135deg, rgba(255,109,125,calc(var(--danger-level, 0) * .18)), rgba(22,13,59,.9)); }
 .difficulty-hud strong { color: var(--gold); }
+.ammo-hud { border-color: rgba(216,150,255,.62); background: linear-gradient(135deg, rgba(141,115,255,.18), rgba(22,13,59,.94)); }
+.ammo-hud strong { color: #d896ff; text-transform: uppercase; }
+.ammo-hud.empty { border-color: var(--danger); opacity: .72; }
 .flight-stage-actions { position: absolute; z-index: 9; top: .75rem; right: .75rem; display: flex; gap: .45rem; }
 .fullscreen-flight, .music-flight { min-height: 46px; display: flex; align-items: center; gap: .5rem; padding: .55rem .8rem; border: 2px solid var(--cyan); border-radius: 14px; color: white; background: rgba(13,8,43,.94); box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 0 18px rgba(94,232,239,.2); cursor: pointer; }
 .music-flight { border-color: var(--gold); box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 0 18px rgba(247,203,98,.2); }
@@ -497,6 +500,8 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 .flight-toast { position: absolute; z-index: 4; left: 50%; top: 12%; translate: -50% 0; width: max-content; max-width: calc(100% - 2rem); padding: .7rem 1rem; border: 2px solid var(--cyan); border-radius: 999px; background: rgba(10,6,36,.94); box-shadow: 0 10px 28px rgba(0,0,0,.38); text-align: center; font-weight: 900; }
 .flight-toast.danger { border-color: var(--danger); }
 .flight-toast.success { border-color: var(--green); color: var(--green); }
+.flight-toast.plasma { border-color: #d896ff; color: #ffffff; box-shadow: 0 10px 28px rgba(0,0,0,.38), 0 0 28px rgba(216,150,255,.42); }
+.flight-toast.destroy { border-color: var(--gold); color: var(--gold); box-shadow: 0 10px 28px rgba(0,0,0,.38), 0 0 34px rgba(247,203,98,.48); }
 .quiz-panel { background: radial-gradient(circle, rgba(69,45,142,.84), rgba(4,2,18,.9)); }
 .quiz-card { border: 2px solid var(--cyan); }
 .quiz-card h2 { max-width: 24ch; margin: .35rem auto .7rem; font-size: clamp(1.45rem, 3.6vh, 2.35rem); line-height: 1.08; }
@@ -509,10 +514,15 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 .quiz-options button.correct { border-color: var(--green); background: rgba(87,224,160,.2); }
 .quiz-options button.wrong { border-color: var(--danger); background: rgba(255,109,125,.2); }
 .quiz-result { min-height: 1.25em; margin: .55rem auto 0; font-size: clamp(.78rem, 1.7vh, .95rem); font-weight: 900; }
-.touch-controls { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; margin-top: .65rem; }
+.fire-hint { width: fit-content; margin: .7rem auto 1rem; padding: .5rem .8rem; border: 1px solid rgba(216,150,255,.7); border-radius: 999px; color: #f2e9ff; background: rgba(141,115,255,.16); font-size: .88rem; }
+.touch-controls { display: grid; grid-template-columns: 1fr .72fr 1fr; gap: .65rem; margin-top: .65rem; }
 .touch-controls button { min-height: 64px; display: flex; justify-content: center; align-items: center; gap: .65rem; border: 2px solid var(--border); border-radius: 18px; color: white; background: rgba(48,34,105,.86); cursor: pointer; font-size: 1.55rem; font-weight: 900; }
 .touch-controls button:active { transform: scale(.98); background: rgba(94,232,239,.16); border-color: var(--cyan); }
 .touch-controls span { font-size: .82rem; }
+.touch-controls small { font-size: .58rem; color: var(--muted); }
+.touch-controls .fire-control { border-color: #d896ff; background: linear-gradient(135deg, rgba(126,71,203,.96), rgba(58,30,119,.96)); box-shadow: 0 0 24px rgba(216,150,255,.2); }
+.touch-controls .fire-control:active { border-color: white; background: rgba(216,150,255,.42); box-shadow: 0 0 34px rgba(216,150,255,.55); }
+.touch-controls .fire-control.empty { border-color: var(--danger); color: var(--muted); background: rgba(55,38,72,.84); box-shadow: none; }
 .flight-tip { margin: .45rem auto 0; color: var(--muted); text-align: center; font-size: .78rem; }
 .stranded-icon { font-size: 4rem; filter: grayscale(.25); }
 .stranded-card { border-color: var(--danger); }
@@ -548,14 +558,14 @@ body.flight-screen-locked { overflow: hidden; }
   .home-orbit { grid-row: 1; min-height: 330px; }
   .orbit-planet { width: 245px; }
   .orbit-planet::after { width: 290px; top: 136px; }
-  .flight-hud { grid-template-columns: 1.4fr .8fr .9fr .8fr; }
+  .flight-hud { grid-template-columns: 1.35fr .75fr .85fr .75fr .8fr; }
   .checkpoint-hud { display: none; }
   .instruction-grid { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 560px) {
   .flight-page { width: calc(100% - .25rem); }
-  .flight-hud { grid-template-columns: 1.4fr .72fr .82fr .72fr; gap: .25rem; }
+  .flight-hud { grid-template-columns: 1.3fr .68fr .76fr .68fr .78fr; gap: .25rem; }
   .hud-block { min-height: 56px; padding: .4rem .5rem; border-radius: 11px; }
   .hud-block > span { font-size: .58rem; }
   .hud-block > strong { font-size: .82rem; }
@@ -570,6 +580,9 @@ body.flight-screen-locked { overflow: hidden; }
   .fuel-question-icon { width: 42px; height: 42px; font-size: 1.55rem; }
   .quiz-options button { min-height: 46px; }
   .touch-controls button { min-height: 58px; }
+  .touch-controls { gap: .3rem; }
+  .touch-controls button { gap: .25rem; padding-inline: .35rem; }
+  .touch-controls small { display: none; }
   .flight-tip { display: none; }
   .mission-formula > span { min-width: 72px; }
   .mission-formula i { display: none; }
