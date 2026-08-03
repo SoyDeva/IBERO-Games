@@ -45,6 +45,7 @@ export function bindLearningTools({
   const tracking = root.querySelector('[data-learning-tracking]');
   const exportJson = root.querySelector('[data-export-learning-json]');
   const exportCsv = root.querySelector('[data-export-learning-csv]');
+  const printReport = root.querySelector('[data-print-learning-report]');
 
   goalForm?.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -87,9 +88,10 @@ export function bindLearningTools({
 
   exportJson?.addEventListener('click', () => exportProgress('json'));
   exportCsv?.addEventListener('click', () => exportProgress('csv'));
+  printReport?.addEventListener('click', () => windowRef?.print?.());
 
   return Object.freeze({
-    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv),
+    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || printReport),
     exportProgress
   });
 }
