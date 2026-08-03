@@ -154,6 +154,6 @@ test('rechaza la restauración cuando el navegador bloquea la escritura protegid
 
   assert.throws(() => store.restoreDeviceBackup(source, [
     { profileId: createLearningProfileId('Nova'), action: 'add' }
-  ]), /punto de recuperación/);
+  ]), /No es seguro aplicar la restauración consolidada/);
   assert.equal(JSON.parse(values.get(STORAGE_KEYS.learningProfiles)).profiles[createLearningProfileId('Nova')], undefined);
 });
