@@ -6,6 +6,7 @@ export const STORAGE_KEYS = Object.freeze({
   achievements: 'nebula-achievements',
   learningProgress: 'nebula-learning-progress-v1',
   learningProfiles: 'nebula-learning-profiles-v1',
+  learningRecovery: 'nebula-learning-recovery-v1',
   tutorialComplete: 'nebula-tutorial-complete',
   flightBest: 'nebula-flight-best',
   rankingPrefix: 'nebula-ranking-'

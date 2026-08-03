@@ -237,7 +237,7 @@ test('elimina un perfil inactivo únicamente después de confirmación', () => {
 
   const result = controller.deleteProfile(button);
   assert.equal(result.removed.pilotName, 'Luna');
-  assert.match(changedMessage, /eliminado del dispositivo/);
+  assert.match(changedMessage, /eliminado.*Puedes deshacer/);
 });
 
 test('presenta metas, perfiles, seguimiento, respaldos e importación con contenido escapado', () => {

@@ -130,7 +130,7 @@ test('la vista previa no persiste una migración heredada', () => {
   assert.notEqual(storage.getItem(STORAGE_KEYS.learningProgress), null);
 });
 
-test('rechaza la restauración cuando el navegador bloquea la escritura', () => {
+test('rechaza la restauración cuando el navegador bloquea la escritura protegida', () => {
   const local = upsertLearningProfile(createLearningProfileCollection(), {
     pilotName: 'Luna',
     progress: recordLearningAnswer(undefined, {
@@ -154,6 +154,6 @@ test('rechaza la restauración cuando el navegador bloquea la escritura', () => 
 
   assert.throws(() => store.restoreDeviceBackup(source, [
     { profileId: createLearningProfileId('Nova'), action: 'add' }
-  ]), /bloqueó el guardado/);
+  ]), /punto de recuperación/);
   assert.equal(JSON.parse(values.get(STORAGE_KEYS.learningProfiles)).profiles[createLearningProfileId('Nova')], undefined);
 });
