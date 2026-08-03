@@ -1,7 +1,7 @@
 const CACHE_NAME = 'mision-nebula-v23';
 const FILES = [
   './', './index.html', './informe-actividad-1.html', './README.md',
-  './css/styles.css?v=23', './css/accessibility.css?v=23', './css/print.css?v=23',
+  './css/styles.css?v=23', './css/learning-progress.css?v=23', './css/learning-profile-tools.css?v=23', './css/accessibility.css?v=23', './css/print.css?v=23',
   './js/app.js?v=23', './js/space-game.js?v=23', './js/galactic-league.js?v=23', './js/questions.js', './js/game.js', './js/data.js', './js/storage.js',
   './js/canvas.js', './js/evaluation.js', './js/report.js', './js/accessibility.js?v=23',
   './assets/icons/favicon.svg'
