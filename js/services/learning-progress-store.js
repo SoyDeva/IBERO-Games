@@ -107,11 +107,27 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
   function profileInfo() {
     const collection = loadCollection();
     const pilotName = activePilotName();
-    return {
-      id: createLearningProfileId(pilotName),
-      pilotName: normalizeLearningPilotName(pilotName),
-      profiles: listLearningProfiles(collection, { activePilotName: pilotName })
-    };
+    const id = createLearningProfileId(pilotName);
+    const safePilotName = normalizeLearningPilotName(pilotName);
+    const profiles = listLearningProfiles(collection, { activePilotName: pilotName });
+    if (!profiles.some((profile) => profile.active)) {
+      const activeSummary = summarizeLearningProgress(readLearningProfile(collection, pilotName));
+      profiles.unshift({
+        id,
+        pilotName: safePilotName,
+        updatedAt: '',
+        active: true,
+        attempts: activeSummary.attempts,
+        correct: activeSummary.correct,
+        accuracy: activeSummary.accuracy,
+        bestStreak: activeSummary.bestStreak,
+        sessions: activeSummary.sessionCount,
+        goalRate: 0,
+        focusCategory: activeSummary.focus[0]?.name || '',
+        strengthCategory: activeSummary.strength?.name || ''
+      });
+    }
+    return { id, pilotName: safePilotName, profiles };
   }
 
   function summary() {
