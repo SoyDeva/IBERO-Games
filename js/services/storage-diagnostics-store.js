@@ -4,6 +4,7 @@ import {
   assertStorageDiagnosticReady,
   diagnoseStorageSnapshot
 } from '../core/storage-diagnostics.js';
+import { getPilotName } from './pilot-profile-store.js';
 
 const DEFAULT_PROBE_KEY = '__mision_nebula_storage_probe__';
 
@@ -60,7 +61,7 @@ export function createStorageDiagnosticsStore({
   storage,
   now = () => new Date().toISOString(),
   probeKey = DEFAULT_PROBE_KEY,
-  resolvePilotName = () => ''
+  resolvePilotName = getPilotName
 } = {}) {
   function diagnose() {
     const snapshot = collectStorageSnapshot({ storage });
