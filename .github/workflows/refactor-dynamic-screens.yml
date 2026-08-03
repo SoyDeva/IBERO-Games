@@ -1,0 +1,47 @@
+name: Apply guarded dynamic screen refactor
+
+on:
+  push:
+    branches:
+      - agent/refactor-dynamic-screens-v24
+
+permissions:
+  contents: write
+
+jobs:
+  transform:
+    if: github.ref == 'refs/heads/agent/refactor-dynamic-screens-v24' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/refactor-dynamic-screens-v24
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Transform app.js only
+        run: node scripts/refactor-dynamic-screens.mjs
+      - name: Reject unexpected file changes
+        run: |
+          unexpected=$(git diff --name-only | grep -v '^js/app.js$' || true)
+          if [ -n "$unexpected" ]; then
+            echo "Unexpected changes:"
+            echo "$unexpected"
+            exit 1
+          fi
+      - name: Validate complete project
+        run: npm run check
+      - name: Commit app.js
+        run: |
+          if git diff --quiet -- js/app.js; then
+            echo "No changes required"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/app.js
+          git commit -m "refactor: connect dynamic screen renderers"
+          git push origin HEAD:agent/refactor-dynamic-screens-v24
