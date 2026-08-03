@@ -1,5 +1,5 @@
 import { FLIGHT_LANES } from '../core/flight-simulation.js?v=23';
-import { clamp, easeIn } from '../core/flight-geometry.js?v=23';
+import { clamp, easeIn, projectFlightPoint } from '../core/flight-geometry.js?v=23';
 import { SHIP_SKINS, SHIP_TRAILS } from '../config/ship-catalog.js?v=23';
 
 class FlightRenderer {
@@ -21,13 +21,12 @@ class FlightRenderer {
   }
 
 project(lane, depth) {
-    const horizon = this.height * .235;
-    const progress = easeIn(depth);
-    return {
-      x: this.width / 2 + lane * (this.width * (.035 + progress * .255)),
-      y: horizon + progress * (this.height * .69),
-      scale: .1 + progress * 1.22
-    };
+    return projectFlightPoint({
+      width: this.width,
+      height: this.height,
+      lane,
+      depth
+    });
   }
 
   draw() {
