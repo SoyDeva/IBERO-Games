@@ -2,6 +2,10 @@ import { STORAGE_KEYS } from '../config/storage-keys.js';
 import { createLearningBackupFile, verifyLearningBackup } from '../core/learning-backup.js';
 import { createLearningDeviceBackupFile } from '../core/learning-device-backup.js';
 import {
+  createLearningDeviceRestorePreview,
+  restoreLearningDeviceProfiles
+} from '../core/learning-device-restore.js';
+import {
   appendLearningSession,
   clearLearningGoal,
   configureLearningGoal,
@@ -152,6 +156,20 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     return createLearningDeviceBackupFile(loadCollection(), { exportedAt });
   }
 
+  function previewDeviceBackup(source) {
+    return createLearningDeviceRestorePreview(loadCollection(), source, {
+      activePilotName: activePilotName()
+    });
+  }
+
+  function restoreDeviceBackup(source, decisions) {
+    const restored = restoreLearningDeviceProfiles(loadCollection(), source, decisions, {
+      activePilotName: activePilotName()
+    });
+    if (restored.applied) writeCollection(restored.collection);
+    return restored;
+  }
+
   function importBackup(source) {
     const verified = verifyLearningBackup(source, { expectedPilotName: activePilotName() });
     const progress = save(verified.progress);
@@ -192,6 +210,8 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     profileInfo,
     createBackup,
     createDeviceBackup,
+    previewDeviceBackup,
+    restoreDeviceBackup,
     importBackup,
     removeProfile,
     reset
