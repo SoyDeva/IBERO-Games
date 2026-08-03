@@ -1,6 +1,6 @@
-import { SpaceFlight } from './space-game.js?v=16';
+import { SpaceFlight } from './space-game.js?v=17';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
-import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=16';
+import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=17';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
@@ -11,6 +11,7 @@ let currentQuestion = null;
 let toastTimer = 0;
 let quizTimer = 0;
 let resumeMusicOnVisible = false;
+let resumeFlightOnVisible = false;
 let flightMode = 'mission';
 let achievementTimer = 0;
 let lastLearnedFact = '';
@@ -278,11 +279,17 @@ function completeTutorial() {
 }
 
 function startFlightSession() {
+  window.clearTimeout(quizTimer);
   const overlay = document.getElementById('flight-overlay');
   const pausePanel = document.getElementById('pause-panel');
+  const quizPanel = document.getElementById('quiz-panel');
   document.querySelector('.flight-page')?.classList.remove('is-paused');
   if (overlay) overlay.hidden = true;
   if (pausePanel) pausePanel.hidden = true;
+  if (quizPanel) {
+    quizPanel.hidden = true;
+    quizPanel.dataset.answered = 'false';
+  }
   const achievementPop = document.getElementById('achievement-pop');
   if (achievementPop) achievementPop.hidden = true;
   const pauseButton = document.getElementById('pause-flight');
@@ -338,6 +345,7 @@ function showQuiz(meta) {
   const question = nextQuestion(meta.number);
   currentCheckpointClean = Boolean(meta.clean && meta.number > 1);
   const panel = document.getElementById('quiz-panel');
+  panel.dataset.answered = 'false';
   document.getElementById('quiz-category').textContent = question.icon + ' ' + question.category + ' · Pregunta nivel ' + question.level;
   document.getElementById('quiz-question').textContent = question.text;
   document.getElementById('quiz-result').textContent = '';
@@ -531,15 +539,15 @@ document.addEventListener('keydown', (event) => {
 });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    resumeMusicOnVisible = flight?.mode === 'running';
+    resumeMusicOnVisible = ['running', 'quiz'].includes(flight?.mode);
+    resumeFlightOnVisible = flight?.mode === 'running';
     flight?.pause();
     stopMusic();
   } else {
-    if (resumeMusicOnVisible && flight && flight.mode !== 'gameover') {
-      startMusic(flight.checkpoints + 1);
-      flight.resume();
-    }
+    if (resumeMusicOnVisible && flight && flight.mode !== 'gameover') startMusic(flight.checkpoints + 1);
+    if (resumeFlightOnVisible) flight?.resume();
     resumeMusicOnVisible = false;
+    resumeFlightOnVisible = false;
   }
 });
 bindSettings(document);
