@@ -1,9 +1,9 @@
-const CACHE_NAME = 'mision-nebula-v18';
+const CACHE_NAME = 'mision-nebula-v19';
 const FILES = [
   './', './index.html', './informe-actividad-1.html', './README.md',
-  './css/styles.css?v=18', './css/accessibility.css?v=18', './css/print.css?v=18',
-  './js/app.js?v=18', './js/space-game.js?v=18', './js/questions.js', './js/game.js', './js/data.js', './js/storage.js',
-  './js/canvas.js', './js/evaluation.js', './js/report.js', './js/accessibility.js?v=18',
+  './css/styles.css?v=19', './css/accessibility.css?v=19', './css/print.css?v=19',
+  './js/app.js?v=19', './js/space-game.js?v=19', './js/questions.js', './js/game.js', './js/data.js', './js/storage.js',
+  './js/canvas.js', './js/evaluation.js', './js/report.js', './js/accessibility.js?v=19',
   './assets/icons/favicon.svg'
 ];
 

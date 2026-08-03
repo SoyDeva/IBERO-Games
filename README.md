@@ -40,6 +40,9 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 - Música espacial sintetizada y efectos con controles de volumen independientes.
 - Dificultad adaptativa: progresa con las respuestas y rachas, pero ofrece ayuda temporal después de los choques.
 - Cinco sectores galácticos con ambiente, colores y progresión visual propios.
+- Economía infantil sin dinero real: 12 cristales por acierto y 3 por objeto destruido en misión.
+- Mercado Nova cada 10 niveles con reparación, superplasma o estabilización del siguiente tramo.
+- Bazar Orbital exterior con cuatro estilos permanentes de nave que cambian su apariencia en Canvas.
 - Pausa disponible durante el vuelo y con la tecla `P`.
 - Cinco logros locales, celebraciones con partículas y bitácora educativa al final de cada intento.
 - Paso cercano corregido: los objetos que se esquivan cruzan el primer plano y se desvanecen fuera de cámara.
@@ -59,6 +62,7 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 6. Esquivar los objetos y entrar al portal brillante.
 7. Elegir una de tres respuestas: acertar recarga combustible; fallar termina el intento normal.
 8. Evitar tres choques y no dejar que el combustible llegue a cero.
+9. Guardar cristales para personalizar la Asteria o comprar una ayuda en las estaciones de los niveles 10, 20, 30 y siguientes.
 
 ## Reglas pedagógicas
 
@@ -69,6 +73,8 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 - Cada pregunta tiene tres opciones y una respuesta definida.
 - El vuelo se detiene por completo mientras se responde.
 - El récord es una motivación personal y no una calificación.
+- Los cristales son recompensas locales de juego: no se compran con dinero real ni se obtienen en práctica o tutorial.
+- En cada estación solo se elige una mejora, para mantener una decisión sencilla y evitar sobrecargar al estudiante.
 - Después de un error se muestra el dato correcto antes de permitir un nuevo intento.
 - Se recomienda realizar intentos de 5 a 10 minutos y conversar brevemente sobre las respuestas nuevas.
 
@@ -141,6 +147,9 @@ GitHub Pages publica la rama `main` desde la raíz del repositorio:
 - [x] Recarga completa de plasma exactamente al superar los niveles 5, 10, 15 y siguientes.
 - [x] Contador de próxima recarga, racha visible y alerta visual de combustible crítico.
 - [x] Avisos de nuevo sector preservados sin ser reemplazados por mensajes simultáneos.
+- [x] Economía persistente, recompensas exclusivas de misión y protección contra saldos inválidos.
+- [x] Estación en niveles múltiplos de 10, una compra por visita y continuación segura del vuelo.
+- [x] Compra, equipamiento y renderizado de cuatro estilos de nave.
 - [x] Pérdida de escudos y combustible por colisión.
 - [x] Aumento de velocidad, frecuencia y oleadas dobles por nivel.
 - [x] Verificación de que ninguna oleada bloquea los tres carriles.

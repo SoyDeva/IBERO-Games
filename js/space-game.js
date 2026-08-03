@@ -1,5 +1,11 @@
 const LANES = [-1, 0, 1];
 const OBSTACLE_TYPES = ['planet', 'meteor', 'star', 'ship'];
+export const SHIP_SKINS = Object.freeze({
+  nebula: { name: 'Nébula', icon: '🚀', price: 0, body: '#e9efff', wing: '#8d73ff', glass: '#54def2', flame: '#5ee8ef', glow: '#5ee8ef', description: 'El uniforme clásico de la Asteria.' },
+  solar: { name: 'Solar', icon: '☀️', price: 75, body: '#fff2bd', wing: '#ff8b45', glass: '#ffd95e', flame: '#ff6d7d', glow: '#f7cb62', description: 'Brilla como una pequeña estrella.' },
+  aqua: { name: 'Aqua', icon: '🌊', price: 105, body: '#dffff7', wing: '#20bfa9', glass: '#79f4ff', flame: '#57e0a0', glow: '#5ee8ef', description: 'Tecnología del Cinturón Helado.' },
+  aurora: { name: 'Aurora', icon: '🌈', price: 150, body: '#ffe8f5', wing: '#ff6fb2', glass: '#bda5ff', flame: '#f7cb62', glow: '#ff7bac', description: 'Una nave legendaria llena de color.' }
+});
 const SECTORS = [
   { name: 'Nebulosa Violeta', icon: '🌌', top: '#09041f', middle: '#21125b', bottom: '#08051b', glow: '124,78,255', route: '94,232,239' },
   { name: 'Cinturón Helado', icon: '❄️', top: '#031a32', middle: '#0d4c6f', bottom: '#071524', glow: '94,232,239', route: '151,225,255' },
@@ -52,6 +58,8 @@ export class SpaceFlight {
     this.totalCollisions = 0;
     this.collisionsThisLeg = 0;
     this.celebrationParticles = [];
+    this.shipSkin = 'nebula';
+    this.stationSlowdown = 0;
     this.lastFrame = performance.now();
     this.stars = Array.from({ length: 105 }, () => this.createStar());
     this.boundFrame = (time) => this.frame(time);
@@ -89,6 +97,7 @@ export class SpaceFlight {
     this.practice = Boolean(options.practice);
     this.tutorial = Boolean(options.tutorial);
     this.tutorialStep = this.tutorial ? 'left' : '';
+    this.shipSkin = SHIP_SKINS[options.skin] ? options.skin : 'nebula';
     this.lane = 0;
     this.lanePosition = 0;
     this.fuel = this.practice ? 78 : 62;
@@ -114,6 +123,7 @@ export class SpaceFlight {
     this.totalCollisions = 0;
     this.collisionsThisLeg = 0;
     this.celebrationParticles = [];
+    this.stationSlowdown = 0;
     this.emitHud();
     if (this.tutorial) this.callbacks.onTutorialStep?.({ step: 'left' });
   }
@@ -124,6 +134,14 @@ export class SpaceFlight {
 
   resume() {
     if (this.mode === 'paused') this.mode = 'running';
+  }
+
+  enterStation() {
+    if (this.mode === 'running') this.mode = 'station';
+  }
+
+  leaveStation() {
+    if (this.mode === 'station') this.mode = 'running';
   }
 
   moveLane(direction) {
@@ -179,6 +197,7 @@ export class SpaceFlight {
 
   answerCorrect() {
     if (this.mode !== 'quiz') return;
+    this.stationSlowdown = 0;
     const previousSector = this.getSectorIndex();
     this.checkpoints += 1;
     this.totalCorrect += 1;
@@ -198,11 +217,12 @@ export class SpaceFlight {
     const sector = this.getSector();
     if (sectorChanged) this.callbacks.onSectorChange?.(sector);
     this.emitHud();
-    return { ammoRecharged, completedLevel: this.checkpoints, sectorChanged, sector };
+    return { ammoRecharged, completedLevel: this.checkpoints, sectorChanged, sector, stationReached: !this.practice && this.checkpoints % 10 === 0 };
   }
 
   answerPracticeMistake() {
     if (this.mode !== 'quiz' || !this.practice) return;
+    this.stationSlowdown = 0;
     const previousSector = this.getSectorIndex();
     this.checkpoints += 1;
     this.correctStreak = 0;
@@ -224,8 +244,25 @@ export class SpaceFlight {
   rechargeAmmoAtMilestone() {
     if (this.checkpoints <= 0 || this.checkpoints % 5 !== 0) return false;
     const previousAmmo = this.ammo;
-    this.ammo = 3;
+    this.ammo = Math.max(this.ammo, 3);
     this.callbacks.onAmmoRecharge?.({ ammo: this.ammo, restored: this.ammo - previousAmmo, level: this.checkpoints });
+    return true;
+  }
+
+  applyStationPurchase(type) {
+    if (this.mode !== 'station') return false;
+    if (type === 'repair') {
+      this.hull = 3;
+      this.fuel = Math.min(100, this.fuel + 20);
+    } else if (type === 'plasma') {
+      this.ammo = 5;
+    } else if (type === 'stabilizer') {
+      this.stationSlowdown = .09;
+    } else {
+      return false;
+    }
+    this.createCelebration(30);
+    this.emitHud();
     return true;
   }
 
@@ -349,9 +386,9 @@ export class SpaceFlight {
     const streakPressure = Math.min(.045, this.correctStreak * .009);
     return {
       level: this.checkpoints + 1,
-      obstacleSpeed: clamp(.36 + this.checkpoints * .042 - introEase - this.adaptiveAssist - hullAssist - practiceEase + streakPressure, .26, .7),
-      spawnInterval: clamp(1.42 - this.checkpoints * .085 + introEase * 1.8 + this.adaptiveAssist + practiceEase - streakPressure, .62, 1.75),
-      pairChance: clamp(.12 + this.checkpoints * .115 - this.adaptiveAssist * .8 - practiceEase, .08, .82)
+      obstacleSpeed: clamp(.36 + this.checkpoints * .042 - introEase - this.adaptiveAssist - hullAssist - practiceEase - this.stationSlowdown + streakPressure, .26, .7),
+      spawnInterval: clamp(1.42 - this.checkpoints * .085 + introEase * 1.8 + this.adaptiveAssist + practiceEase + this.stationSlowdown * 1.6 - streakPressure, .62, 1.75),
+      pairChance: clamp(.12 + this.checkpoints * .115 - this.adaptiveAssist * .8 - practiceEase - this.stationSlowdown * 1.2, .08, .82)
     };
   }
 
@@ -810,6 +847,7 @@ export class SpaceFlight {
   }
 
   drawShip(ctx) {
+    const skin = SHIP_SKINS[this.shipSkin] || SHIP_SKINS.nebula;
     const x = this.width / 2 + this.lanePosition * this.width * .27;
     const mobileCockpit = this.width <= 850;
     const mobileShipHeight = this.height < 380 ? .55 : this.height < 520 ? .66 : .72;
@@ -822,7 +860,7 @@ export class SpaceFlight {
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
       ctx.fillStyle = `rgba(255,255,255,${this.weaponPulse})`;
-      ctx.shadowColor = '#5ee8ef';
+      ctx.shadowColor = skin.glow;
       ctx.shadowBlur = 34;
       ctx.beginPath();
       ctx.arc(0, -size * .74, size * (.12 + this.weaponPulse * .15), 0, Math.PI * 2);
@@ -830,9 +868,9 @@ export class SpaceFlight {
       ctx.restore();
     }
     const flame = 20 + Math.sin(this.elapsed * 18) * 6;
-    ctx.shadowColor = '#5ee8ef';
+    ctx.shadowColor = skin.glow;
     ctx.shadowBlur = 25;
-    ctx.fillStyle = '#5ee8ef';
+    ctx.fillStyle = skin.flame;
     ctx.beginPath();
     ctx.moveTo(-size * .2, size * .48);
     ctx.lineTo(0, size * .48 + flame);
@@ -840,7 +878,7 @@ export class SpaceFlight {
     ctx.closePath();
     ctx.fill();
     ctx.shadowBlur = 12;
-    ctx.fillStyle = '#e9efff';
+    ctx.fillStyle = skin.body;
     ctx.beginPath();
     ctx.moveTo(0, -size * .72);
     ctx.quadraticCurveTo(size * .55, -size * .1, size * .42, size * .55);
@@ -848,7 +886,7 @@ export class SpaceFlight {
     ctx.lineTo(-size * .42, size * .55);
     ctx.quadraticCurveTo(-size * .55, -size * .1, 0, -size * .72);
     ctx.fill();
-    ctx.fillStyle = '#8d73ff';
+    ctx.fillStyle = skin.wing;
     ctx.beginPath();
     ctx.moveTo(-size * .38, size * .08);
     ctx.lineTo(-size * .78, size * .46);
@@ -861,7 +899,7 @@ export class SpaceFlight {
     ctx.lineTo(size * .32, size * .38);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = '#54def2';
+    ctx.fillStyle = skin.glass;
     ctx.beginPath();
     ctx.ellipse(0, -size * .18, size * .22, size * .31, 0, 0, Math.PI * 2);
     ctx.fill();
