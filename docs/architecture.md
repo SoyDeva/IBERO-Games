@@ -44,13 +44,15 @@ Ejemplos actuales:
 - eliminación controlada por identificador, protegiendo el perfil activo;
 - creación y verificación de respaldos JSON individuales y consolidados mediante suma de integridad;
 - análisis sin escritura de respaldos consolidados, selección de perfiles y resolución explícita de coincidencias;
-- aplicación atómica de perfiles nuevos o reemplazados, respetando el límite defensivo de la colección.
+- aplicación atómica de perfiles nuevos o reemplazados, respetando el límite defensivo de la colección;
+- puntos de recuperación versionados con caducidad, integridad y huella del estado posterior;
+- reversión segura únicamente cuando no existen cambios pedagógicos posteriores.
 
 ### `js/services/`
 
 Coordina recursos externos o estado de aplicación que no pertenece al DOM. Esta capa no conoce la estructura visual de las pantallas.
 
-El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla. `learning-progress-store.js` persiste localmente aciertos, errores, rachas, sesiones, metas y preferencias dentro de perfiles separados por piloto. Migra el documento pedagógico anterior al primer piloto activo, permite respaldar o restaurar el perfil actual, crear un respaldo consolidado, previsualizar una restauración consolidada sin escribir, aplicar solamente la selección confirmada y eliminar perfiles inactivos con protección explícita del perfil activo. `flight-input-controller.js` interpreta teclado y puntero, enlaza los eventos del navegador y los traduce a operaciones públicas de `SpaceFlight`.
+El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla. `learning-progress-store.js` persiste localmente aciertos, errores, rachas, sesiones, metas y preferencias dentro de perfiles separados por piloto. Migra el documento pedagógico anterior al primer piloto activo, permite respaldar o restaurar el perfil actual, crear un respaldo consolidado, previsualizar una restauración consolidada sin escribir, aplicar solamente la selección confirmada y eliminar perfiles inactivos con protección explícita del perfil activo. Antes de una eliminación, importación o restauración consolidada exige guardar un punto de recuperación; también valida y aplica la reversión del último cambio destructivo. `flight-input-controller.js` interpreta teclado y puntero, enlaza los eventos del navegador y los traduce a operaciones públicas de `SpaceFlight`.
 
 ### `js/ui/`
 
@@ -62,7 +64,8 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 - `learning-progress-panel.js` muestra el perfil activo, métricas, fortalezas, temas de refuerzo, metas, última sesión y tendencia opcional.
 - `teacher-learning-report.js` genera una lectura local por categorías y sesiones, identifica el perfil activo y presenta la comparación descriptiva, administración y entradas de respaldo o restauración.
 - `learning-device-restore-panel.js` presenta perfiles nuevos y coincidentes, compara métricas locales con el respaldo y recoge decisiones explícitas de añadir, conservar, reemplazar o excluir.
-- `learning-tools-controller.js` enlaza metas, seguimiento longitudinal, impresión, exportaciones, respaldos, eliminación confirmada y restauración consolidada en dos pasos. Ninguna de estas acciones usa red.
+- `learning-recovery-panel.js` muestra el último punto válido, explica su vigencia y ofrece deshacer o descartarlo.
+- `learning-tools-controller.js` enlaza metas, seguimiento longitudinal, impresión, exportaciones, respaldos, eliminación confirmada, restauración consolidada y reversión inmediata. Ninguna de estas acciones usa red.
 - `hangar-screen.js` representa fuselajes, estelas, saldo y acciones de compra o equipamiento.
 - `ranking-screen.js` representa estados de carga, error, podio y tabla mundial.
 - `quiz-panel.js` presenta preguntas y opciones, enlaza respuestas y marca visualmente aciertos y errores.
@@ -72,7 +75,7 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 - `game-over-screen.js` genera la bitácora, enlaza sus acciones y actualiza el resultado de la Liga Galáctica.
 - `flight-renderer.js` dibuja fondo, estrellas, ruta, portal, obstáculos, plasma, explosiones, celebraciones y nave a partir del estado actual del vuelo.
 
-### Perfiles y respaldo pedagógico
+### Perfiles, respaldo y recuperación pedagógica
 
 El progreso ya no utiliza un único documento compartido. `nebula-learning-profiles-v1` guarda una colección local con un máximo defensivo de perfiles normalizados. Cada perfil contiene únicamente apodo visible, fecha de actualización y progreso pedagógico; no contiene contraseña, token de la Liga ni configuración de Supabase.
 
@@ -83,6 +86,8 @@ Los respaldos individuales utilizan el esquema `mision-nebula-learning-backup-v1
 La importación individual valida esquema, suma e identidad del piloto antes de reemplazar solamente el perfil activo. La restauración consolidada verifica nuevamente el archivo, construye una vista previa sin modificar `localStorage` y exige una decisión por perfil. Las coincidencias se conservan por defecto; reemplazarlas requiere selección explícita. Los perfiles no marcados se excluyen y toda la selección se valida antes de una única escritura de la colección resultante.
 
 La eliminación local acepta únicamente identificadores existentes, exige confirmación visual y rechaza el perfil activo; para borrarlo es necesario cambiar primero de piloto.
+
+`nebula-learning-recovery-v1` conserva como máximo un punto de recuperación. Se crea antes de una eliminación, importación individual o restauración consolidada, y la operación se aborta si el navegador no puede guardarlo. El punto almacena la colección anterior, una huella del estado posterior, caduca a las 24 horas y deja de ser válido al registrarse cualquier cambio pedagógico adicional. Deshacer restaura la colección previa mediante una escritura única y elimina el punto después del éxito.
 
 ### Fachadas públicas
 
@@ -126,3 +131,4 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 18. Perfiles pedagógicos por piloto, respaldo verificable e importación local. **Completado.**
 19. Administración de perfiles locales, comparación descriptiva y respaldo consolidado. **Completado.**
 20. Restauración consolidada con vista previa, selección y resolución de coincidencias. **Completado.**
+21. Puntos de recuperación y reversión del último cambio destructivo. **Completado.**
