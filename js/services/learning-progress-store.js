@@ -35,9 +35,11 @@ import {
 } from '../core/learning-profiles.js';
 import { getPilotName } from './pilot-profile-store.js';
 import { hasStorageValue, readStorageJson, removeStorageValue, writeStorageJson } from './browser-storage.js';
+import { createStorageDiagnosticsStore } from './storage-diagnostics-store.js';
 
 export function createLearningProgressStore({ storage, resolvePilotName = getPilotName } = {}) {
   const options = { storage };
+  const storageDiagnostics = createStorageDiagnosticsStore({ storage });
 
   function activePilotName() {
     return String(resolvePilotName?.() || '').trim().slice(0, 48);
@@ -143,6 +145,10 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     return info;
   }
 
+  function storageInfo() {
+    return storageDiagnostics.diagnose();
+  }
+
   function profileInfo() {
     const collection = loadCollection();
     const pilotName = activePilotName();
@@ -177,11 +183,13 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
       profileName: profile.pilotName,
       profileCount: profile.profiles.length,
       availableProfiles: profile.profiles,
-      recovery: recoveryInfo()
+      recovery: recoveryInfo(),
+      storage: storageInfo()
     };
   }
 
   function createBackup({ exportedAt } = {}) {
+    storageDiagnostics.assertReady('crear el respaldo del perfil');
     return createLearningBackupFile(load(), {
       pilotName: activePilotName(),
       exportedAt
@@ -189,16 +197,19 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
   }
 
   function createDeviceBackup({ exportedAt } = {}) {
+    storageDiagnostics.assertReady('crear el respaldo consolidado');
     return createLearningDeviceBackupFile(loadCollection(), { exportedAt });
   }
 
   function previewDeviceBackup(source) {
+    storageDiagnostics.assertReady('previsualizar la restauración consolidada');
     return createLearningDeviceRestorePreview(loadCollection({ persistMigrations: false }), source, {
       activePilotName: activePilotName()
     });
   }
 
   function restoreDeviceBackup(source, decisions) {
+    storageDiagnostics.assertReady('aplicar la restauración consolidada');
     const previous = loadCollection({ persistMigrations: false });
     const restored = restoreLearningDeviceProfiles(previous, source, decisions, {
       activePilotName: activePilotName()
@@ -208,6 +219,7 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
   }
 
   function importBackup(source) {
+    storageDiagnostics.assertReady('importar el respaldo del perfil');
     const verified = verifyLearningBackup(source, { expectedPilotName: activePilotName() });
     const previous = loadCollection({ persistMigrations: false });
     const next = upsertLearningProfile(previous, {
@@ -254,6 +266,10 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     return { dismissed: true };
   }
 
+  function cleanupObsoleteStorage() {
+    return storageDiagnostics.cleanupObsolete();
+  }
+
   function reset() {
     const collection = removeLearningProfile(loadCollection(), activePilotName());
     if (Object.keys(collection.profiles).length) writeCollection(collection);
@@ -272,6 +288,7 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     summary,
     profileInfo,
     recoveryInfo,
+    storageInfo,
     createBackup,
     createDeviceBackup,
     previewDeviceBackup,
@@ -280,6 +297,7 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     removeProfile,
     undoLastDestructiveChange,
     dismissRecovery,
+    cleanupObsoleteStorage,
     reset
   });
 }

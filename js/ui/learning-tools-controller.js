@@ -83,6 +83,8 @@ export function bindLearningTools({
   const importInput = root.querySelector('[data-import-learning]');
   const deviceImportInput = root.querySelector('[data-import-learning-device]');
   const deviceRestoreContainer = root.querySelector('[data-learning-device-restore-preview]');
+  const cleanupStorageButton = root.querySelector('[data-cleanup-learning-storage]');
+  const refreshStorageButton = root.querySelector('[data-refresh-learning-storage]');
   const printReport = root.querySelector('[data-print-learning-report]');
   const deleteProfileButtons = Array.from(root.querySelectorAll?.('[data-delete-learning-profile]') || []);
   const recoveryPanel = mountLearningRecoveryPanel({
@@ -316,19 +318,44 @@ export function bindLearningTools({
     }
   }
 
+  function cleanupStorage() {
+    const confirmed = windowRef?.confirm
+      ? windowRef.confirm('¿Eliminar únicamente los elementos que el diagnóstico volvió a clasificar como obsoletos? No se borrarán perfiles pedagógicos válidos.')
+      : true;
+    if (!confirmed) {
+      setStatus(root, 'Limpieza cancelada.');
+      return null;
+    }
+    try {
+      const result = store.cleanupObsoleteStorage();
+      onChanged('Limpieza local completada: ' + result.removed.length + (result.removed.length === 1 ? ' elemento eliminado.' : ' elementos eliminados.'));
+      return result;
+    } catch (error) {
+      setStatus(root, error?.message || 'No fue posible limpiar el almacenamiento local.');
+      return null;
+    }
+  }
+
+  function refreshStorage() {
+    onChanged('Diagnóstico de almacenamiento actualizado.');
+    return store.storageInfo?.() || null;
+  }
+
   exportJson?.addEventListener('click', () => exportProgress('json'));
   exportCsv?.addEventListener('click', () => exportProgress('csv'));
   backupButton?.addEventListener('click', backupProgress);
   deviceBackupButton?.addEventListener('click', backupDevice);
   importInput?.addEventListener('change', importProgress);
   deviceImportInput?.addEventListener('change', previewDeviceRestore);
+  cleanupStorageButton?.addEventListener('click', cleanupStorage);
+  refreshStorageButton?.addEventListener('click', refreshStorage);
   printReport?.addEventListener('click', () => windowRef?.print?.());
   deleteProfileButtons.forEach((button) => button.addEventListener('click', () => deleteProfile(button)));
   undoRecoveryButton?.addEventListener('click', undoLastChange);
   dismissRecoveryButton?.addEventListener('click', dismissRecovery);
 
   return Object.freeze({
-    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || backupButton || deviceBackupButton || importInput || deviceImportInput || printReport || deleteProfileButtons.length || undoRecoveryButton || dismissRecoveryButton),
+    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || backupButton || deviceBackupButton || importInput || deviceImportInput || cleanupStorageButton || refreshStorageButton || printReport || deleteProfileButtons.length || undoRecoveryButton || dismissRecoveryButton),
     exportProgress,
     backupProgress,
     backupDevice,
@@ -338,6 +365,8 @@ export function bindLearningTools({
     cancelDeviceRestore,
     deleteProfile,
     undoLastChange,
-    dismissRecovery
+    dismissRecovery,
+    cleanupStorage,
+    refreshStorage
   });
 }

@@ -291,23 +291,123 @@
   gap: .55rem;
 }
 
+.storage-diagnostic {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid rgba(94, 232, 239, .3);
+  border-radius: 1rem;
+  background: rgba(10, 9, 36, .78);
+}
+
+.storage-diagnostic-warning {
+  border-color: rgba(255, 198, 92, .38);
+}
+
+.storage-diagnostic-critical {
+  border-color: rgba(255, 111, 145, .5);
+  background: rgba(88, 22, 48, .2);
+}
+
+.storage-diagnostic-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.storage-diagnostic-heading h3,
+.storage-diagnostic-heading .eyebrow {
+  margin: 0;
+}
+
+.storage-diagnostic-heading > span {
+  font-size: 1.5rem;
+}
+
+.storage-diagnostic-status,
+.storage-diagnostic-guard,
+.storage-diagnostic-empty {
+  margin: .7rem 0;
+  line-height: 1.45;
+}
+
+.storage-diagnostic-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: .55rem;
+  margin: .8rem 0;
+}
+
+.storage-diagnostic-metrics div {
+  padding: .65rem;
+  border-radius: .75rem;
+  background: rgba(94, 232, 239, .06);
+}
+
+.storage-diagnostic-metrics dt,
+.storage-diagnostic-metrics dd {
+  margin: 0;
+}
+
+.storage-diagnostic-metrics dt {
+  color: var(--muted, #c8c8e8);
+  font-size: .72rem;
+}
+
+.storage-diagnostic-metrics dd {
+  margin-top: .2rem;
+  font-weight: 800;
+}
+
+.storage-diagnostic-issues {
+  display: grid;
+  gap: .45rem;
+  margin: .8rem 0;
+  padding-left: 1.2rem;
+}
+
+.storage-diagnostic-issues li {
+  line-height: 1.4;
+}
+
+.storage-diagnostic-issues .critical {
+  color: #ffd1dc;
+}
+
+.storage-diagnostic-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+  margin-top: .8rem;
+}
+
+.storage-diagnostic > small {
+  display: block;
+  margin-top: .75rem;
+  color: var(--muted, #c8c8e8);
+  line-height: 1.4;
+}
+
 @media (max-width: 620px) {
   .learning-import-control,
   .learning-profile-administration,
   .learning-device-restore,
-  .learning-recovery-panel {
+  .learning-recovery-panel,
+  .storage-diagnostic {
     padding: .7rem;
   }
 
   .learning-restore-actions .button,
-  .learning-recovery-actions .button {
+  .learning-recovery-actions .button,
+  .storage-diagnostic-actions .button {
     flex: 1 1 100%;
   }
 }
 
 @media print {
   .learning-profile-context,
-  .learning-profile-administration {
+  .learning-profile-administration,
+  .storage-diagnostic {
     border: 1px solid #bbb;
     background: transparent;
     color: #111;
@@ -316,7 +416,8 @@
   .learning-profile-delete,
   .learning-device-import-control,
   .learning-device-restore,
-  .learning-recovery-panel {
+  .learning-recovery-panel,
+  .storage-diagnostic-actions {
     display: none;
   }
 
