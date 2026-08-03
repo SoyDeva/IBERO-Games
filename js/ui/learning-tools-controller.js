@@ -3,6 +3,7 @@ import {
   readLearningDeviceRestoreDecisions,
   renderLearningDeviceRestorePreview
 } from './learning-device-restore-panel.js';
+import { bindLearningRepairTools } from './learning-repair-controller.js';
 import { mountLearningRecoveryPanel } from './learning-recovery-panel.js';
 
 const MAX_BACKUP_BYTES = 1024 * 1024;
@@ -66,6 +67,7 @@ export function downloadLearningDeviceBackup({
 export function bindLearningTools({
   root,
   store,
+  repairStore,
   pilotName = '',
   onChanged = () => {},
   documentRef = globalThis.document,
@@ -94,6 +96,13 @@ export function bindLearningTools({
   });
   const undoRecoveryButton = recoveryPanel?.querySelector?.('[data-undo-learning-change]');
   const dismissRecoveryButton = recoveryPanel?.querySelector?.('[data-dismiss-learning-recovery]');
+  const repairTools = bindLearningRepairTools({
+    root,
+    repairStore,
+    onChanged,
+    documentRef,
+    windowRef
+  });
   let deviceRestoreSource = '';
   let deviceRestorePreview = null;
 
@@ -355,7 +364,7 @@ export function bindLearningTools({
   dismissRecoveryButton?.addEventListener('click', dismissRecovery);
 
   return Object.freeze({
-    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || backupButton || deviceBackupButton || importInput || deviceImportInput || cleanupStorageButton || refreshStorageButton || printReport || deleteProfileButtons.length || undoRecoveryButton || dismissRecoveryButton),
+    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || backupButton || deviceBackupButton || importInput || deviceImportInput || cleanupStorageButton || refreshStorageButton || printReport || deleteProfileButtons.length || undoRecoveryButton || dismissRecoveryButton || repairTools.bound),
     exportProgress,
     backupProgress,
     backupDevice,
@@ -367,6 +376,7 @@ export function bindLearningTools({
     undoLastChange,
     dismissRecovery,
     cleanupStorage,
-    refreshStorage
+    refreshStorage,
+    repairTools
   });
 }
