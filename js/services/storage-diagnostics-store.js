@@ -1,3 +1,5 @@
+import { STORAGE_KEYS } from '../config/storage-keys.js';
+import { createLearningRepairPreview } from '../core/learning-repair.js';
 import {
   assertStorageDiagnosticReady,
   diagnoseStorageSnapshot
@@ -57,17 +59,23 @@ export function probeStorageWrite({ storage, probeKey = DEFAULT_PROBE_KEY } = {}
 export function createStorageDiagnosticsStore({
   storage,
   now = () => new Date().toISOString(),
-  probeKey = DEFAULT_PROBE_KEY
+  probeKey = DEFAULT_PROBE_KEY,
+  resolvePilotName = () => ''
 } = {}) {
   function diagnose() {
     const snapshot = collectStorageSnapshot({ storage });
     const writable = snapshot.readable && probeStorageWrite({ storage, probeKey });
-    return diagnoseStorageSnapshot({
+    const diagnostic = diagnoseStorageSnapshot({
       entries: snapshot.entries,
       readable: snapshot.readable,
       writable,
       now: now()
     });
+    const repair = createLearningRepairPreview(
+      snapshot.entries[STORAGE_KEYS.learningProfiles] ?? null,
+      { activePilotName: resolvePilotName?.() || '' }
+    );
+    return { ...diagnostic, repair };
   }
 
   function cleanupObsolete() {
