@@ -26,9 +26,9 @@ export function normalizeLearningPilotName(value) {
 }
 
 export function createLearningProfileId(pilotName) {
-  const name = normalizeLearningPilotName(pilotName);
-  if (name === 'Piloto local') return 'local';
-  const canonical = name.normalize('NFKC').toLocaleLowerCase('es');
+  const rawName = safeText(pilotName, 48);
+  if (!rawName) return 'local';
+  const canonical = rawName.normalize('NFKC').toLocaleLowerCase('es');
   return 'pilot-' + fnv1a32(canonical);
 }
 
@@ -37,9 +37,8 @@ export function createLearningProfileCollection() {
 }
 
 function normalizeProfileEntry(value = {}) {
-  const pilotName = normalizeLearningPilotName(value.pilotName);
   return {
-    pilotName,
+    pilotName: normalizeLearningPilotName(value.pilotName),
     updatedAt: normalizeDate(value.updatedAt),
     progress: normalizeLearningProgress(value.progress)
   };
@@ -49,12 +48,12 @@ export function normalizeLearningProfileCollection(value) {
   const source = value && typeof value === 'object' ? value : {};
   const profiles = {};
   const entries = source.profiles && typeof source.profiles === 'object'
-    ? Object.values(source.profiles).slice(0, MAX_PROFILES)
+    ? Object.entries(source.profiles).slice(0, MAX_PROFILES)
     : [];
 
-  for (const candidate of entries) {
+  for (const [sourceId, candidate] of entries) {
     const entry = normalizeProfileEntry(candidate);
-    const id = createLearningProfileId(entry.pilotName);
+    const id = sourceId === 'local' ? 'local' : createLearningProfileId(entry.pilotName);
     const previous = profiles[id];
     if (!previous || Date.parse(entry.updatedAt) >= Date.parse(previous.updatedAt)) profiles[id] = entry;
   }
@@ -75,7 +74,7 @@ export function upsertLearningProfile(collection, {
 } = {}) {
   const normalized = normalizeLearningProfileCollection(collection);
   const safePilotName = normalizeLearningPilotName(pilotName);
-  const id = createLearningProfileId(safePilotName);
+  const id = createLearningProfileId(pilotName);
   return {
     version: PROFILE_COLLECTION_VERSION,
     profiles: {
@@ -100,7 +99,7 @@ export function removeLearningProfile(collection, pilotName) {
 export function adoptLocalLearningProfile(collection, pilotName) {
   const normalized = normalizeLearningProfileCollection(collection);
   const targetName = normalizeLearningPilotName(pilotName);
-  const targetId = createLearningProfileId(targetName);
+  const targetId = createLearningProfileId(pilotName);
   if (targetId === 'local' || normalized.profiles[targetId] || !normalized.profiles.local) return normalized;
 
   const profiles = { ...normalized.profiles };
