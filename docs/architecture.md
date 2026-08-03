@@ -6,7 +6,7 @@ Misión Nébula utiliza módulos ES nativos y no requiere compilación. La reest
 
 ### `js/config/`
 
-Contiene valores de configuración sin lógica de negocio, por ejemplo la URL pública de Supabase, las claves de `localStorage`, la clave publicable y los tiempos límite de red.
+Contiene valores de configuración sin lógica de negocio, por ejemplo la URL pública de Supabase, las claves de `localStorage`, la clave publicable, los tiempos límite de red y los catálogos visuales de fuselajes y estelas.
 
 ### `js/core/`
 
@@ -32,7 +32,8 @@ Ejemplos actuales:
 - estado inicial del vuelo, dificultad adaptativa, sectores, recarga, HUD y resumen final;
 - avance continuo, agotamiento de combustible y rescates de práctica;
 - movimiento y limpieza de obstáculos, proyectiles y explosiones;
-- generación de oleadas, detección de impactos, colisiones y destrucciones.
+- generación de oleadas, detección de impactos, colisiones y destrucciones;
+- límites, perspectiva y redimensionamiento de la superficie de vuelo.
 
 ### `js/services/`
 
@@ -54,10 +55,11 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 - `pause-panel.js` sincroniza la tarjeta de pausa, el bloqueo visual del vuelo y las etiquetas accesibles del botón.
 - `tutorial-panel.js` presenta la guía paso a paso, resalta controles y administra la pregunta de entrenamiento.
 - `game-over-screen.js` genera la bitácora, enlaza sus acciones y actualiza el resultado de la Liga Galáctica.
+- `flight-renderer.js` dibuja fondo, estrellas, ruta, portal, obstáculos, plasma, explosiones, celebraciones y nave a partir del estado actual del vuelo.
 
 ### Fachadas públicas
 
-Los archivos históricos que ya importa la aplicación, como `js/galactic-league.js` y `js/storage.js`, se conservan como fachadas pequeñas. De esta manera, los consumidores no necesitan cambiar mientras la implementación interna se reorganiza.
+Los archivos históricos que ya importa la aplicación, como `js/galactic-league.js`, `js/storage.js` y `js/space-game.js`, se conservan como fachadas pequeñas. De esta manera, los consumidores no necesitan cambiar mientras la implementación interna se reorganiza.
 
 ### Aplicación y presentación
 
@@ -65,7 +67,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ### Motor de vuelo
 
-`js/space-game.js` conserva la fachada `SpaceFlight`, el ciclo de animación y el renderizado. Delega en `js/core/flight-state.js` la creación del estado, dificultad, sectores, recarga, HUD y resumen; en `js/core/flight-simulation.js` el avance continuo, combustible, rescates, oleadas, proyectiles, colisiones, destrucciones y limpieza de objetos; y en `js/services/flight-input-controller.js` la entrada de teclado y puntero. La siguiente fase separará el dibujo y las utilidades de Canvas.
+`js/space-game.js` conserva la fachada `SpaceFlight` y el ciclo de animación. Delega en `js/core/flight-state.js` la creación del estado, dificultad, sectores, recarga, HUD y resumen; en `js/core/flight-simulation.js` el avance continuo, combustible, rescates, oleadas, proyectiles, colisiones, destrucciones y limpieza de objetos; en `js/services/flight-input-controller.js` la entrada de teclado y puntero; en `js/core/flight-geometry.js` los límites, la proyección y el redimensionamiento; y en `js/ui/flight-renderer.js` todo el dibujo de Canvas. `destroy()` cancela la animación, desconecta el observador y desmonta el controlador de entrada.
 
 ## Reglas del refactor
 
@@ -90,5 +92,5 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 11. Motor de vuelo: estado y reglas derivadas. **Completado.**
 12. Motor de vuelo: simulación, colisiones y oleadas. **Completado.**
 13. Motor de vuelo: entrada de teclado, puntero y controles. **Completado.**
-14. Motor de vuelo: renderizado y utilidades de Canvas.
+14. Motor de vuelo: renderizado y utilidades de Canvas. **Completado.**
 15. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
