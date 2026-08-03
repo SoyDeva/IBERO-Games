@@ -4,13 +4,16 @@ on:
   push:
     branches:
       - agent/refactor-question-orchestration-v24
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   transform:
-    if: github.ref == 'refs/heads/agent/refactor-question-orchestration-v24' && github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
