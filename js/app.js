@@ -5,6 +5,8 @@ import { claimGalacticPilot, getGalacticLeaderboard, submitGalacticScore } from 
 import { ACHIEVEMENTS } from './core/achievements.js?v=23';
 import { equipHangarItem, purchaseHangarItem } from './core/hangar.js?v=23';
 import { escapeHtml } from './core/html.js?v=23';
+import { createMissionSummary } from './core/mission-summary.js?v=23';
+import { evaluateTutorialAnswer, TUTORIAL_COMPLETION, TUTORIAL_QUESTION, tutorialStep } from './core/tutorial.js?v=23';
 import { createRouteState } from './core/routes.js?v=23';
 import { createStationSession, STATION_OFFERS } from './core/station.js?v=23';
 import { createAchievementStore } from './services/achievement-store.js?v=23';
@@ -13,11 +15,13 @@ import { createRankingController } from './services/ranking-controller.js?v=23';
 import { createQuestionSession } from './services/question-session.js?v=23';
 import { cleanPilotName, getPilotName, getPilotSession, loadRememberedPilot, savePilot } from './services/pilot-profile-store.js?v=23';
 import { bindNavigation } from './ui/navigation-bindings.js?v=23';
+import { renderGameOverScreen, updateGameOverRanking } from './ui/game-over-screen.js?v=23';
 import { applyPausePanelState } from './ui/pause-panel.js?v=23';
 import { renderHangarScreen } from './ui/hangar-screen.js?v=23';
 import { renderHomeScreen } from './ui/home-screen.js?v=23';
 import { renderRankingScreen } from './ui/ranking-screen.js?v=23';
 import { renderCredits, renderInstructions, renderTeacher } from './ui/static-screens.js?v=23';
+import { applyTutorialStep, clearTutorialTargets, hideTutorialCoach, hideTutorialQuestion, presentTutorialQuestion, revealTutorialAnswer, showTutorialCoach } from './ui/tutorial-panel.js?v=23';
 import { closeStationPanel, openStationPanel, renderStationOffers, setStationResult, updateStationButtons } from './ui/station-panel.js?v=23';
 import { presentQuizPanel, resetQuizPanel, revealQuizAnswer } from './ui/quiz-panel.js?v=23';
 
@@ -26,7 +30,6 @@ const settingsDialog = document.getElementById('settings-dialog');
 const pilotDialog = document.getElementById('pilot-dialog');
 const navigation = createRouteState('home');
 let flight = null;
-let currentQuestion = null;
 let toastTimer = 0;
 let quizTimer = 0;
 let resumeMusicOnVisible = false;
@@ -344,91 +347,46 @@ function updateHud(state) {
   if (state.distance >= 1000) unlockAchievement('explorer');
 }
 
-function clearTutorialTargets() {
-  document.querySelectorAll('.tutorial-target').forEach((element) => element.classList.remove('tutorial-target'));
-}
-
-function showTutorialCoach(icon, title, detail) {
-  const coach = document.getElementById('tutorial-coach');
-  if (!coach) return;
-  coach.innerHTML = '<span>' + icon + '</span><div><strong>' + title + '</strong><small>' + detail + '</small></div>';
-  coach.hidden = false;
-}
-
 function handleTutorialStep({ step }) {
-  clearTutorialTargets();
-  if (step === 'left') {
-    showTutorialCoach('👈', 'Muévete a la izquierda', 'Pulsa el botón IZQUIERDA o la flecha ←');
-    document.querySelectorAll('#steer-left, #mobile-steer-left').forEach((element) => element.classList.add('tutorial-target'));
-  } else if (step === 'right') {
-    showTutorialCoach('👉', '¡Muy bien! Ahora a la derecha', 'Pulsa DERECHA o la flecha →');
-    document.querySelectorAll('#steer-right, #mobile-steer-right').forEach((element) => element.classList.add('tutorial-target'));
-  } else if (step === 'fire') {
-    showTutorialCoach('⚡', 'Destruye el meteorito', 'Pulsa ESPACIO o el botón DISPARAR');
-    document.querySelectorAll('[data-fire-plasma]').forEach((element) => element.classList.add('tutorial-target'));
-  } else if (step === 'question') {
-    showTutorialCoach('🧠', 'Último paso: responde', 'Elige el planeta donde vivimos');
-    quizTimer = window.setTimeout(showTutorialQuestion, 650);
-  }
+  const presentation = applyTutorialStep({ documentRef: document, step: tutorialStep(step) });
+  if (presentation.showQuestion) quizTimer = window.setTimeout(showTutorialQuestion, presentation.delayMs);
 }
 
 function showTutorialQuestion() {
-  currentQuestion = {
-    icon: '🌎', category: 'Nuestro planeta', level: 1,
-    text: '¿En qué planeta vivimos?',
-    options: ['Marte', 'La Tierra', 'Júpiter'], answer: 1,
-    fact: 'Vivimos en la Tierra, el tercer planeta del sistema solar.'
-  };
-  const panel = document.getElementById('quiz-panel');
-  if (!panel) return;
-  const coach = document.getElementById('tutorial-coach');
-  if (coach) coach.hidden = true;
-  panel.dataset.answered = 'false';
-  document.getElementById('quiz-category').textContent = '🌎 PREGUNTA DE ENTRENAMIENTO';
-  document.getElementById('quiz-question').textContent = currentQuestion.text;
-  document.getElementById('quiz-result').textContent = '';
-  const options = document.getElementById('quiz-options');
-  options.innerHTML = currentQuestion.options.map((option, index) => '<button type="button" data-answer="' + index + '"><span>' + String.fromCharCode(65 + index) + '</span>' + option + '</button>').join('');
-  options.querySelectorAll('[data-answer]').forEach((button) => button.addEventListener('click', () => answerTutorialQuestion(Number(button.dataset.answer))));
-  panel.hidden = false;
-  options.querySelector('button')?.focus();
-  playTone('complete');
+  const shown = presentTutorialQuestion({
+    documentRef: document,
+    question: TUTORIAL_QUESTION,
+    onAnswer: answerTutorialQuestion
+  });
+  if (shown) playTone('complete');
 }
 
 function answerTutorialQuestion(selectedIndex) {
   const panel = document.getElementById('quiz-panel');
   if (!panel || panel.dataset.answered === 'true') return;
-  const buttons = [...panel.querySelectorAll('[data-answer]')];
-  if (selectedIndex !== currentQuestion.answer) {
-    buttons[selectedIndex].classList.add('wrong');
-    document.getElementById('quiz-result').textContent = '💡 Casi. Mira las opciones y prueba otra vez.';
-    playTone('alert');
-    buttons[selectedIndex].disabled = true;
-    return;
-  }
-  panel.dataset.answered = 'true';
-  buttons.forEach((button) => { button.disabled = true; });
-  buttons[currentQuestion.answer].classList.add('correct');
-  document.getElementById('quiz-result').textContent = '🌟 ¡Exacto! La Tierra es nuestro hogar.';
-  lastLearnedFact = currentQuestion.fact;
+  const outcome = evaluateTutorialAnswer(selectedIndex);
+  revealTutorialAnswer({ documentRef: document, outcome });
+  playTone(outcome.tone);
+  if (!outcome.correct) return;
+
+  lastLearnedFact = outcome.fact;
   localStorage.setItem('nebula-tutorial-complete', 'true');
-  playTone('achievement');
   quizTimer = window.setTimeout(() => {
-    panel.hidden = true;
+    hideTutorialQuestion(document);
     flight.finishTutorial();
-  }, 900);
+  }, outcome.delayMs);
 }
 
 function completeTutorial() {
-  clearTutorialTargets();
-  showTutorialCoach('🏅', '¡Entrenamiento completado!', 'Ya sabes pilotar. Comienza tu primera misión.');
+  clearTutorialTargets(document);
+  showTutorialCoach({ documentRef: document, step: TUTORIAL_COMPLETION });
   playTone('achievement');
   quizTimer = window.setTimeout(() => {
     flightMode = 'mission';
-    document.getElementById('tutorial-coach').hidden = true;
+    hideTutorialCoach(document);
     startFlightSession();
-    showToast('🚀 MISIÓN REAL · ¡TÚ PUEDES!', 'success');
-  }, 1700);
+    showToast(TUTORIAL_COMPLETION.toast, 'success');
+  }, TUTORIAL_COMPLETION.delayMs);
 }
 
 function startFlightSession() {
@@ -586,38 +544,36 @@ function showGameOver(result) {
   stopMusic();
   const rankingPromise = recordRanking(result);
   const pilotName = getPilotName() || 'Piloto';
-  const best = Math.max(result.distance, Number(localStorage.getItem('nebula-flight-best') || 0));
-  localStorage.setItem('nebula-flight-best', String(best));
-  const overlay = document.getElementById('flight-overlay');
-  const fact = lastLearnedFact ? '<div class="learned-fact"><span>💡</span><p><small>HOY APRENDISTE</small><strong>' + escapeHtml(lastLearnedFact) + '</strong></p></div>' : '';
-  const achievementNote = runAchievements.length ? '<p class="run-achievements">🏅 Desbloqueaste ' + runAchievements.length + (runAchievements.length === 1 ? ' logro nuevo' : ' logros nuevos') + '</p>' : '';
-  const rankingNote = flightMode === 'mission' ? '<p class="ranking-result syncing" id="ranking-result">🛰️ Enviando tu mejor vuelo a la Liga Galáctica…</p>' : '';
-  overlay.innerHTML = '<div class="overlay-card stranded-card"><div class="stranded-icon" aria-hidden="true">🛰️</div><p class="eyebrow">Bitácora de ' + escapeHtml(pilotName) + '</p><h2>¡Gran intento, piloto!</h2><p>' + escapeHtml(result.reason) + '</p><div class="flight-summary"><span><b>' + result.distance + '</b> km<small>Distancia</small></span><span><b>' + result.correct + '</b><small>Respuestas</small></span><span><b>' + result.bestStreak + '</b><small>Mejor racha</small></span><span><b>' + result.destroyed + '</b><small>Destruidos</small></span><span><b>' + result.checkpoints + '</b><small>Portales</small></span><span><b>' + best + '</b> km<small>Récord</small></span><span><b>+' + runCrystals + ' 💎</b><small>Cristales ganados</small></span></div>' + rankingNote + fact + achievementNote + '<div class="summary-actions"><button class="button primary launch-button" id="restart-flight">🚀 Intentar otra vez</button><button class="button ranking-button" id="ranking-after-game">🏆 Clasificación</button><button class="button ghost" id="shop-after-game">🛸 Hangar</button><button class="button ghost" id="practice-after-game">🧪 Practicar</button><button class="button text-button" data-nav="home">Salir</button></div></div>';
-  overlay.hidden = false;
-  overlay.querySelector('#restart-flight').addEventListener('click', () => {
-    flightMode = 'mission';
-    startFlightSession();
+  const summary = createMissionSummary({
+    result,
+    previousBest: Number(localStorage.getItem('nebula-flight-best') || 0),
+    crystals: runCrystals,
+    achievements: runAchievements,
+    learnedFact: lastLearnedFact,
+    pilotName,
+    mode: flightMode
   });
-  overlay.querySelector('#practice-after-game').addEventListener('click', () => {
-    flightMode = 'practice';
-    startFlightSession();
-  });
-  overlay.querySelector('#shop-after-game').addEventListener('click', () => setRoute('shop'));
-  overlay.querySelector('#ranking-after-game').addEventListener('click', () => setRoute('ranking'));
-  overlay.querySelector('[data-nav]').addEventListener('click', () => setRoute('home'));
-  rankingPromise.then(({ position, error, updated }) => {
-    const note = document.getElementById('ranking-result');
-    if (!note) return;
-    note.classList.remove('syncing');
-    if (error) {
-      note.classList.add('sync-error');
-      note.textContent = '📡 Tu vuelo quedó en la nave, pero no pudo enviarse: ' + error;
-    } else if (position) {
-      note.innerHTML = (updated ? '🏆 ' : '✨ ') + escapeHtml(pilotName) + ', tu mejor marca ocupa el puesto <strong>#' + position + '</strong> de la Liga Galáctica mundial.';
-    } else {
-      note.textContent = '✨ Vuelo sincronizado con la Liga Galáctica.';
+  localStorage.setItem('nebula-flight-best', String(summary.best));
+  renderGameOverScreen({
+    documentRef: document,
+    summary,
+    actions: {
+      restart: () => {
+        flightMode = 'mission';
+        startFlightSession();
+      },
+      practice: () => {
+        flightMode = 'practice';
+        startFlightSession();
+      },
+      shop: () => setRoute('shop'),
+      ranking: () => setRoute('ranking'),
+      exit: () => setRoute('home')
     }
   });
+  if (summary.syncRanking) {
+    rankingPromise.then((ranking) => updateGameOverRanking({ documentRef: document, pilotName, ...ranking }));
+  }
   announce('Misión terminada. Revisa tu bitácora y vuelve a intentarlo cuando quieras.');
 }
 
