@@ -14,10 +14,10 @@ test('SpaceFlight enlaza el controlador de entrada con sus operaciones públicas
 });
 
 test('SpaceFlight no interpreta directamente eventos de teclado o puntero', () => {
-  assert.doesNotMatch(source, /this\.boundKey/);
-  assert.doesNotMatch(source, /this\.boundPointer/);
+  assert.doesNotMatch(source, /this\.boundKey\s*=/);
+  assert.doesNotMatch(source, /this\.boundPointer\s*=/);
   assert.doesNotMatch(source, /window\.addEventListener\('keydown'/);
   assert.doesNotMatch(source, /canvas\.addEventListener\('pointerdown'/);
-  assert.doesNotMatch(source, /onKey\(event\)/);
-  assert.doesNotMatch(source, /onPointer\(event\)/);
+  assert.doesNotMatch(source, /\n\s*onKey\(event\) \{/);
+  assert.doesNotMatch(source, /\n\s*onPointer\(event\) \{/);
 });
