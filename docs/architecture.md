@@ -48,13 +48,14 @@ Ejemplos actuales:
 - puntos de recuperación versionados con caducidad, integridad y huella del estado posterior;
 - reversión segura únicamente cuando no existen cambios pedagógicos posteriores;
 - medición UTF-8 del almacenamiento accesible y clasificación de salud local;
-- detección de colección ilegible, perfiles reparables, residuos obsoletos y bloqueos de lectura o escritura.
+- detección de colección ilegible, perfiles reparables, residuos obsoletos y bloqueos de lectura o escritura;
+- vista previa conservadora de perfiles recuperables, exclusión de entradas irreconocibles y verificación de que la fuente no cambió antes de reparar.
 
 ### `js/services/`
 
 Coordina recursos externos o estado de aplicación que no pertenece al DOM. Esta capa no conoce la estructura visual de las pantallas.
 
-El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla. `storage-diagnostics-store.js` enumera las claves accesibles, comprueba escritura con una clave temporal y permite eliminar únicamente residuos recalculados como obsoletos. `learning-progress-store.js` persiste localmente aciertos, errores, rachas, sesiones, metas y preferencias dentro de perfiles separados por piloto. Migra el documento pedagógico anterior al primer piloto activo, permite respaldar o restaurar el perfil actual, crear un respaldo consolidado, previsualizar una restauración consolidada sin escribir, aplicar solamente la selección confirmada y eliminar perfiles inactivos con protección explícita del perfil activo. Antes de una eliminación, importación o restauración consolidada exige guardar un punto de recuperación; también valida y aplica la reversión del último cambio destructivo. Los respaldos e importaciones deben superar además el diagnóstico preventivo de almacenamiento. `flight-input-controller.js` interpreta teclado y puntero, enlaza los eventos del navegador y los traduce a operaciones públicas de `SpaceFlight`.
+El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla. `storage-diagnostics-store.js` enumera las claves accesibles, comprueba escritura con una clave temporal, incorpora la vista previa de reparación y permite eliminar únicamente residuos recalculados como obsoletos. `learning-repair-store.js` conserva el contenido original sin transformarlo, exige su descarga preventiva, vuelve a comparar la huella de la fuente y escribe únicamente una colección reparable ya normalizada. `learning-progress-store.js` persiste localmente aciertos, errores, rachas, sesiones, metas y preferencias dentro de perfiles separados por piloto. Migra el documento pedagógico anterior al primer piloto activo, permite respaldar o restaurar el perfil actual, crear un respaldo consolidado, previsualizar una restauración consolidada sin escribir, aplicar solamente la selección confirmada y eliminar perfiles inactivos con protección explícita del perfil activo. Antes de una eliminación, importación o restauración consolidada exige guardar un punto de recuperación; también valida y aplica la reversión del último cambio destructivo. Los respaldos e importaciones deben superar además el diagnóstico preventivo de almacenamiento. `flight-input-controller.js` interpreta teclado y puntero, enlaza los eventos del navegador y los traduce a operaciones públicas de `SpaceFlight`.
 
 ### `js/ui/`
 
@@ -67,8 +68,10 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 - `teacher-learning-report.js` genera una lectura local por categorías y sesiones, identifica el perfil activo y presenta la comparación descriptiva, administración, diagnóstico y entradas de respaldo o restauración.
 - `learning-device-restore-panel.js` presenta perfiles nuevos y coincidentes, compara métricas locales con el respaldo y recoge decisiones explícitas de añadir, conservar, reemplazar o excluir.
 - `learning-recovery-panel.js` muestra el último punto válido, explica su vigencia y ofrece deshacer o descartarlo.
-- `storage-diagnostics-panel.js` presenta uso estimado, capacidad de lectura y escritura, perfiles reparables, problemas y limpieza segura.
-- `learning-tools-controller.js` enlaza metas, seguimiento longitudinal, impresión, exportaciones, respaldos, eliminación confirmada, restauración consolidada, reversión inmediata y limpieza de residuos. Ninguna de estas acciones usa red.
+- `storage-diagnostics-panel.js` presenta uso estimado, capacidad de lectura y escritura, perfiles reparables, problemas, limpieza segura y la entrada a la reparación asistida.
+- `learning-repair-panel.js` muestra la vista previa de perfiles recuperables, exclusiones y la obligación de descargar el original antes de guardar.
+- `learning-repair-controller.js` crea la descarga local exacta, habilita la confirmación y aplica la reparación mediante la huella previsualizada.
+- `learning-tools-controller.js` enlaza metas, seguimiento longitudinal, impresión, exportaciones, respaldos, eliminación confirmada, restauración consolidada, reversión inmediata, limpieza de residuos y reparación asistida. Ninguna de estas acciones usa red.
 - `hangar-screen.js` representa fuselajes, estelas, saldo y acciones de compra o equipamiento.
 - `ranking-screen.js` representa estados de carga, error, podio y tabla mundial.
 - `quiz-panel.js` presenta preguntas y opciones, enlaza respuestas y marca visualmente aciertos y errores.
@@ -78,7 +81,7 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 - `game-over-screen.js` genera la bitácora, enlaza sus acciones y actualiza el resultado de la Liga Galáctica.
 - `flight-renderer.js` dibuja fondo, estrellas, ruta, portal, obstáculos, plasma, explosiones, celebraciones y nave a partir del estado actual del vuelo.
 
-### Perfiles, respaldo, recuperación y diagnóstico pedagógico
+### Perfiles, respaldo, recuperación, diagnóstico y reparación pedagógica
 
 El progreso ya no utiliza un único documento compartido. `nebula-learning-profiles-v1` guarda una colección local con un máximo defensivo de perfiles normalizados. Cada perfil contiene únicamente apodo visible, fecha de actualización y progreso pedagógico; no contiene contraseña, token de la Liga ni configuración de Supabase.
 
@@ -93,6 +96,8 @@ La eliminación local acepta únicamente identificadores existentes, exige confi
 `nebula-learning-recovery-v1` conserva como máximo un punto de recuperación. Se crea antes de una eliminación, importación individual o restauración consolidada, y la operación se aborta si el navegador no puede guardarlo. El punto almacena la colección anterior, una huella del estado posterior, caduca a las 24 horas y deja de ser válido al registrarse cualquier cambio pedagógico adicional. Deshacer restaura la colección previa mediante una escritura única y elimina el punto después del éxito.
 
 El diagnóstico local mide claves y valores como bytes UTF-8, prueba escritura mediante una clave temporal que se retira inmediatamente y clasifica el resultado como correcto, advertencia o crítico. Una colección pedagógica ilegible o un bloqueo de lectura o escritura impiden crear respaldos e iniciar importaciones. La limpieza vuelve a calcular el diagnóstico y solo elimina progreso heredado ya absorbido, puntos de recuperación inválidos o cachés antiguas de clasificación; nunca recibe claves arbitrarias desde la interfaz ni elimina perfiles válidos.
+
+La reparación asistida analiza como máximo 5 MB y nunca escribe durante la vista previa. Solo considera recuperable una entrada que contenga un apodo identificable y un objeto de progreso; vuelve a derivar el identificador desde el apodo, limita la colección a 50 perfiles y resuelve coincidencias conservando la actualización más reciente. Un JSON ilegible, una estructura desconocida o claves reservadas no se reparan automáticamente. Antes de guardar se exige descargar byte por byte el contenido original, confirmar la operación y verificar que su huella no haya cambiado desde la vista previa. La versión normalizada se escribe una sola vez; las entradas excluidas permanecen disponibles en el archivo original descargado.
 
 ### Fachadas públicas
 
@@ -138,3 +143,4 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 20. Restauración consolidada con vista previa, selección y resolución de coincidencias. **Completado.**
 21. Puntos de recuperación y reversión del último cambio destructivo. **Completado.**
 22. Diagnóstico preventivo, medición y limpieza segura del almacenamiento local. **Completado.**
+23. Reparación asistida con vista previa, descarga exacta del original y confirmación antes de guardar. **Completado.**
