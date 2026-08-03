@@ -17,6 +17,7 @@ import { createRankingController } from './services/ranking-controller.js?v=23';
 import { createQuestionSession } from './services/question-session.js?v=23';
 import { cleanPilotName, getPilotName, getPilotSession, loadRememberedPilot, savePilot } from './services/pilot-profile-store.js?v=23';
 import { bindNavigation } from './ui/navigation-bindings.js?v=23';
+import { bindLearningTools } from './ui/learning-tools-controller.js?v=23';
 import { renderGameOverScreen, updateGameOverRanking } from './ui/game-over-screen.js?v=23';
 import { applyPausePanelState } from './ui/pause-panel.js?v=23';
 import { renderHangarScreen } from './ui/hangar-screen.js?v=23';
@@ -302,7 +303,17 @@ function render() {
   });
   app.querySelectorAll('[data-change-pilot]').forEach((button) => button.addEventListener('click', () => openPilotDialog(() => render())));
   app.querySelectorAll('[data-refresh-ranking]').forEach((button) => button.addEventListener('click', () => refreshGlobalRanking(true)));
-  app.querySelector('[data-print-learning-report]')?.addEventListener('click', () => window.print());
+  bindLearningTools({
+    root: app,
+    store: learningProgressStore,
+    pilotName: getPilotName(),
+    onChanged: (message) => {
+      announce(message);
+      render();
+    },
+    documentRef: document,
+    windowRef: window
+  });
   if (route === 'flight') bindFlight();
   if (route === 'shop') bindShop();
   if (route === 'ranking' && rankingController.getSnapshot().status === 'idle') window.setTimeout(() => refreshGlobalRanking(), 0);

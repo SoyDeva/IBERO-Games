@@ -1,10 +1,13 @@
 import { STORAGE_KEYS } from '../config/storage-keys.js';
 import {
   appendLearningSession,
+  clearLearningGoal,
+  configureLearningGoal,
   createLearningProgress,
   createLearningSession,
   normalizeLearningProgress,
   recordLearningAnswer,
+  setLongitudinalTracking,
   summarizeLearningProgress
 } from '../core/learning-progress.js';
 import { readStorageJson, removeStorageValue, writeStorageJson } from './browser-storage.js';
@@ -32,6 +35,18 @@ export function createLearningProgressStore({ storage } = {}) {
     return { progress: saved, session };
   }
 
+  function setGoal(goal) {
+    return save(configureLearningGoal(load(), goal));
+  }
+
+  function resetGoal() {
+    return save(clearLearningGoal(load()));
+  }
+
+  function setTracking(enabled) {
+    return save(setLongitudinalTracking(load(), enabled));
+  }
+
   function summary() {
     return summarizeLearningProgress(load());
   }
@@ -41,5 +56,5 @@ export function createLearningProgressStore({ storage } = {}) {
     return createLearningProgress();
   }
 
-  return Object.freeze({ load, save, record, completeSession, summary, reset });
+  return Object.freeze({ load, save, record, completeSession, setGoal, resetGoal, setTracking, summary, reset });
 }
