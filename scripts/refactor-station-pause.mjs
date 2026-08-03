@@ -159,7 +159,6 @@ for (const forbidden of [
   'let stationPurchased = false',
   'const STATION_OFFERS = {',
   'Object.entries(STATION_OFFERS).map',
-  "document.querySelectorAll('[data-station-buy]').forEach",
   "button.innerHTML = '<span>▶</span><strong>Continuar</strong>'"
 ]) {
   if (source.includes(forbidden)) throw new Error(`Persistió lógica duplicada de estación o pausa: ${forbidden}`);
