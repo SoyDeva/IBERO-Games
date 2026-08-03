@@ -34,19 +34,30 @@ export function normalizeLearningProgress(value) {
     }
   }
 
-  const totals = Object.values(categories).reduce((result, stats) => ({
+  const sourceTotals = normalizeStats(source.totals);
+  const categoryTotals = Object.values(categories).reduce((result, stats) => ({
     attempts: result.attempts + stats.attempts,
     correct: result.correct + stats.correct,
     incorrect: result.incorrect + stats.incorrect,
-    currentStreak: Math.max(result.currentStreak, stats.currentStreak),
     bestStreak: Math.max(result.bestStreak, stats.bestStreak)
-  }), normalizeStats(source.totals));
+  }), { attempts: 0, correct: 0, incorrect: 0, bestStreak: 0 });
+  const useCategoryTotals = categoryTotals.attempts > 0;
+  const attempts = useCategoryTotals ? categoryTotals.attempts : sourceTotals.attempts;
+  const correct = Math.min(attempts, useCategoryTotals ? categoryTotals.correct : sourceTotals.correct);
+  const currentStreak = Math.min(correct, sourceTotals.currentStreak);
+  const bestStreak = Math.max(currentStreak, sourceTotals.bestStreak, categoryTotals.bestStreak);
 
-  totals.incorrect = Math.max(0, totals.attempts - totals.correct);
-  totals.currentStreak = Math.min(totals.correct, safeCount(source.totals?.currentStreak));
-  totals.bestStreak = Math.max(totals.currentStreak, safeCount(source.totals?.bestStreak), ...Object.values(categories).map((stats) => stats.bestStreak));
-
-  return { version: PROGRESS_VERSION, totals, categories };
+  return {
+    version: PROGRESS_VERSION,
+    totals: {
+      attempts,
+      correct,
+      incorrect: Math.max(0, attempts - correct),
+      currentStreak,
+      bestStreak
+    },
+    categories
+  };
 }
 
 export function recordLearningAnswer(progress, { question, correct, mode = 'mission' } = {}) {
