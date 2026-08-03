@@ -3,14 +3,22 @@ import { createLearningProfileId, normalizeLearningPilotName } from './learning-
 
 export const LEARNING_BACKUP_SCHEMA = 'mision-nebula-learning-backup-v1';
 const MAX_BACKUP_BYTES = 1024 * 1024;
+const RESERVED_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+
+function assertSafeKeys(value) {
+  if (!value || typeof value !== 'object') return;
+  for (const key of Object.keys(value)) {
+    if (RESERVED_KEYS.has(key)) throw new Error('El respaldo contiene una clave reservada y no puede importarse.');
+    assertSafeKeys(value[key]);
+  }
+}
 
 function stableValue(value) {
   if (Array.isArray(value)) return value.map(stableValue);
   if (!value || typeof value !== 'object') return value;
-  return Object.keys(value).sort().reduce((result, key) => {
-    result[key] = stableValue(value[key]);
-    return result;
-  }, {});
+  const result = Object.create(null);
+  for (const key of Object.keys(value).sort()) result[key] = stableValue(value[key]);
+  return result;
 }
 
 function stableStringify(value) {
@@ -32,16 +40,18 @@ function normalizeDate(value) {
 }
 
 function parseSource(source) {
+  let parsed = source;
   if (typeof source === 'string') {
     if (new TextEncoder().encode(source).length > MAX_BACKUP_BYTES) throw new Error('El respaldo supera el límite de 1 MB.');
     try {
-      return JSON.parse(source);
+      parsed = JSON.parse(source);
     } catch (error) {
       throw new Error('El archivo no contiene un respaldo JSON válido.');
     }
   }
-  if (!source || typeof source !== 'object') throw new Error('El respaldo no tiene una estructura válida.');
-  return source;
+  if (!parsed || typeof parsed !== 'object') throw new Error('El respaldo no tiene una estructura válida.');
+  assertSafeKeys(parsed);
+  return parsed;
 }
 
 function payloadWithoutIntegrity(value) {
