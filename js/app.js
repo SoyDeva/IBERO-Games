@@ -2,6 +2,10 @@ import { SpaceFlight, SHIP_SKINS, SHIP_TRAILS } from './space-game.js?v=23';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
 import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=23';
 import { claimGalacticPilot, getGalacticLeaderboard, submitGalacticScore } from './galactic-league.js?v=23';
+import { ACHIEVEMENTS } from './core/achievements.js?v=23';
+import { createAchievementStore } from './services/achievement-store.js?v=23';
+import { createEconomyStore } from './services/economy-store.js?v=23';
+import { cleanPilotName, getPilotName, getPilotSession, loadRememberedPilot, savePilot } from './services/pilot-profile-store.js?v=23';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
@@ -24,15 +28,12 @@ let shopMessage = '';
 let stationPurchased = false;
 let runCrystals = 0;
 let viewportResizeFrame = 0;
-let activePilotSession = null;
 let pendingPilotAction = null;
 let globalRanking = [];
 let rankingStatus = 'idle';
 let rankingError = '';
 let rankingUpdatedAt = 0;
 
-const ECONOMY_KEY = 'nebula-economy-v1';
-const PROFILE_KEY = 'nebula-pilot-profile';
 const GAME_RELEASE = new URL(import.meta.url).searchParams.get('v') || 'local';
 const RANKING_PREFIX = 'nebula-ranking-';
 const SEASON_NAME = 'Expedición Horizonte ' + GAME_RELEASE;
@@ -42,41 +43,11 @@ const STATION_OFFERS = {
   stabilizer: { icon: '🧭', name: 'Estabilizador', description: 'Hace más lento y tranquilo el próximo tramo.', price: 30 }
 };
 
-const ACHIEVEMENTS = {
-  first_portal: { icon: '🌀', title: 'Primer portal', text: 'Superaste tu primera recarga.' },
-  clean_pilot: { icon: '🛡️', title: 'Vuelo impecable', text: 'Llegaste a un portal sin chocar.' },
-  streak_three: { icon: '🧠', title: 'Mente estelar', text: 'Lograste tres respuestas seguidas.' },
-  sharpshooter: { icon: '⚡', title: 'Puntería galáctica', text: 'Usaste las tres cargas con éxito.' },
-  explorer: { icon: '🏆', title: 'Explorador cósmico', text: 'Recorriste 1.000 kilómetros.' }
-};
-
-function loadAchievements() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('nebula-achievements') || '[]');
-    return Array.isArray(saved) ? saved : [];
-  } catch (error) {
-    return [];
-  }
-}
-
-function loadEconomy() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(ECONOMY_KEY) || '{}');
-    const ownedSkins = Array.isArray(saved.ownedSkins) ? saved.ownedSkins.filter((id) => SHIP_SKINS[id]) : [];
-    if (!ownedSkins.includes('nebula')) ownedSkins.unshift('nebula');
-    const activeSkin = ownedSkins.includes(saved.activeSkin) ? saved.activeSkin : 'nebula';
-    const ownedTrails = Array.isArray(saved.ownedTrails) ? saved.ownedTrails.filter((id) => SHIP_TRAILS[id]) : [];
-    if (!ownedTrails.includes('pulse')) ownedTrails.unshift('pulse');
-    const activeTrail = ownedTrails.includes(saved.activeTrail) ? saved.activeTrail : 'pulse';
-    return { credits: Math.max(0, Math.floor(Number(saved.credits) || 0)), ownedSkins, activeSkin, ownedTrails, activeTrail };
-  } catch (error) {
-    return { credits: 0, ownedSkins: ['nebula'], activeSkin: 'nebula', ownedTrails: ['pulse'], activeTrail: 'pulse' };
-  }
-}
-
-function saveEconomy(economy) {
-  localStorage.setItem(ECONOMY_KEY, JSON.stringify(economy));
-}
+const economyStore = createEconomyStore({ skins: SHIP_SKINS, trails: SHIP_TRAILS });
+const achievementStore = createAchievementStore();
+const loadEconomy = () => economyStore.load();
+const saveEconomy = (economy) => economyStore.save(economy);
+const loadAchievements = () => achievementStore.load();
 
 function updateCrystalDisplays() {
   const credits = loadEconomy().credits;
@@ -104,10 +75,7 @@ function spendCrystals(amount) {
 
 function unlockAchievement(id) {
   if (flightMode !== 'mission' || !ACHIEVEMENTS[id]) return;
-  const unlocked = loadAchievements();
-  if (unlocked.includes(id)) return;
-  unlocked.push(id);
-  localStorage.setItem('nebula-achievements', JSON.stringify(unlocked));
+  if (!achievementStore.unlock(id)) return;
   runAchievements.push(id);
   const achievement = ACHIEVEMENTS[id];
   const pop = document.getElementById('achievement-pop');
@@ -121,40 +89,6 @@ function unlockAchievement(id) {
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
-}
-
-function cleanPilotName(value = '') {
-  return String(value).replace(/[^\p{L}\p{N} ._-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 18);
-}
-
-function loadRememberedPilot() {
-  try {
-    const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
-    const name = cleanPilotName(profile.name);
-    return profile.remember && name ? { name, token: String(profile.token || ''), protected: Boolean(profile.protected), remember: true } : null;
-  } catch (error) {
-    return null;
-  }
-}
-
-function getPilotSession() {
-  return activePilotSession || loadRememberedPilot();
-}
-
-function getPilotName() {
-  return getPilotSession()?.name || '';
-}
-
-function savePilot(profile, remember) {
-  activePilotSession = {
-    name: cleanPilotName(profile.nickname || profile.name),
-    token: String(profile.token || ''),
-    protected: Boolean(profile.protected),
-    remember: Boolean(remember)
-  };
-  if (remember) localStorage.setItem(PROFILE_KEY, JSON.stringify(activePilotSession));
-  else localStorage.removeItem(PROFILE_KEY);
-  return activePilotSession;
 }
 
 function openPilotDialog(action = null) {
