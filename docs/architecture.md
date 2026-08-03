@@ -24,13 +24,14 @@ Ejemplos actuales:
 - catálogo y normalización de logros;
 - compras y equipamiento del Hangar Estelar sin mutar el estado anterior;
 - catálogo, validación y transiciones del estado de rutas;
-- escape uniforme de contenido dinámico antes de insertarlo en HTML.
+- escape uniforme de contenido dinámico antes de insertarlo en HTML;
+- evaluación de respuestas, mensajes pedagógicos y tiempos de retroalimentación.
 
 ### `js/services/`
 
-Coordina recursos externos. Esta capa conoce `fetch`, Supabase y `localStorage`, pero no conoce las pantallas del juego.
+Coordina recursos externos o estado de aplicación que no pertenece al DOM. Esta capa no conoce la estructura visual de las pantallas.
 
-El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida.
+El adaptador `browser-storage.js` centraliza lectura, escritura, eliminación y tolerancia a almacenamiento bloqueado. Los servicios especializados administran partidas, ajustes, sesión del piloto, economía local y logros. `ranking-controller.js` concentra la caché, los estados de carga y error, la actualización del top mundial y la invalidación posterior al envío de una partida. `question-session.js` administra una baraja por nivel, selecciona la siguiente pregunta y conserva la pregunta activa para evaluarla.
 
 ### `js/ui/`
 
@@ -41,6 +42,7 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 - `home-screen.js` representa perfil, récord, logros, cristales y nave activa.
 - `hangar-screen.js` representa fuselajes, estelas, saldo y acciones de compra o equipamiento.
 - `ranking-screen.js` representa estados de carga, error, podio y tabla mundial.
+- `quiz-panel.js` presenta preguntas y opciones, enlaza respuestas y marca visualmente aciertos y errores.
 
 ### Fachadas públicas
 
@@ -48,7 +50,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ### Aplicación y presentación
 
-`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación y renderizado de las pantallas externas a la misión. La siguiente fase separará la orquestación de preguntas y el flujo de vuelo.
+`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas y presentación del panel pedagógico. La siguiente fase separará la coordinación completa de la misión.
 
 ### Motor de vuelo
 
@@ -71,6 +73,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 5. Clasificación y estado remoto de la Liga. **Completado.**
 6. Navegación y pantallas informativas. **Completado.**
 7. Pantallas dinámicas de Inicio, Hangar y Liga. **Completado.**
-8. Orquestación de la misión y preguntas.
-9. Motor de vuelo: estado, simulación, entrada y renderizado.
-10. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
+8. Barajas, evaluación y presentación de preguntas. **Completado.**
+9. Coordinación de la misión: tutorial, estación, pausa y cierre de partida.
+10. Motor de vuelo: estado, simulación, entrada y renderizado.
+11. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
