@@ -90,9 +90,9 @@ test('revierte una restauración consolidada seleccionada', () => {
   assert.equal(store.profileInfo().profiles.some((profile) => profile.pilotName === 'Nova'), false);
 });
 
-test('aborta el cambio destructivo cuando no puede guardar el punto de recuperación', () => {
+test('aborta el cambio destructivo cuando el diagnóstico detecta escritura bloqueada', () => {
   const storage = createMemoryStorage({ blocked: true });
   const store = createLearningProgressStore({ storage, resolvePilotName: () => 'Luna' });
   const backup = createLearningBackup(answer('Ciencias'), { pilotName: 'Luna' });
-  assert.throws(() => store.importBackup(backup), /punto de recuperación/);
+  assert.throws(() => store.importBackup(backup), /No es seguro importar el respaldo del perfil/);
 });
