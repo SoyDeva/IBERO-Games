@@ -1,7 +1,19 @@
 import { ammoMilestone, createFlightState, flightDifficulty, flightHud, flightSector, flightSectorIndex, flightSummary } from './core/flight-state.js?v=23';
+import {
+  advanceExplosions,
+  advanceFlightVitals,
+  advanceObstacles,
+  advanceProjectile,
+  cleanupFlightObjects,
+  collisionOutcome,
+  createObstacleWave,
+  destructionOutcome,
+  FLIGHT_LANES,
+  isShipCollision,
+  projectileHitsObstacle,
+  resolveFuelDepletion
+} from './core/flight-simulation.js?v=23';
 
-const LANES = [-1, 0, 1];
-const OBSTACLE_TYPES = ['planet', 'meteor', 'star', 'ship'];
 export const SHIP_SKINS = Object.freeze({
   nebula: { name: 'Nébula', icon: '🚀', price: 0, body: '#e9efff', wing: '#8d73ff', glass: '#54def2', flame: '#5ee8ef', glow: '#5ee8ef', description: 'El uniforme clásico de la Asteria.' },
   solar: { name: 'Solar', icon: '☀️', price: 75, body: '#fff2bd', wing: '#ff8b45', glass: '#ffd95e', flame: '#ff6d7d', glow: '#f7cb62', description: 'Brilla como una pequeña estrella.' },
@@ -257,29 +269,17 @@ export class SpaceFlight {
   }
 
   update(delta) {
-    this.elapsed += delta;
-    this.lanePosition += (this.lane - this.lanePosition) * Math.min(1, delta * 11);
-    const difficulty = this.getDifficulty();
-    const distanceRate = 17 + this.checkpoints * 1.8;
-    if (!this.tutorial) {
-      this.distance += distanceRate * delta;
-      this.fuel = Math.max(0, this.fuel - delta * (1.05 + this.checkpoints * .035) * (this.practice ? .7 : 1));
-    }
-    this.flash = Math.max(0, this.flash - delta * 1.8);
-    this.shake = Math.max(0, this.shake - delta * 2.5);
-    this.weaponPulse = Math.max(0, this.weaponPulse - delta * 5);
-    this.invulnerable = Math.max(0, this.invulnerable - delta);
+    Object.assign(this, advanceFlightVitals(this, delta));
 
-    if (this.fuel <= 0) {
-      if (this.practice) {
-        this.fuel = 45;
-        this.hull = Math.max(1, this.hull);
-        this.adaptiveAssist = Math.min(.16, this.adaptiveAssist + .05);
-        this.callbacks.onPracticeRescue?.({ reason: 'fuel' });
-        this.emitHud();
-        return;
-      }
-      this.strand('Se terminó el combustible antes de llegar al puesto de recarga.');
+    const fuelOutcome = resolveFuelDepletion(this);
+    if (fuelOutcome.status === 'rescued') {
+      Object.assign(this, fuelOutcome.patch);
+      this.callbacks.onPracticeRescue?.({ reason: fuelOutcome.reason });
+      this.emitHud();
+      return;
+    }
+    if (fuelOutcome.status === 'stranded') {
+      this.strand(fuelOutcome.reason);
       return;
     }
 
@@ -290,27 +290,30 @@ export class SpaceFlight {
       this.spawnTimer = difficulty.spawnInterval + Math.random() * .32;
     }
 
-    for (const obstacle of this.obstacles) {
-      obstacle.previousDepth = obstacle.depth;
-      obstacle.depth += delta * difficulty.obstacleSpeed * obstacle.speedFactor;
-      if (obstacle.tutorialTarget && obstacle.depth > .66) obstacle.depth = .66;
-      obstacle.spin += delta * obstacle.spinSpeed;
-    }
+    this.obstacles = advanceObstacles(this.obstacles, {
+      delta,
+      obstacleSpeed: difficulty.obstacleSpeed
+    });
     this.updateProjectiles(delta);
     for (const obstacle of this.obstacles) {
-      if (!obstacle.hit && !obstacle.tutorialTarget && this.invulnerable <= 0 && obstacle.depth > .87 && obstacle.depth < .99 && Math.abs(obstacle.lane - this.lanePosition) < .34) {
+      if (isShipCollision({ obstacle, lanePosition: this.lanePosition, invulnerable: this.invulnerable })) {
         obstacle.hit = true;
         this.collide(obstacle);
       }
       if (this.mode === 'gameover') break;
     }
-    this.explosions.forEach((explosion) => {
-      explosion.age += delta;
-      explosion.depth += delta * difficulty.obstacleSpeed * .5;
+    this.explosions = advanceExplosions(this.explosions, {
+      delta,
+      obstacleSpeed: difficulty.obstacleSpeed
     });
-    this.explosions = this.explosions.filter((explosion) => explosion.age < (explosion.duration || .7));
-    this.projectiles = this.projectiles.filter((projectile) => !projectile.hit && projectile.depth > .015 && projectile.age < .9);
-    this.obstacles = this.obstacles.filter((obstacle) => obstacle.depth < 1.24 && !obstacle.hit);
+    const activeObjects = cleanupFlightObjects({
+      explosions: this.explosions,
+      projectiles: this.projectiles,
+      obstacles: this.obstacles
+    });
+    this.explosions = activeObjects.explosions;
+    this.projectiles = activeObjects.projectiles;
+    this.obstacles = activeObjects.obstacles;
     if (this.mode !== 'running') {
       this.emitHud();
       return;
@@ -338,77 +341,45 @@ export class SpaceFlight {
   }
 
   updateProjectiles(delta) {
-    for (const projectile of this.projectiles) {
-      projectile.previousDepth = projectile.depth;
-      projectile.depth -= delta * 1.72;
-      projectile.age += delta;
+    for (let index = 0; index < this.projectiles.length; index += 1) {
+      let projectile = advanceProjectile(this.projectiles[index], delta);
+      this.projectiles[index] = projectile;
       for (const obstacle of this.obstacles) {
-        if (projectile.hit || obstacle.hit || obstacle.lane !== projectile.lane) continue;
-        const previousGap = projectile.previousDepth - (obstacle.previousDepth ?? obstacle.depth);
-        const currentGap = projectile.depth - obstacle.depth;
-        const crossed = previousGap >= 0 && currentGap <= 0;
-        if (crossed || Math.abs(currentGap) < .075) {
-          projectile.hit = true;
-          this.destroyObstacle(obstacle);
-        }
+        if (!projectileHitsObstacle(projectile, obstacle)) continue;
+        projectile = { ...projectile, hit: true };
+        this.projectiles[index] = projectile;
+        this.destroyObstacle(obstacle);
       }
     }
   }
 
   spawnWave() {
-    const difficulty = this.getDifficulty();
-    const lanes = [...LANES].sort(() => Math.random() - .5);
-    const count = this.checkpoints >= 2 && Math.random() < difficulty.pairChance ? 2 : 1;
-    for (let index = 0; index < count; index += 1) {
-      this.obstacles.push({
-        type: OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)],
-        lane: lanes[index],
-        depth: .035 + (index === 1 && this.checkpoints > 4 && Math.random() < .45 ? .1 : 0),
-        spin: Math.random() * Math.PI * 2,
-        spinSpeed: (Math.random() - .5) * 2.8,
-        speedFactor: .92 + Math.random() * .16,
-        size: .84 + Math.random() * .32,
-        hit: false
-      });
-    }
+    this.obstacles.push(...createObstacleWave({
+      checkpoints: this.checkpoints,
+      pairChance: this.getDifficulty().pairChance,
+      random: Math.random
+    }));
   }
 
   collide(obstacle) {
-    this.hull -= 1;
-    this.totalCollisions += 1;
-    this.collisionsThisLeg += 1;
-    this.correctStreak = 0;
-    this.adaptiveAssist = Math.min(.16, this.adaptiveAssist + .038);
-    this.invulnerable = 1.05;
-    this.fuel = Math.max(0, this.fuel - 12);
-    this.shake = 1;
-    this.flash = -.7;
-    this.explosions.push({ lane: obstacle.lane, depth: obstacle.depth, age: 0, seed: Math.random() * Math.PI * 2 });
-    const names = { planet: 'un planeta', meteor: 'un meteorito', star: 'una estrella ardiente', ship: 'otra nave' };
-    this.callbacks.onCollision?.({ name: names[obstacle.type], hull: this.hull });
-    if (this.hull <= 0) {
-      if (this.practice) {
-        this.hull = 3;
-        this.fuel = Math.max(48, this.fuel);
-        this.callbacks.onPracticeRescue?.({ reason: 'hull' });
-      } else {
-        this.strand('La nave recibió demasiados golpes y quedó varada.');
-      }
+    const outcome = collisionOutcome(this, obstacle, Math.random);
+    Object.assign(this, outcome.patch);
+    this.explosions.push(outcome.explosion);
+    this.callbacks.onCollision?.(outcome.collision);
+    if (outcome.rescueReason) {
+      this.callbacks.onPracticeRescue?.({ reason: outcome.rescueReason });
+    } else if (outcome.gameOverReason) {
+      this.strand(outcome.gameOverReason);
     }
   }
 
   destroyObstacle(obstacle) {
     obstacle.hit = true;
-    this.destroyed += 1;
-    this.flash = Math.max(this.flash, .72);
-    this.shake = Math.max(this.shake, .24);
-    this.explosions.push({ lane: obstacle.lane, depth: obstacle.depth, age: 0, duration: .95, seed: Math.random() * Math.PI * 2, kind: 'plasma', type: obstacle.type });
-    const names = { planet: 'PLANETA', meteor: 'METEORITO', star: 'ESTRELLA', ship: 'NAVE RIVAL' };
-    this.callbacks.onDestroy?.({ name: names[obstacle.type], ammo: this.ammo, type: obstacle.type });
-    if (this.tutorial && this.tutorialStep === 'fire') {
-      this.tutorialStep = 'question';
-      this.callbacks.onTutorialStep?.({ step: 'question' });
-    }
+    const outcome = destructionOutcome(this, obstacle, Math.random);
+    Object.assign(this, outcome.patch);
+    this.explosions.push(outcome.explosion);
+    this.callbacks.onDestroy?.(outcome.destroyed);
+    if (outcome.tutorialStep) this.callbacks.onTutorialStep?.({ step: outcome.tutorialStep });
   }
 
   emitHud() {
@@ -553,7 +524,7 @@ export class SpaceFlight {
     if (!threats.length) return;
     const blocked = new Set(threats.map((obstacle) => obstacle.lane));
     if (blocked.size !== 2) return;
-    const safeLane = LANES.find((lane) => !blocked.has(lane));
+    const safeLane = FLIGHT_LANES.find((lane) => !blocked.has(lane));
     const point = this.project(safeLane, .9);
     ctx.save();
     ctx.strokeStyle = 'rgba(87,224,160,.88)';
