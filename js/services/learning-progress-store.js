@@ -29,7 +29,7 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
   const options = { storage };
 
   function activePilotName() {
-    return normalizeLearningPilotName(resolvePilotName?.());
+    return String(resolvePilotName?.() || '').trim().slice(0, 48);
   }
 
   function writeCollection(collection) {
@@ -48,7 +48,7 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
         readStorageJson(STORAGE_KEYS.learningProgress, createLearningProgress(), options)
       );
       collection = upsertLearningProfile(collection, {
-        pilotName: 'Piloto local',
+        pilotName: '',
         progress: legacy,
         updatedAt: new Date().toISOString()
       });
@@ -107,7 +107,7 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     const pilotName = activePilotName();
     return {
       id: createLearningProfileId(pilotName),
-      pilotName,
+      pilotName: normalizeLearningPilotName(pilotName),
       profiles: listLearningProfiles(collection)
     };
   }
