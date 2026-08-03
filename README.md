@@ -4,82 +4,74 @@ Juego pedagógico de pilotaje espacial 2.5D y conocimiento general para niñas y
 
 **Diseñado y desarrollado por Danilo Olarte González.**
 
-Proyecto de la Maestría en Educación de la Corporación Universitaria Iberoamericana, curso Electiva Creatividad e Innovación Educativa, Actividad 1 “Jugando enseño a crear”.
+Proyecto de la Maestría en Educación de la Corporación Universitaria Iberoamericana, curso Electiva Creatividad e Innovación Educativa, Actividad 1 «Jugando enseño a crear».
 
 ## La experiencia
 
-La nave Asteria viaja automáticamente por una ruta galáctica. El jugador la mueve entre tres carriles para evitar planetas, meteoritos, estrellas ardientes y otras naves. Cada cierto tiempo aparece un portal de recarga que pausa el vuelo y presenta una pregunta de conocimiento general.
+La nave Asteria avanza automáticamente por una ruta galáctica. El jugador la mueve entre tres carriles, esquiva obstáculos, utiliza cargas de plasma y atraviesa portales que presentan preguntas de conocimiento general.
 
-- Respuesta correcta: la nave recibe combustible y continúa.
-- Respuesta incorrecta: la nave queda varada y termina el intento.
-- Choque: se pierde un escudo y parte del combustible.
-- Tres choques: la nave queda varada.
-- Sin combustible: termina el intento.
+- Una respuesta correcta recarga combustible y permite continuar.
+- Una respuesta incorrecta termina la misión normal.
+- Cada choque reduce escudos y combustible.
+- El tutorial y el modo práctica permiten aprender sin penalizaciones severas.
 
-El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
+El objetivo es recorrer la mayor distancia posible, superar portales y aparecer en la Liga Galáctica.
 
-Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo práctica donde los errores muestran la explicación, reparan la nave y permiten continuar.
-
-## Características
+## Características principales
 
 - Escena Canvas con perspectiva 2.5D, profundidad y sensación de velocidad.
-- Área de vuelo ampliada hasta 1540 px de ancho y 76 % de la altura visible.
-- Botón de pantalla completa que conserva tablero, escena y controles; incluye modo inmersivo móvil, viewport dinámico, zonas seguras para notch y reajuste al cambiar de orientación.
-- Tres carriles y controles con teclado, botones táctiles o toque directo sobre la escena.
-- Obstáculos diferenciados: planetas, meteoritos, estrellas ardientes y naves rivales.
-- Tres escudos para que el aprendizaje inicial sea amable.
-- Indicadores permanentes de combustible, escudos, distancia y siguiente portal.
-- Portales aproximadamente cada 15–20 segundos.
-- 100 preguntas de opción múltiple, sin escritura, organizadas en cinco niveles.
-- Tutorial interactivo paso a paso para movimiento, disparo y preguntas.
-- Modo práctica sin fin de partida por choques, combustible o respuestas incorrectas.
-- Cañón de plasma con 3 cargas, activado con la barra espaciadora o el botón táctil; el arsenal se recarga por completo al superar cada 5 niveles.
-- Categorías: espacio, ciencias, naturaleza, geografía, matemáticas, lenguaje, historia, tecnología y convivencia.
-- Explicación breve después de una respuesta incorrecta.
-- Liga Galáctica mundial sincronizada con Supabase, con apodos únicos, contraseña opcional de 4 a 8 caracteres y temporadas separadas por versión.
-- Música espacial sintetizada y efectos con controles de volumen independientes.
-- Dificultad adaptativa: progresa con las respuestas y rachas, pero ofrece ayuda temporal después de los choques.
-- Cinco sectores galácticos con ambiente, colores y progresión visual propios.
-- Economía infantil sin dinero real: 12 cristales por acierto y 3 por objeto destruido en misión.
-- Estación Nova cada 10 niveles con reparación, superplasma o estabilización del siguiente tramo.
-- Hangar Estelar con seis fuselajes y cinco estelas permanentes que cambian la nave y su motor en Canvas.
-- Perfil de piloto opcionalmente recordado y bitácoras personalizadas.
-- Liga Galáctica mundial con podio, top 10, apodos únicos, contraseña opcional y una temporada nueva al actualizar el juego.
-- Controles directos por carril y ruta segura verde únicamente en oleadas dobles.
-- Pausa disponible durante el vuelo y con la tecla `P`.
-- Cinco logros locales, celebraciones con partículas y bitácora educativa al final de cada intento.
-- Paso cercano corregido: los objetos que se esquivan cruzan el primer plano y se desvanecen fuera de cámara.
-- Explosiones visibles en lugar de desapariciones bruscas al chocar.
-- Alto contraste, texto grande y reducción de animaciones de interfaz.
+- Tres carriles y controles por teclado, pantalla táctil o toque directo.
+- 100 preguntas de opción múltiple organizadas en cinco niveles.
+- Categorías de espacio, ciencias, naturaleza, geografía, matemáticas, lenguaje, historia, tecnología y convivencia.
+- Tutorial interactivo y modo práctica.
+- Dificultad adaptativa y cinco sectores galácticos.
+- Cañón de plasma, estaciones de mejora y economía infantil sin dinero real.
+- Hangar Estelar con seis fuselajes y cinco estelas.
+- Música y efectos sintetizados en el navegador.
+- Ajustes de accesibilidad, alto contraste, texto ampliado y reducción de movimiento.
 - Diseño adaptable a computador, tableta y teléfono.
-- Funcionamiento sin cuentas, publicidad, analítica ni servicios externos.
 - Caché sin conexión mediante Service Worker.
+- Liga Galáctica mundial respaldada por Supabase/PostgreSQL.
+
+## Liga Galáctica
+
+La clasificación mundial utiliza un apodo único y una contraseña obligatoria de 4 a 8 caracteres. La contraseña permite recuperar el apodo desde otro navegador o después de perder la sesión local.
+
+El navegador solo utiliza la clave pública publicable de Supabase. Las tablas no aceptan acceso directo desde clientes; el registro, la consulta del top y el envío de resultados se realizan mediante funciones RPC controladas.
+
+Cada versión publicada crea una temporada independiente. El cliente normaliza el identificador de versión al formato `v<versión>`, por ejemplo `v23`.
+
+El servidor valida:
+
+- sesión vigente;
+- formato de temporada;
+- coincidencia entre portales y respuestas correctas;
+- distancia plausible para los portales alcanzados;
+- cantidad plausible de objetos destruidos;
+- fuselajes y estelas reconocidos;
+- límites de frecuencia para registro, desbloqueo y envío de partidas.
+
+Estas validaciones reducen resultados manipulados, aunque ningún juego ejecutado enteramente en el navegador puede ser completamente inmune a trampas.
 
 ## Cómo jugar
 
-1. Pulsar **Despegar**.
-2. Usar `←` y `→`, las teclas `A` y `D`, los botones grandes o tocar un lado de la escena.
-3. Pulsar `ESPACIO` o **⚡ DISPARAR** para usar una de las tres cargas de plasma; todas regresan al superar los niveles 5, 10, 15 y siguientes.
-4. Pulsar **⛶ Pantalla completa** para ampliar el juego cuando se desee.
-5. Pulsar **⏸ Pausa** o la tecla `P` cuando se necesite un descanso.
-6. Esquivar los objetos y entrar al portal brillante.
-7. Elegir una de tres respuestas: acertar recarga combustible; fallar termina el intento normal.
-8. Evitar tres choques y no dejar que el combustible llegue a cero.
-9. Guardar cristales para personalizar la Asteria o comprar una ayuda en las estaciones de los niveles 10, 20, 30 y siguientes.
+1. Registrar o desbloquear un apodo con contraseña.
+2. Pulsar **Jugar misión**.
+3. Usar `←`, `→`, `A`, `D`, los botones táctiles o tocar un lado de la escena.
+4. Pulsar `ESPACIO` o **⚡ DISPARAR** para usar plasma.
+5. Esquivar obstáculos y atravesar los portales.
+6. Elegir una de tres respuestas.
+7. Guardar cristales para personalizar la nave o comprar ayudas en estaciones.
 
 ## Reglas pedagógicas
 
-- Las preguntas están dirigidas a estudiantes de 10 a 12 años y avanzan de reconocimiento básico a razonamiento aplicado.
-- Cada dos portales aumenta el nivel cognitivo de las preguntas, hasta el nivel cinco.
-- Cada respuesta correcta aumenta gradualmente el reto; los choques y la pérdida de escudos activan asistencia adaptativa.
-- Las oleadas bloquean como máximo dos carriles: siempre queda una ruta posible.
+- Las preguntas están dirigidas a estudiantes de 10 a 12 años.
+- Cada dos portales aumenta el nivel cognitivo, hasta el nivel cinco.
 - Cada pregunta tiene tres opciones y una respuesta definida.
-- El vuelo se detiene por completo mientras se responde.
-- El récord es una motivación personal y no una calificación.
-- Los cristales son recompensas locales de juego: no se compran con dinero real ni se obtienen en práctica o tutorial.
-- En cada estación solo se elige una mejora, para mantener una decisión sencilla y evitar sobrecargar al estudiante.
-- Después de un error se muestra el dato correcto antes de permitir un nuevo intento.
-- Se recomienda realizar intentos de 5 a 10 minutos y conversar brevemente sobre las respuestas nuevas.
+- El vuelo se detiene mientras se responde.
+- El récord es una motivación y no una calificación.
+- Después de un error se muestra el dato correcto.
+- Se recomiendan intentos de 5 a 10 minutos y una conversación breve sobre lo aprendido.
 
 ## Tecnologías
 
@@ -88,18 +80,22 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 - JavaScript ES6 con módulos nativos
 - Canvas 2D
 - Web Audio API
-- `localStorage` para preferencias y progreso cosmético local
-- Supabase/PostgreSQL para la clasificación mundial
+- `localStorage` para preferencias, sesión recordada y progreso cosmético
+- Supabase/PostgreSQL para identidad de piloto y clasificación mundial
 - Service Worker
+- Node.js para pruebas y validación de sintaxis
+- GitHub Actions para integración continua
 
-No existe backend, proceso de compilación, dependencia externa ni clave de API.
+No existe un servidor de aplicación tradicional ni un proceso de compilación del cliente. Supabase funciona como backend administrado y el repositorio incluye migraciones SQL reproducibles.
 
 ## Estructura principal
 
 ```text
 IBERO-Games/
+├── .github/workflows/quality.yml
 ├── index.html
 ├── informe-actividad-1.html
+├── package.json
 ├── README.md
 ├── sw.js
 ├── css/
@@ -111,11 +107,12 @@ IBERO-Games/
 │   ├── space-game.js
 │   ├── questions.js
 │   ├── accessibility.js
+│   ├── galactic-league.js
 │   └── storage.js
+├── supabase/migrations/
+├── tests/
 └── assets/icons/favicon.svg
 ```
-
-Los módulos anteriores de prototipos creativos permanecen temporalmente en el repositorio como historial técnico, pero no se cargan en la experiencia actual.
 
 ## Ejecutar localmente
 
@@ -127,43 +124,21 @@ python -m http.server 8000
 
 Después, abrir `http://localhost:8000/`.
 
+## Verificaciones automáticas
+
+```bash
+npm test
+npm run check
+```
+
+`npm run check` ejecuta las pruebas de normalización de temporadas y valida la sintaxis de los módulos principales. GitHub Actions ejecuta el mismo control en ramas y pull requests.
+
 ## Publicación
 
 GitHub Pages publica la rama `main` desde la raíz del repositorio:
 
 <https://soydeva.github.io/IBERO-Games/>
 
-## Verificaciones
-
-- [x] Sintaxis de todos los módulos JavaScript.
-- [x] Integridad de 100 preguntas únicas: 20 por cada nivel.
-- [x] Progresión de preguntas 1–1, 2–2, 3–3, 4–4 y 5–5 por portal.
-- [x] Simulación del primer portal y pausa del vuelo.
-- [x] Respuesta correcta: recarga y reanudación.
-- [x] Respuesta incorrecta: nave varada.
-- [x] Tutorial completo: izquierda, derecha, disparo y pregunta con reintento amable.
-- [x] Modo práctica: recuperación de escudos, combustible y respuesta incorrecta sin terminar.
-- [x] Dificultad adaptativa: la asistencia reduce velocidad y frecuencia tras dificultades.
-- [x] Transición entre cinco sectores y actualización del ambiente visual.
-- [x] Pausa, reanudación y reinicio sin perder los controles táctiles.
-- [x] Mezclador independiente de música y efectos, con persistencia local.
-- [x] Logros, celebraciones y bitácora educativa final.
-- [x] Recarga completa de plasma exactamente al superar los niveles 5, 10, 15 y siguientes.
-- [x] Contador de próxima recarga, racha visible y alerta visual de combustible crítico.
-- [x] Avisos de nuevo sector preservados sin ser reemplazados por mensajes simultáneos.
-- [x] Economía persistente, recompensas exclusivas de misión y protección contra saldos inválidos.
-- [x] Estación en niveles múltiplos de 10, una compra por visita y continuación segura del vuelo.
-- [x] Compra, equipamiento y renderizado de cuatro estilos de nave.
-- [x] Pérdida de escudos y combustible por colisión.
-- [x] Aumento de velocidad, frecuencia y oleadas dobles por nivel.
-- [x] Verificación de que ninguna oleada bloquea los tres carriles.
-- [x] Explosión de impacto y desvanecimiento de objetos en primer plano.
-- [x] Música dinámica y liberación de sus temporizadores.
-- [x] Carga local de portada, estilos, motor y preguntas.
-- [x] Rutas relativas compatibles con GitHub Pages.
-- [x] Controles accesibles por teclado y pantalla táctil.
-- [x] Pantalla completa nativa, salida mediante el mismo botón y modo alternativo.
-
 ## Autoría y privacidad
 
-Concepto, interfaz, programación, figuras Canvas y contenido pedagógico originales. Los sonidos se sintetizan dentro del navegador. La Liga comparte el apodo elegido y el resultado del vuelo; no se debe utilizar el nombre real. El récord, los logros, el tutorial completado y las preferencias se conservan localmente.
+El concepto, la interfaz, la programación, las figuras Canvas y el contenido pedagógico son originales. Los sonidos se sintetizan dentro del navegador. La Liga comparte únicamente el apodo elegido y el resultado del vuelo; no se debe utilizar el nombre real. Los récords locales, logros, preferencias y progreso cosmético permanecen en el navegador.

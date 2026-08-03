@@ -1,0 +1,12 @@
+{
+  "name": "ibero-games",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "npm test && node --check js/app.js && node --check js/space-game.js && node --check js/galactic-league.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
