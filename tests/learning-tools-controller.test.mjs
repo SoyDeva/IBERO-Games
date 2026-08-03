@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { downloadLearningBackup, downloadLearningExport } from '../js/ui/learning-tools-controller.js';
+import { bindLearningTools, downloadLearningBackup, downloadLearningExport } from '../js/ui/learning-tools-controller.js';
 import { renderTeacherLearningReport } from '../js/ui/teacher-learning-report.js';
 import { createLearningProgress } from '../js/core/learning-progress.js';
 
@@ -66,6 +66,43 @@ test('descarga el respaldo preparado por el almacén sin usar red', () => {
   assert.equal(file.filename, 'respaldo.json');
   assert.equal(environment.link.download, 'respaldo.json');
   assert.equal(environment.state().clicked, true);
+});
+
+test('importa únicamente después de seleccionar, confirmar y verificar un archivo local', async () => {
+  let imported = '';
+  let changedMessage = '';
+  const status = { textContent: '' };
+  const importInput = {
+    value: 'respaldo.json',
+    files: [{ size: 200, text: async () => '{"respaldo":true}' }],
+    addEventListener() {}
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === '[data-import-learning]') return importInput;
+      if (selector === '[data-learning-tools-status]') return status;
+      return null;
+    }
+  };
+  const store = {
+    importBackup(content) {
+      imported = content;
+      return { pilotName: 'Luna' };
+    }
+  };
+  const controller = bindLearningTools({
+    root,
+    store,
+    pilotName: 'Luna',
+    onChanged(message) { changedMessage = message; },
+    windowRef: { confirm: () => true }
+  });
+
+  const result = await controller.importProgress();
+  assert.equal(result.pilotName, 'Luna');
+  assert.equal(imported, '{"respaldo":true}');
+  assert.match(changedMessage, /verificado e importado/);
+  assert.equal(importInput.value, '');
 });
 
 test('presenta metas, perfiles, seguimiento, respaldo e importación con contenido escapado', () => {
