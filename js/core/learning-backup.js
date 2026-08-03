@@ -62,7 +62,7 @@ export function createLearningBackup(progress, {
     schema: LEARNING_BACKUP_SCHEMA,
     exportedAt: normalizeDate(exportedAt),
     pilot: {
-      id: createLearningProfileId(safePilotName),
+      id: createLearningProfileId(pilotName),
       name: safePilotName
     },
     progress: normalizeLearningProgress(progress)
@@ -97,7 +97,9 @@ export function verifyLearningBackup(source, { expectedPilotName = '' } = {}) {
   if (!parsed.integrity || typeof parsed.integrity !== 'object') throw new Error('El respaldo no incluye verificación de integridad.');
 
   const pilotName = normalizeLearningPilotName(parsed.pilot.name);
-  const pilotId = createLearningProfileId(pilotName);
+  const pilotId = parsed.pilot.id === 'local' && pilotName === 'Piloto local'
+    ? 'local'
+    : createLearningProfileId(pilotName);
   if (parsed.pilot.id !== pilotId) throw new Error('La identidad local del respaldo es inconsistente.');
 
   const actualChecksum = checksum(payloadWithoutIntegrity(parsed));
