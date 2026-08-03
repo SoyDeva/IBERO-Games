@@ -557,7 +557,7 @@ export class SpaceFlight {
     if (this.shake > 0) ctx.translate((Math.random() - .5) * 14 * this.shake, (Math.random() - .5) * 10 * this.shake);
     this.drawSpace(ctx);
     this.drawRoute(ctx);
-    this.drawLaneSignals(ctx);
+    this.drawSafeRoute(ctx);
     this.drawCheckpoint(ctx);
     const sorted = [...this.obstacles].sort((a, b) => a.depth - b.depth);
     sorted.filter((obstacle) => obstacle.depth <= .92).forEach((obstacle) => this.drawObstacle(ctx, obstacle));
@@ -642,40 +642,22 @@ export class SpaceFlight {
     }
   }
 
-  drawLaneSignals(ctx) {
+  drawSafeRoute(ctx) {
     if (this.mode !== 'running') return;
     const threats = this.obstacles.filter((obstacle) => !obstacle.hit && !obstacle.tutorialTarget && obstacle.depth > .58 && obstacle.depth < .84);
     if (!threats.length) return;
     const blocked = new Set(threats.map((obstacle) => obstacle.lane));
+    if (blocked.size !== 2) return;
+    const safeLane = LANES.find((lane) => !blocked.has(lane));
+    const point = this.project(safeLane, .9);
     ctx.save();
-    for (const lane of blocked) {
-      const point = this.project(lane, .9);
-      const pulse = .55 + Math.sin(this.elapsed * 9) * .18;
-      ctx.fillStyle = `rgba(255,109,125,${pulse})`;
-      ctx.shadowColor = '#ff6d7d';
-      ctx.shadowBlur = 18;
-      ctx.beginPath();
-      ctx.moveTo(point.x, point.y - 28);
-      ctx.lineTo(point.x - 17, point.y + 2);
-      ctx.lineTo(point.x + 17, point.y + 2);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 18px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('!', point.x, point.y - 5);
-    }
-    if (blocked.size === 2) {
-      const safeLane = LANES.find((lane) => !blocked.has(lane));
-      const point = this.project(safeLane, .9);
-      ctx.strokeStyle = 'rgba(87,224,160,.88)';
-      ctx.shadowColor = '#57e0a0';
-      ctx.shadowBlur = 20;
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.arc(point.x, point.y - 12, 24 + Math.sin(this.elapsed * 7) * 3, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    ctx.strokeStyle = 'rgba(87,224,160,.88)';
+    ctx.shadowColor = '#57e0a0';
+    ctx.shadowBlur = 20;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y - 12, 24 + Math.sin(this.elapsed * 7) * 3, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
   }
 

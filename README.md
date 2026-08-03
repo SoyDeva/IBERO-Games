@@ -45,7 +45,7 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 - Hangar Estelar con seis fuselajes y cinco estelas permanentes que cambian la nave y su motor en Canvas.
 - Perfil de piloto opcionalmente recordado y bitácoras personalizadas.
 - Liga Galáctica local con podio, top 10, un mejor vuelo por piloto y reinicio automático al actualizar el juego.
-- Controles directos por carril, señales rojas de peligro y ruta segura verde en oleadas dobles.
+- Controles directos por carril y ruta segura verde únicamente en oleadas dobles.
 - Pausa disponible durante el vuelo y con la tecla `P`.
 - Cinco logros locales, celebraciones con partículas y bitácora educativa al final de cada intento.
 - Paso cercano corregido: los objetos que se esquivan cruzan el primer plano y se desvanecen fuera de cámara.
