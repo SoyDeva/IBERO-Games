@@ -9,12 +9,14 @@ test('la portada carga las capas visuales antes de accesibilidad', async () => {
   const visualIndex = html.indexOf('css/nebula-bright.css?v=23');
   const flightIndex = html.indexOf('css/flight-polish.css?v=23');
   const resultsIndex = html.indexOf('css/mission-results.css?v=23');
+  const hangarIndex = html.indexOf('css/hangar-polish.css?v=23');
   const accessibilityIndex = html.indexOf('css/accessibility.css?v=23');
 
   assert.ok(visualIndex > 0);
   assert.ok(flightIndex > visualIndex);
   assert.ok(resultsIndex > flightIndex);
-  assert.ok(accessibilityIndex > resultsIndex);
+  assert.ok(hangarIndex > resultsIndex);
+  assert.ok(accessibilityIndex > hangarIndex);
   assert.match(html, /meta name="theme-color" content="#0b071b"/);
 });
 
@@ -58,6 +60,22 @@ test('la bitácora visual destaca resultados, Liga y recompensas sin dependencia
   assert.match(css, /\.run-achievements\s*\{/);
   assert.match(css, /\.summary-actions \.launch-button\s*\{/);
   assert.match(css, /@media \(max-width: 460px\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.doesNotMatch(css, /@import|https?:\/\/|url\s*\(/i);
+});
+
+test('el Hangar Estelar diferencia colección, equipamiento y respuesta móvil sin dependencias remotas', async () => {
+  const css = await read('css/hangar-polish.css');
+
+  assert.match(css, /\.orbital-shop\.screen-narrow\s*\{/);
+  assert.match(css, /\.hangar-hero\s*\{/);
+  assert.match(css, /\.shop-wallet\s*\{/);
+  assert.match(css, /\.skin-card\.active::after\s*\{/);
+  assert.match(css, /content: "EQUIPADA"/);
+  assert.match(css, /\.trail-card\.active::after\s*\{/);
+  assert.match(css, /content: "EN USO"/);
+  assert.match(css, /@supports selector\(:has\(\*\)\)/);
+  assert.match(css, /@media \(max-width: 560px\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.doesNotMatch(css, /@import|https?:\/\/|url\s*\(/i);
 });
@@ -131,4 +149,22 @@ test('la bitácora conserva métricas, acciones y sincronización funcionales', 
   assert.match(source, /actions\.exit/);
   assert.match(source, /rankingSyncPresentation/);
   assert.doesNotMatch(source, /fetch\s*\(|setTimeout/);
+});
+
+test('el Hangar conserva catálogo, compras, equipamiento y navegación funcionales', async () => {
+  const source = await read('js/ui/hangar-screen.js');
+
+  assert.match(source, /economy\.ownedSkins\.includes\(id\)/);
+  assert.match(source, /economy\.activeSkin === id/);
+  assert.match(source, /economy\.ownedTrails\.includes\(id\)/);
+  assert.match(source, /economy\.activeTrail === id/);
+  assert.match(source, /data-buy-item/);
+  assert.match(source, /data-equip-item/);
+  assert.match(source, /data-kind=/);
+  assert.match(source, /data-item=/);
+  assert.match(source, /data-crystal-balance/);
+  assert.match(source, /data-nav="flight" data-mode="mission"/);
+  assert.match(source, /data-nav="ranking"/);
+  assert.match(source, /data-nav="home"/);
+  assert.doesNotMatch(source, /fetch\s*\(|setTimeout|localStorage/);
 });
