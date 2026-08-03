@@ -132,6 +132,86 @@ test('importa únicamente después de seleccionar, confirmar y verificar un arch
   assert.equal(importInput.value, '');
 });
 
+test('previsualiza antes de restaurar y aplica únicamente las decisiones visibles', async () => {
+  let restoreCalls = 0;
+  let changedMessage = '';
+  const status = { textContent: '' };
+  const deviceInput = {
+    value: 'dispositivo.json',
+    files: [{ size: 400, text: async () => '{"respaldo":"consolidado"}' }],
+    addEventListener() {}
+  };
+  const applyButton = { addEventListener() {} };
+  const cancelButton = { addEventListener() {} };
+  const checkboxes = [
+    { value: 'pilot-luna', checked: true },
+    { value: 'pilot-nova', checked: true }
+  ];
+  const previewContainer = {
+    innerHTML: '',
+    querySelector(selector) {
+      if (selector === '[data-apply-learning-device-restore]') return applyButton;
+      if (selector === '[data-cancel-learning-device-restore]') return cancelButton;
+      if (selector === '[data-restore-learning-action="pilot-luna"]') return { value: 'keep' };
+      return null;
+    },
+    querySelectorAll(selector) {
+      return selector === '[data-restore-learning-profile]' ? checkboxes : [];
+    }
+  };
+  const root = {
+    querySelector(selector) {
+      if (selector === '[data-import-learning-device]') return deviceInput;
+      if (selector === '[data-learning-device-restore-preview]') return previewContainer;
+      if (selector === '[data-learning-tools-status]') return status;
+      return null;
+    },
+    querySelectorAll() { return []; }
+  };
+  const store = {
+    previewDeviceBackup(content) {
+      assert.equal(content, '{"respaldo":"consolidado"}');
+      return {
+        exportedAt: '2026-08-03T12:00:00.000Z',
+        newProfileCount: 1,
+        conflictCount: 1,
+        profiles: [
+          { id: 'pilot-luna', pilotName: 'Luna', conflict: true, active: true, incoming: { attempts: 2, accuracy: 50, sessions: 1, updatedAt: '2026-08-03T10:00:00.000Z' }, local: { attempts: 1, accuracy: 100, sessions: 0, updatedAt: '2026-08-02T10:00:00.000Z' } },
+          { id: 'pilot-nova', pilotName: 'Nova', conflict: false, active: false, incoming: { attempts: 1, accuracy: 100, sessions: 0, updatedAt: '2026-08-03T11:00:00.000Z' }, local: null }
+        ]
+      };
+    },
+    restoreDeviceBackup(content, decisions) {
+      restoreCalls += 1;
+      assert.equal(content, '{"respaldo":"consolidado"}');
+      assert.deepEqual(decisions, [
+        { profileId: 'pilot-luna', action: 'keep' },
+        { profileId: 'pilot-nova', action: 'add' }
+      ]);
+      return { added: 1, replaced: 0, kept: 1 };
+    }
+  };
+  const controller = bindLearningTools({
+    root,
+    store,
+    onChanged(message) { changedMessage = message; },
+    windowRef: { confirm: () => true }
+  });
+
+  const preview = await controller.previewDeviceRestore();
+  assert.equal(preview.newProfileCount, 1);
+  assert.equal(restoreCalls, 0);
+  assert.match(previewContainer.innerHTML, /Vista previa verificada/);
+  assert.match(status.textContent, /Revisa la selección/);
+
+  const restored = controller.applyDeviceRestore();
+  assert.equal(restored.added, 1);
+  assert.equal(restoreCalls, 1);
+  assert.match(changedMessage, /Restauración consolidada completada/);
+  assert.equal(deviceInput.value, '');
+  assert.equal(previewContainer.innerHTML, '');
+});
+
 test('elimina un perfil inactivo únicamente después de confirmación', () => {
   let changedMessage = '';
   const button = {
@@ -187,6 +267,8 @@ test('presenta metas, perfiles, seguimiento, respaldos e importación con conten
   assert.match(html, /Respaldar perfil activo/);
   assert.match(html, /Respaldar todos los perfiles/);
   assert.match(html, /data-import-learning/);
+  assert.match(html, /data-import-learning-device/);
+  assert.match(html, /data-learning-device-restore-preview/);
   assert.match(html, /2 perfiles guardados/);
   assert.match(html, /data-learning-tracking checked/);
   assert.match(html, /data-delete-learning-profile="pilot-otro"/);
