@@ -8,11 +8,13 @@ test('la portada carga las capas visuales antes de accesibilidad', async () => {
   const html = await read('index.html');
   const visualIndex = html.indexOf('css/nebula-bright.css?v=23');
   const flightIndex = html.indexOf('css/flight-polish.css?v=23');
+  const resultsIndex = html.indexOf('css/mission-results.css?v=23');
   const accessibilityIndex = html.indexOf('css/accessibility.css?v=23');
 
   assert.ok(visualIndex > 0);
   assert.ok(flightIndex > visualIndex);
-  assert.ok(accessibilityIndex > flightIndex);
+  assert.ok(resultsIndex > flightIndex);
+  assert.ok(accessibilityIndex > resultsIndex);
   assert.match(html, /meta name="theme-color" content="#0b071b"/);
 });
 
@@ -39,6 +41,23 @@ test('el pulido de vuelo estiliza HUD, preguntas y respuestas sin dependencias r
   assert.match(css, /\.quiz-options button\.wrong\s*\{/);
   assert.match(css, /\.quiz-panel\[data-answered="true"\]/);
   assert.match(css, /@media \(max-width: 680px\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.doesNotMatch(css, /@import|https?:\/\/|url\s*\(/i);
+});
+
+test('la bitácora visual destaca resultados, Liga y recompensas sin dependencias remotas', async () => {
+  const css = await read('css/mission-results.css');
+
+  assert.match(css, /\.stranded-card\s*\{/);
+  assert.match(css, /\.flight-summary\s*\{/);
+  assert.match(css, /\.flight-summary span:nth-child\(6\)/);
+  assert.match(css, /\.flight-summary span:nth-child\(7\)/);
+  assert.match(css, /\.ranking-result\.syncing\s*\{/);
+  assert.match(css, /\.ranking-result\.sync-error\s*\{/);
+  assert.match(css, /\.learned-fact\s*\{/);
+  assert.match(css, /\.run-achievements\s*\{/);
+  assert.match(css, /\.summary-actions \.launch-button\s*\{/);
+  assert.match(css, /@media \(max-width: 460px\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.doesNotMatch(css, /@import|https?:\/\/|url\s*\(/i);
 });
@@ -78,4 +97,38 @@ test('el vuelo conserva sus identificadores y las clases de retroalimentación e
   assert.match(quiz, /classList\.add\('wrong'\)/);
   assert.match(quiz, /panel\.dataset\.answered = 'true'/);
   assert.doesNotMatch(quiz, /setTimeout|fetch\s*\(/);
+});
+
+test('la bitácora conserva métricas, acciones y sincronización funcionales', async () => {
+  const source = await read('js/ui/game-over-screen.js');
+
+  for (const metric of [
+    'summary.distance',
+    'summary.correct',
+    'summary.bestStreak',
+    'summary.destroyed',
+    'summary.checkpoints',
+    'summary.best',
+    'summary.crystals'
+  ]) {
+    assert.match(source, new RegExp(metric.replace('.', '\\.')));
+  }
+
+  for (const id of [
+    'restart-flight',
+    'ranking-after-game',
+    'shop-after-game',
+    'practice-after-game',
+    'ranking-result'
+  ]) {
+    assert.match(source, new RegExp(id));
+  }
+
+  assert.match(source, /actions\.restart/);
+  assert.match(source, /actions\.practice/);
+  assert.match(source, /actions\.shop/);
+  assert.match(source, /actions\.ranking/);
+  assert.match(source, /actions\.exit/);
+  assert.match(source, /rankingSyncPresentation/);
+  assert.doesNotMatch(source, /fetch\s*\(|setTimeout/);
 });
