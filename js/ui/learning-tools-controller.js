@@ -48,6 +48,15 @@ export function downloadLearningBackup({
   return downloadLocalFile(store.createBackup(), { documentRef, windowRef });
 }
 
+export function downloadLearningDeviceBackup({
+  store,
+  documentRef = globalThis.document,
+  windowRef = globalThis.window
+} = {}) {
+  if (!store?.createDeviceBackup) throw new Error('No fue posible preparar el respaldo consolidado.');
+  return downloadLocalFile(store.createDeviceBackup(), { documentRef, windowRef });
+}
+
 export function bindLearningTools({
   root,
   store,
@@ -64,8 +73,10 @@ export function bindLearningTools({
   const exportJson = root.querySelector('[data-export-learning-json]');
   const exportCsv = root.querySelector('[data-export-learning-csv]');
   const backupButton = root.querySelector('[data-backup-learning]');
+  const deviceBackupButton = root.querySelector('[data-backup-learning-device]');
   const importInput = root.querySelector('[data-import-learning]');
   const printReport = root.querySelector('[data-print-learning-report]');
+  const deleteProfileButtons = Array.from(root.querySelectorAll?.('[data-delete-learning-profile]') || []);
 
   goalForm?.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -117,6 +128,18 @@ export function bindLearningTools({
     }
   }
 
+  function backupDevice() {
+    try {
+      const file = downloadLearningDeviceBackup({ store, documentRef, windowRef });
+      const count = Number(file.backup?.profileCount) || 0;
+      setStatus(root, 'Respaldo consolidado creado con ' + count + (count === 1 ? ' perfil.' : ' perfiles.'));
+      return file;
+    } catch (error) {
+      setStatus(root, error?.message || 'No fue posible crear el respaldo consolidado.');
+      return null;
+    }
+  }
+
   async function importProgress() {
     const file = importInput?.files?.[0];
     if (!file) return null;
@@ -148,16 +171,42 @@ export function bindLearningTools({
     }
   }
 
+  function deleteProfile(button) {
+    const profileId = button?.dataset?.deleteLearningProfile || '';
+    const profileName = button?.dataset?.learningProfileName || 'este perfil';
+    if (!profileId) return null;
+    const confirmed = windowRef?.confirm
+      ? windowRef.confirm('¿Eliminar de este dispositivo el perfil pedagógico de ' + profileName + '? Esta acción no borra su cuenta de la Liga y no se puede deshacer sin un respaldo.')
+      : true;
+    if (!confirmed) {
+      setStatus(root, 'Eliminación cancelada.');
+      return null;
+    }
+
+    try {
+      const result = store.removeProfile(profileId);
+      onChanged('Perfil pedagógico de ' + result.removed.pilotName + ' eliminado del dispositivo.');
+      return result;
+    } catch (error) {
+      setStatus(root, error?.message || 'No fue posible eliminar el perfil pedagógico.');
+      return null;
+    }
+  }
+
   exportJson?.addEventListener('click', () => exportProgress('json'));
   exportCsv?.addEventListener('click', () => exportProgress('csv'));
   backupButton?.addEventListener('click', backupProgress);
+  deviceBackupButton?.addEventListener('click', backupDevice);
   importInput?.addEventListener('change', importProgress);
   printReport?.addEventListener('click', () => windowRef?.print?.());
+  deleteProfileButtons.forEach((button) => button.addEventListener('click', () => deleteProfile(button)));
 
   return Object.freeze({
-    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || backupButton || importInput || printReport),
+    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || backupButton || deviceBackupButton || importInput || printReport || deleteProfileButtons.length),
     exportProgress,
     backupProgress,
-    importProgress
+    backupDevice,
+    importProgress,
+    deleteProfile
   });
 }
