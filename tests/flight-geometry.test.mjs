@@ -2,6 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { clamp, easeIn, projectFlightPoint, resizeFlightCanvas } from '../js/core/flight-geometry.js';
 
+function closeTo(actual, expected, tolerance = 1e-9) {
+  assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} no está cerca de ${expected}`);
+}
+
 test('conserva límites y proyección de la ruta', () => {
   assert.equal(clamp(4, -1, 1), 1);
   assert.equal(clamp(-4, -1, 1), -1);
@@ -13,9 +17,9 @@ test('conserva límites y proyección de la ruta', () => {
     scale: .1
   });
   const point = projectFlightPoint({ width: 960, height: 600, lane: 1, depth: 1 });
-  assert.equal(point.x, 758.4);
-  assert.equal(point.y, 555);
-  assert.equal(point.scale, 1.32);
+  closeTo(point.x, 758.4);
+  closeTo(point.y, 555);
+  closeTo(point.scale, 1.32);
 });
 
 test('redimensiona el canvas con los mínimos y el límite de densidad actuales', () => {
