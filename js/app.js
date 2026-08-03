@@ -1,6 +1,6 @@
 import { SpaceFlight } from './space-game.js';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
-import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=11';
+import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=12';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');

@@ -7,6 +7,7 @@ let musicStep = 0;
 let musicLevel = 1;
 let musicRequested = false;
 let musicMaster;
+let effectsMaster;
 
 function ensureAudioContext() {
   audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
@@ -26,6 +27,20 @@ function ensureMusicMaster(context) {
   limiter.release.setValueAtTime(.14, context.currentTime);
   musicMaster.connect(limiter).connect(context.destination);
   return musicMaster;
+}
+
+function ensureEffectsMaster(context) {
+  if (effectsMaster) return effectsMaster;
+  effectsMaster = context.createGain();
+  const limiter = context.createDynamicsCompressor();
+  effectsMaster.gain.setValueAtTime(1.8, context.currentTime);
+  limiter.threshold.setValueAtTime(-1.5, context.currentTime);
+  limiter.knee.setValueAtTime(2, context.currentTime);
+  limiter.ratio.setValueAtTime(20, context.currentTime);
+  limiter.attack.setValueAtTime(.001, context.currentTime);
+  limiter.release.setValueAtTime(.1, context.currentTime);
+  effectsMaster.connect(limiter).connect(context.destination);
+  return effectsMaster;
 }
 
 function scheduleSynthNote(context, destination, frequency, start, duration, volume, type = 'triangle') {
@@ -127,14 +142,15 @@ export function playTone(type = 'select') {
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
     const tones = { select: [440, 0.06], complete: [660, 0.18], core: [880, 0.3], alert: [260, 0.22] };
+    const volumes = { select: .22, complete: .28, core: .32, alert: .34 };
     const [frequency, duration] = tones[type] || tones.select;
     oscillator.type = type === 'alert' ? 'sawtooth' : 'sine';
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
     if (type === 'core') oscillator.frequency.exponentialRampToValueAtTime(1320, audioContext.currentTime + duration);
     gain.gain.setValueAtTime(0.001, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(volumes[type] || volumes.select, audioContext.currentTime + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-    oscillator.connect(gain).connect(audioContext.destination);
+    oscillator.connect(gain).connect(ensureEffectsMaster(audioContext));
     oscillator.start();
     oscillator.stop(audioContext.currentTime + duration);
   } catch (error) {
