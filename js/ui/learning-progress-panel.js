@@ -19,9 +19,15 @@ function renderTrend(summary) {
   return '<p class="learning-mini-trend">' + icon + ' ' + escapeHtml(trend.text) + '</p>';
 }
 
+function renderProfile(summary) {
+  const name = escapeHtml(summary.profileName || 'Piloto local');
+  return '<p class="learning-profile-chip">👤 Perfil pedagógico: <strong>' + name + '</strong></p>';
+}
+
 export function renderLearningProgressPanel(summary = {}) {
+  const profile = renderProfile(summary);
   if (!summary.hasData) {
-    return '<section class="learning-progress learning-progress-empty" aria-labelledby="learning-progress-title"><div class="learning-progress-heading"><span aria-hidden="true">🧭</span><div><p class="eyebrow">Ruta de aprendizaje</p><h2 id="learning-progress-title">Tu panel pedagógico</h2></div></div><p>Responde algunos portales y aquí aparecerán tus fortalezas, temas de refuerzo y una recomendación para la siguiente práctica.</p><small>No es una calificación: es una brújula para seguir aprendiendo.</small></section>';
+    return '<section class="learning-progress learning-progress-empty" aria-labelledby="learning-progress-title"><div class="learning-progress-heading"><span aria-hidden="true">🧭</span><div><p class="eyebrow">Ruta de aprendizaje</p><h2 id="learning-progress-title">Tu panel pedagógico</h2></div></div>' + profile + '<p>Responde algunos portales y aquí aparecerán tus fortalezas, temas de refuerzo y una recomendación para la siguiente práctica.</p><small>No es una calificación: es una brújula para seguir aprendiendo.</small></section>';
   }
 
   const focusItems = (summary.focus || []).map(renderFocusCategory).join('');
@@ -34,5 +40,5 @@ export function renderLearningProgressPanel(summary = {}) {
   const recent = renderRecentSession(summary.recentSessions?.[0]);
   const trend = renderTrend(summary);
 
-  return '<section class="learning-progress" aria-labelledby="learning-progress-title"><div class="learning-progress-heading"><span aria-hidden="true">🧭</span><div><p class="eyebrow">Ruta de aprendizaje</p><h2 id="learning-progress-title">Tu panel pedagógico</h2></div></div><div class="learning-metrics"><span><small>Respuestas</small><strong>' + summary.attempts + '</strong></span><span><small>Aciertos</small><strong>' + summary.accuracy + '%</strong></span><span><small>Mejor racha</small><strong>🔥 ' + summary.bestStreak + '</strong></span></div>' + goal + recent + trend + '<div class="learning-focus"><h3>Temas para reforzar</h3><ul>' + focusItems + '</ul></div>' + strength + '<p class="learning-recommendation">💡 ' + escapeHtml(summary.recommendation || '') + '</p><small class="learning-note">La adaptación es moderada: todas las preguntas del nivel siguen apareciendo antes de repetirse.</small></section>';
+  return '<section class="learning-progress" aria-labelledby="learning-progress-title"><div class="learning-progress-heading"><span aria-hidden="true">🧭</span><div><p class="eyebrow">Ruta de aprendizaje</p><h2 id="learning-progress-title">Tu panel pedagógico</h2></div></div>' + profile + '<div class="learning-metrics"><span><small>Respuestas</small><strong>' + summary.attempts + '</strong></span><span><small>Aciertos</small><strong>' + summary.accuracy + '%</strong></span><span><small>Mejor racha</small><strong>🔥 ' + summary.bestStreak + '</strong></span></div>' + goal + recent + trend + '<div class="learning-focus"><h3>Temas para reforzar</h3><ul>' + focusItems + '</ul></div>' + strength + '<p class="learning-recommendation">💡 ' + escapeHtml(summary.recommendation || '') + '</p><small class="learning-note">La adaptación es moderada: todas las preguntas del nivel siguen apareciendo antes de repetirse.</small></section>';
 }
