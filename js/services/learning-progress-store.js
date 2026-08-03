@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from '../config/storage-keys.js';
+import { createLearningBackupFile, verifyLearningBackup } from '../core/learning-backup.js';
 import {
   appendLearningSession,
   clearLearningGoal,
@@ -10,16 +11,70 @@ import {
   setLongitudinalTracking,
   summarizeLearningProgress
 } from '../core/learning-progress.js';
-import { readStorageJson, removeStorageValue, writeStorageJson } from './browser-storage.js';
+import {
+  adoptLocalLearningProfile,
+  createLearningProfileCollection,
+  createLearningProfileId,
+  listLearningProfiles,
+  normalizeLearningPilotName,
+  normalizeLearningProfileCollection,
+  readLearningProfile,
+  removeLearningProfile,
+  upsertLearningProfile
+} from '../core/learning-profiles.js';
+import { getPilotName } from './pilot-profile-store.js';
+import { hasStorageValue, readStorageJson, removeStorageValue, writeStorageJson } from './browser-storage.js';
 
-export function createLearningProgressStore({ storage } = {}) {
+export function createLearningProgressStore({ storage, resolvePilotName = getPilotName } = {}) {
+  const options = { storage };
+
+  function activePilotName() {
+    return normalizeLearningPilotName(resolvePilotName?.());
+  }
+
+  function writeCollection(collection) {
+    const normalized = normalizeLearningProfileCollection(collection);
+    writeStorageJson(STORAGE_KEYS.learningProfiles, normalized, options);
+    return normalized;
+  }
+
+  function loadCollection() {
+    let collection = normalizeLearningProfileCollection(
+      readStorageJson(STORAGE_KEYS.learningProfiles, createLearningProfileCollection(), options)
+    );
+
+    if (hasStorageValue(STORAGE_KEYS.learningProgress, options)) {
+      const legacy = normalizeLearningProgress(
+        readStorageJson(STORAGE_KEYS.learningProgress, createLearningProgress(), options)
+      );
+      collection = upsertLearningProfile(collection, {
+        pilotName: 'Piloto local',
+        progress: legacy,
+        updatedAt: new Date().toISOString()
+      });
+      if (writeStorageJson(STORAGE_KEYS.learningProfiles, collection, options)) {
+        removeStorageValue(STORAGE_KEYS.learningProgress, options);
+      }
+    }
+
+    const pilotName = activePilotName();
+    const pilotId = createLearningProfileId(pilotName);
+    const shouldAdopt = pilotId !== 'local' && !collection.profiles[pilotId] && Boolean(collection.profiles.local);
+    if (shouldAdopt) collection = writeCollection(adoptLocalLearningProfile(collection, pilotName));
+    return collection;
+  }
+
   function load() {
-    return normalizeLearningProgress(readStorageJson(STORAGE_KEYS.learningProgress, createLearningProgress(), { storage }));
+    return readLearningProfile(loadCollection(), activePilotName());
   }
 
   function save(progress) {
     const normalized = normalizeLearningProgress(progress);
-    writeStorageJson(STORAGE_KEYS.learningProgress, normalized, { storage });
+    writeCollection(upsertLearningProfile(loadCollection(), {
+      pilotName: activePilotName(),
+      progress: normalized,
+      updatedAt: new Date().toISOString()
+    }));
     return normalized;
   }
 
@@ -47,14 +102,59 @@ export function createLearningProgressStore({ storage } = {}) {
     return save(setLongitudinalTracking(load(), enabled));
   }
 
+  function profileInfo() {
+    const collection = loadCollection();
+    const pilotName = activePilotName();
+    return {
+      id: createLearningProfileId(pilotName),
+      pilotName,
+      profiles: listLearningProfiles(collection)
+    };
+  }
+
   function summary() {
-    return summarizeLearningProgress(load());
+    const profile = profileInfo();
+    return {
+      ...summarizeLearningProgress(load()),
+      profileId: profile.id,
+      profileName: profile.pilotName,
+      profileCount: profile.profiles.length,
+      availableProfiles: profile.profiles
+    };
+  }
+
+  function createBackup({ exportedAt } = {}) {
+    return createLearningBackupFile(load(), {
+      pilotName: activePilotName(),
+      exportedAt
+    });
+  }
+
+  function importBackup(source) {
+    const verified = verifyLearningBackup(source, { expectedPilotName: activePilotName() });
+    const progress = save(verified.progress);
+    return { ...verified, progress };
   }
 
   function reset() {
-    removeStorageValue(STORAGE_KEYS.learningProgress, { storage });
+    const collection = removeLearningProfile(loadCollection(), activePilotName());
+    if (Object.keys(collection.profiles).length) writeCollection(collection);
+    else removeStorageValue(STORAGE_KEYS.learningProfiles, options);
     return createLearningProgress();
   }
 
-  return Object.freeze({ load, save, record, completeSession, setGoal, resetGoal, setTracking, summary, reset });
+  return Object.freeze({
+    load,
+    save,
+    record,
+    completeSession,
+    setGoal,
+    resetGoal,
+    setTracking,
+    summary,
+    profileInfo,
+    createBackup,
+    importBackup,
+    reset
+  });
 }
