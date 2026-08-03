@@ -1,4 +1,4 @@
-import { createLearningProgress, normalizeLearningProgress } from './learning-progress.js';
+import { createLearningProgress, normalizeLearningProgress, summarizeLearningProgress } from './learning-progress.js';
 
 const PROFILE_COLLECTION_VERSION = 1;
 const MAX_PROFILES = 50;
@@ -96,6 +96,25 @@ export function removeLearningProfile(collection, pilotName) {
   return { version: PROFILE_COLLECTION_VERSION, profiles };
 }
 
+export function removeLearningProfileById(collection, profileId, { protectedProfileId = '' } = {}) {
+  const normalized = normalizeLearningProfileCollection(collection);
+  const id = safeText(profileId, 64);
+  if (!id || !Object.hasOwn(normalized.profiles, id)) {
+    return { collection: normalized, removed: null };
+  }
+  if (id === safeText(protectedProfileId, 64)) {
+    throw new Error('El perfil pedagógico activo no puede eliminarse. Cambia de piloto antes de borrarlo.');
+  }
+
+  const profiles = { ...normalized.profiles };
+  const removedEntry = profiles[id];
+  delete profiles[id];
+  return {
+    collection: { version: PROFILE_COLLECTION_VERSION, profiles },
+    removed: { id, pilotName: removedEntry.pilotName }
+  };
+}
+
 export function adoptLocalLearningProfile(collection, pilotName) {
   const normalized = normalizeLearningProfileCollection(collection);
   const targetName = normalizeLearningPilotName(pilotName);
@@ -109,15 +128,32 @@ export function adoptLocalLearningProfile(collection, pilotName) {
   return { version: PROFILE_COLLECTION_VERSION, profiles };
 }
 
-export function listLearningProfiles(collection) {
+function profileView(id, entry, activeProfileId) {
+  const summary = summarizeLearningProgress(entry.progress);
+  const sessions = entry.progress.sessions.length;
+  const reachedGoals = entry.progress.sessions.filter((session) => session.goalReached).length;
+  return {
+    id,
+    pilotName: entry.pilotName,
+    updatedAt: entry.updatedAt,
+    active: id === activeProfileId,
+    attempts: summary.attempts,
+    correct: summary.correct,
+    accuracy: summary.accuracy,
+    bestStreak: summary.bestStreak,
+    sessions,
+    goalRate: sessions ? Math.round((reachedGoals / sessions) * 100) : 0,
+    focusCategory: summary.focus[0]?.name || '',
+    strengthCategory: summary.strength?.name || ''
+  };
+}
+
+export function listLearningProfiles(collection, { activePilotName = '' } = {}) {
   const normalized = normalizeLearningProfileCollection(collection);
+  const activeProfileId = createLearningProfileId(activePilotName);
   return Object.entries(normalized.profiles)
-    .map(([id, entry]) => ({
-      id,
-      pilotName: entry.pilotName,
-      updatedAt: entry.updatedAt,
-      attempts: entry.progress.totals.attempts,
-      sessions: entry.progress.sessions.length
-    }))
-    .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt) || a.pilotName.localeCompare(b.pilotName));
+    .map(([id, entry]) => profileView(id, entry, activeProfileId))
+    .sort((a, b) => Number(b.active) - Number(a.active)
+      || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
+      || a.pilotName.localeCompare(b.pilotName));
 }
