@@ -17,16 +17,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'push' && github.ref_name || '' }}
+          ref: ${{ github.event_name == 'pull_request' && 'agent/add-configurable-learning-tools-v24' || github.ref_name }}
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
       - name: Apply guarded configurable learning tools integration
-        if: github.event_name == 'push' && github.ref == 'refs/heads/agent/add-configurable-learning-tools-v24' && github.actor != 'github-actions[bot]'
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: node scripts/add-configurable-learning-tools.mjs
       - name: Reject unexpected transformed files
-        if: github.event_name == 'push' && github.ref == 'refs/heads/agent/add-configurable-learning-tools-v24' && github.actor != 'github-actions[bot]'
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           unexpected=$(git diff --name-only | grep -Ev '^js/app\.js$' || true)
           if [ -n "$unexpected" ]; then
@@ -37,7 +37,7 @@ jobs:
       - name: Run checks
         run: npm run check
       - name: Commit configurable learning tools integration
-        if: github.event_name == 'push' && github.ref == 'refs/heads/agent/add-configurable-learning-tools-v24' && github.actor != 'github-actions[bot]'
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           if git diff --quiet -- js/app.js; then
             echo "No changes required"
