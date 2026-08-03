@@ -1,6 +1,6 @@
-import { SpaceFlight } from './space-game.js?v=14';
+import { SpaceFlight } from './space-game.js?v=15';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
-import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=14';
+import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=15';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
@@ -45,7 +45,7 @@ function renderFlight() {
     <div class="flight-hud">
       <div class="hud-block fuel-hud"><span>⛽ Combustible</span><div class="fuel-track"><i id="fuel-fill"></i></div><strong id="fuel-value">62%</strong></div>
       <div class="hud-block hull-hud"><span>🛡️ Escudos</span><strong id="hull-value" aria-label="Tres escudos">♥ ♥ ♥</strong></div>
-      <div class="hud-block"><span>📍 Distancia</span><strong><b id="distance-value">0</b> km</strong></div>
+      <div class="hud-block distance-hud"><span>📍 Distancia</span><strong><b id="distance-value">0</b> km</strong></div>
       <div class="hud-block checkpoint-hud"><span>🌀 Portal <b id="checkpoint-number">1</b></span><strong>A <b id="remaining-value">280</b> km</strong></div>
       <div class="hud-block difficulty-hud"><span>⚡ Dificultad</span><strong>Nivel <b id="level-value">1</b></strong></div>
       <div class="hud-block ammo-hud"><span>💥 Plasma</span><strong><b id="ammo-value">3</b> disparos</strong></div>
@@ -55,12 +55,14 @@ function renderFlight() {
       <div class="flight-stage-actions">
         <button class="music-flight" id="music-flight" data-music-label type="button" aria-label="Silenciar música y sonidos" aria-pressed="true"><span>🎵</span><strong>Música</strong></button>
         <button class="fullscreen-flight" id="fullscreen-flight" type="button" aria-label="Activar pantalla completa" aria-pressed="false"><span>⛶</span><strong>Pantalla completa</strong></button>
+        <button class="exit-flight" type="button" data-nav="home" aria-label="Salir del vuelo"><span>✕</span><strong>Salir</strong></button>
       </div>
       <div id="flight-toast" class="flight-toast" hidden></div>
       <div id="flight-overlay" class="flight-overlay"><div class="overlay-card rules-card"><p class="eyebrow">Tu misión</p><h2>Esquiva, dispara y responde</h2><div class="quick-rules" role="list"><div role="listitem"><b>1</b><span>↔️</span><strong>MUÉVETE</strong><small>Flechas o botones</small></div><div role="listitem"><b>2</b><span>⚡</span><strong>DISPARA</strong><small>ESPACIO · 3 cargas</small></div><div role="listitem"><b>3</b><span>🌀</span><strong>LLEGA</strong><small>Entra al portal</small></div><div role="listitem"><b>4</b><span>🧠</span><strong>RESPONDE</strong><small>Acierta y recarga</small></div></div><p class="quick-warning"><span>⚠️</span><strong>3 choques, combustible vacío o una respuesta incorrecta terminan la misión.</strong></p><button class="button primary launch-button" id="start-flight">🚀 ¡Despegar!</button></div></div>
       <section id="quiz-panel" class="quiz-panel" hidden aria-labelledby="quiz-question"><div class="quiz-card"><p class="quiz-category" id="quiz-category"></p><div class="fuel-question-icon" aria-hidden="true">⛽</div><h2 id="quiz-question"></h2><div id="quiz-options" class="quiz-options"></div><p id="quiz-result" class="quiz-result" aria-live="assertive"></p></div></section>
+      <div class="mobile-flight-controls" aria-label="Controles móviles"><button id="mobile-steer-left" type="button" aria-label="Mover nave a la izquierda"><span>⬅️</span><strong>IZQUIERDA</strong></button><button class="mobile-fire-control" id="mobile-fire-plasma" data-fire-plasma type="button" aria-label="Disparar plasma. Quedan tres disparos"><span>⚡</span><strong>DISPARAR</strong><small><b id="mobile-ammo-value">3</b> CARGAS</small></button><button id="mobile-steer-right" type="button" aria-label="Mover nave a la derecha"><span>➡️</span><strong>DERECHA</strong></button></div>
     </div>
-    <div class="touch-controls" aria-label="Controles táctiles"><button id="steer-left" type="button" aria-label="Mover nave a la izquierda">⬅️<span>IZQUIERDA</span></button><button class="fire-control" id="fire-plasma" type="button" aria-label="Disparar plasma. Quedan tres disparos">⚡<span>DISPARAR</span><small>ESPACIO</small></button><button id="steer-right" type="button" aria-label="Mover nave a la derecha"><span>DERECHA</span>➡️</button></div>
+    <div class="touch-controls" aria-label="Controles táctiles"><button id="steer-left" type="button" aria-label="Mover nave a la izquierda">⬅️<span>IZQUIERDA</span></button><button class="fire-control" id="fire-plasma" data-fire-plasma type="button" aria-label="Disparar plasma. Quedan tres disparos">⚡<span>DISPARAR</span><small>ESPACIO</small></button><button id="steer-right" type="button" aria-label="Mover nave a la derecha"><span>DERECHA</span>➡️</button></div>
     <p class="flight-tip">Toca los lados para moverte · Pulsa ESPACIO para disparar.</p>
   </section>`;
 }
@@ -79,6 +81,7 @@ function renderCredits() {
 
 function render() {
   const screens = { home: renderHome, flight: renderFlight, instructions: renderInstructions, teacher: renderTeacher, credits: renderCredits };
+  document.body.classList.toggle('flight-route', route === 'flight');
   app.innerHTML = (screens[route] || renderHome)();
   app.querySelectorAll('[data-nav]').forEach((button) => button.addEventListener('click', () => setRoute(button.dataset.nav)));
   if (route === 'flight') bindFlight();
@@ -109,11 +112,12 @@ function updateHud(state) {
   document.getElementById('level-value').textContent = state.level;
   const ammoValue = document.getElementById('ammo-value');
   if (ammoValue) ammoValue.textContent = state.ammo;
-  const fireButton = document.getElementById('fire-plasma');
-  if (fireButton) {
+  document.querySelectorAll('[data-fire-plasma]').forEach((fireButton) => {
     fireButton.classList.toggle('empty', state.ammo <= 0);
     fireButton.setAttribute('aria-label', state.ammo > 0 ? 'Disparar plasma. Quedan ' + state.ammo + ' disparos' : 'Sin cargas de plasma');
-  }
+  });
+  const mobileAmmo = document.getElementById('mobile-ammo-value');
+  if (mobileAmmo) mobileAmmo.textContent = state.ammo;
   document.querySelector('.ammo-hud')?.classList.toggle('empty', state.ammo <= 0);
   document.querySelector('.flight-page')?.style.setProperty('--danger-level', Math.min(1, (state.level - 1) / 8));
 }
@@ -263,7 +267,9 @@ function bindFlight() {
   });
   document.getElementById('steer-left').addEventListener('click', () => flight.moveLane(-1));
   document.getElementById('steer-right').addEventListener('click', () => flight.moveLane(1));
-  document.getElementById('fire-plasma').addEventListener('click', () => flight.fire());
+  document.getElementById('mobile-steer-left').addEventListener('click', () => flight.moveLane(-1));
+  document.getElementById('mobile-steer-right').addEventListener('click', () => flight.moveLane(1));
+  document.querySelectorAll('[data-fire-plasma]').forEach((button) => button.addEventListener('click', () => flight.fire()));
   document.getElementById('music-flight').addEventListener('click', () => {
     const enabled = !getSettings().sound;
     applySettings({ sound: enabled });

@@ -595,7 +595,9 @@ export class SpaceFlight {
 
   drawShip(ctx) {
     const x = this.width / 2 + this.lanePosition * this.width * .27;
-    const y = this.height * .82;
+    const mobileCockpit = this.width <= 850;
+    const mobileShipHeight = this.height < 380 ? .55 : this.height < 520 ? .66 : .72;
+    const y = this.height * (mobileCockpit ? mobileShipHeight : .82);
     const size = clamp(this.width / 13, 58, 88);
     ctx.save();
     ctx.translate(x, y);
