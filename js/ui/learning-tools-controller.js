@@ -3,6 +3,7 @@ import {
   readLearningDeviceRestoreDecisions,
   renderLearningDeviceRestorePreview
 } from './learning-device-restore-panel.js';
+import { mountLearningRecoveryPanel } from './learning-recovery-panel.js';
 
 const MAX_BACKUP_BYTES = 1024 * 1024;
 const MAX_DEVICE_BACKUP_BYTES = 5 * 1024 * 1024;
@@ -84,6 +85,13 @@ export function bindLearningTools({
   const deviceRestoreContainer = root.querySelector('[data-learning-device-restore-preview]');
   const printReport = root.querySelector('[data-print-learning-report]');
   const deleteProfileButtons = Array.from(root.querySelectorAll?.('[data-delete-learning-profile]') || []);
+  const recoveryPanel = mountLearningRecoveryPanel({
+    root,
+    recovery: store.recoveryInfo?.(),
+    documentRef
+  });
+  const undoRecoveryButton = recoveryPanel?.querySelector?.('[data-undo-learning-change]');
+  const dismissRecoveryButton = recoveryPanel?.querySelector?.('[data-dismiss-learning-recovery]');
   let deviceRestoreSource = '';
   let deviceRestorePreview = null;
 
@@ -159,7 +167,7 @@ export function bindLearningTools({
     }
 
     const confirmed = windowRef?.confirm
-      ? windowRef.confirm('La importación reemplazará el progreso pedagógico de ' + (pilotName || 'este piloto') + '. ¿Continuar?')
+      ? windowRef.confirm('La importación reemplazará el progreso pedagógico de ' + (pilotName || 'este piloto') + '. Se creará un punto de recuperación local. ¿Continuar?')
       : true;
     if (!confirmed) {
       setStatus(root, 'Importación cancelada.');
@@ -171,7 +179,7 @@ export function bindLearningTools({
       const content = await file.text();
       const result = store.importBackup(content);
       importInput.value = '';
-      onChanged('Respaldo verificado e importado para ' + result.pilotName + '.');
+      onChanged('Respaldo verificado e importado para ' + result.pilotName + '. Puedes deshacer mientras no haya actividad posterior.');
       return result;
     } catch (error) {
       setStatus(root, error?.message || 'No fue posible verificar e importar el respaldo.');
@@ -204,7 +212,7 @@ export function bindLearningTools({
     const replacements = selected.filter((decision) => decision.action === 'replace').length;
     const additions = selected.filter((decision) => decision.action === 'add').length;
     const confirmed = windowRef?.confirm
-      ? windowRef.confirm('Se añadirán ' + additions + ' perfiles y se reemplazarán ' + replacements + '. Los demás datos locales se conservarán. ¿Aplicar esta selección?')
+      ? windowRef.confirm('Se añadirán ' + additions + ' perfiles y se reemplazarán ' + replacements + '. Los demás datos locales se conservarán y se creará un punto de recuperación. ¿Aplicar esta selección?')
       : true;
     if (!confirmed) {
       setStatus(root, 'Aplicación cancelada. La vista previa continúa disponible.');
@@ -214,7 +222,7 @@ export function bindLearningTools({
     try {
       const result = store.restoreDeviceBackup(deviceRestoreSource, decisions);
       clearDeviceRestore();
-      onChanged('Restauración consolidada completada: ' + result.added + ' añadidos, ' + result.replaced + ' reemplazados y ' + result.kept + ' conservados.');
+      onChanged('Restauración consolidada completada: ' + result.added + ' añadidos, ' + result.replaced + ' reemplazados y ' + result.kept + ' conservados. Puedes deshacer mientras no haya actividad posterior.');
       return result;
     } catch (error) {
       setStatus(root, error?.message || 'No fue posible aplicar la restauración consolidada.');
@@ -261,7 +269,7 @@ export function bindLearningTools({
     const profileName = button?.dataset?.learningProfileName || 'este perfil';
     if (!profileId) return null;
     const confirmed = windowRef?.confirm
-      ? windowRef.confirm('¿Eliminar de este dispositivo el perfil pedagógico de ' + profileName + '? Esta acción no borra su cuenta de la Liga y no se puede deshacer sin un respaldo.')
+      ? windowRef.confirm('¿Eliminar de este dispositivo el perfil pedagógico de ' + profileName + '? Esta acción no borra su cuenta de la Liga. Se creará un punto de recuperación local.')
       : true;
     if (!confirmed) {
       setStatus(root, 'Eliminación cancelada.');
@@ -270,10 +278,40 @@ export function bindLearningTools({
 
     try {
       const result = store.removeProfile(profileId);
-      onChanged('Perfil pedagógico de ' + result.removed.pilotName + ' eliminado del dispositivo.');
+      onChanged('Perfil pedagógico de ' + result.removed.pilotName + ' eliminado. Puedes deshacer mientras no haya actividad posterior.');
       return result;
     } catch (error) {
       setStatus(root, error?.message || 'No fue posible eliminar el perfil pedagógico.');
+      return null;
+    }
+  }
+
+  function undoLastChange() {
+    const confirmed = windowRef?.confirm
+      ? windowRef.confirm('¿Restaurar el estado pedagógico anterior al último cambio destructivo?')
+      : true;
+    if (!confirmed) {
+      setStatus(root, 'Reversión cancelada.');
+      return null;
+    }
+    try {
+      const result = store.undoLastDestructiveChange();
+      onChanged('Se deshizo la ' + result.label + ' y se restauraron los perfiles anteriores.');
+      return result;
+    } catch (error) {
+      setStatus(root, error?.message || 'No fue posible deshacer el último cambio.');
+      return null;
+    }
+  }
+
+  function dismissRecovery() {
+    try {
+      const result = store.dismissRecovery();
+      recoveryPanel?.remove?.();
+      setStatus(root, 'Punto de recuperación descartado.');
+      return result;
+    } catch (error) {
+      setStatus(root, error?.message || 'No fue posible descartar el punto de recuperación.');
       return null;
     }
   }
@@ -286,9 +324,11 @@ export function bindLearningTools({
   deviceImportInput?.addEventListener('change', previewDeviceRestore);
   printReport?.addEventListener('click', () => windowRef?.print?.());
   deleteProfileButtons.forEach((button) => button.addEventListener('click', () => deleteProfile(button)));
+  undoRecoveryButton?.addEventListener('click', undoLastChange);
+  dismissRecoveryButton?.addEventListener('click', dismissRecovery);
 
   return Object.freeze({
-    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || backupButton || deviceBackupButton || importInput || deviceImportInput || printReport || deleteProfileButtons.length),
+    bound: Boolean(goalForm || resetGoal || tracking || exportJson || exportCsv || backupButton || deviceBackupButton || importInput || deviceImportInput || printReport || deleteProfileButtons.length || undoRecoveryButton || dismissRecoveryButton),
     exportProgress,
     backupProgress,
     backupDevice,
@@ -296,6 +336,8 @@ export function bindLearningTools({
     previewDeviceRestore,
     applyDeviceRestore,
     cancelDeviceRestore,
-    deleteProfile
+    deleteProfile,
+    undoLastChange,
+    dismissRecovery
   });
 }
