@@ -1,6 +1,7 @@
-import { SpaceFlight, SHIP_SKINS, SHIP_TRAILS } from './space-game.js?v=22';
+import { SpaceFlight, SHIP_SKINS, SHIP_TRAILS } from './space-game.js?v=23';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
-import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=22';
+import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=23';
+import { claimGalacticPilot, getGalacticLeaderboard, submitGalacticScore } from './galactic-league.js?v=23';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
@@ -23,14 +24,17 @@ let shopMessage = '';
 let stationPurchased = false;
 let runCrystals = 0;
 let viewportResizeFrame = 0;
-let activePilotName = '';
+let activePilotSession = null;
 let pendingPilotAction = null;
+let globalRanking = [];
+let rankingStatus = 'idle';
+let rankingError = '';
+let rankingUpdatedAt = 0;
 
 const ECONOMY_KEY = 'nebula-economy-v1';
 const PROFILE_KEY = 'nebula-pilot-profile';
 const GAME_RELEASE = new URL(import.meta.url).searchParams.get('v') || 'local';
 const RANKING_PREFIX = 'nebula-ranking-';
-const RANKING_KEY = RANKING_PREFIX + GAME_RELEASE;
 const SEASON_NAME = 'Expedición Horizonte ' + GAME_RELEASE;
 const STATION_OFFERS = {
   repair: { icon: '🛡️', name: 'Reparación total', description: 'Restaura los escudos y suma 20% de combustible.', price: 20 },
@@ -126,21 +130,31 @@ function cleanPilotName(value = '') {
 function loadRememberedPilot() {
   try {
     const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
-    return profile.remember ? cleanPilotName(profile.name) : '';
+    const name = cleanPilotName(profile.name);
+    return profile.remember && name ? { name, token: String(profile.token || ''), protected: Boolean(profile.protected), remember: true } : null;
   } catch (error) {
-    return '';
+    return null;
   }
 }
 
-function getPilotName() {
-  return activePilotName || loadRememberedPilot();
+function getPilotSession() {
+  return activePilotSession || loadRememberedPilot();
 }
 
-function savePilot(name, remember) {
-  activePilotName = cleanPilotName(name);
-  if (remember) localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: activePilotName, remember: true }));
+function getPilotName() {
+  return getPilotSession()?.name || '';
+}
+
+function savePilot(profile, remember) {
+  activePilotSession = {
+    name: cleanPilotName(profile.nickname || profile.name),
+    token: String(profile.token || ''),
+    protected: Boolean(profile.protected),
+    remember: Boolean(remember)
+  };
+  if (remember) localStorage.setItem(PROFILE_KEY, JSON.stringify(activePilotSession));
   else localStorage.removeItem(PROFILE_KEY);
-  return activePilotName;
+  return activePilotSession;
 }
 
 function openPilotDialog(action = null) {
@@ -149,6 +163,7 @@ function openPilotDialog(action = null) {
   const remembered = loadRememberedPilot();
   const input = document.getElementById('pilot-name');
   input.value = getPilotName();
+  document.getElementById('pilot-pin').value = '';
   document.getElementById('remember-pilot').checked = Boolean(remembered);
   document.getElementById('pilot-error').textContent = '';
   if (!pilotDialog.open) pilotDialog.showModal();
@@ -156,49 +171,58 @@ function openPilotDialog(action = null) {
 }
 
 function requirePilot(action) {
-  if (getPilotName()) action();
+  if (getPilotSession()?.token) action();
   else openPilotDialog(action);
 }
 
 function purgePreviousRankings() {
   try {
-    Object.keys(localStorage).filter((key) => key.startsWith(RANKING_PREFIX) && key !== RANKING_KEY).forEach((key) => localStorage.removeItem(key));
+    Object.keys(localStorage).filter((key) => key.startsWith(RANKING_PREFIX)).forEach((key) => localStorage.removeItem(key));
   } catch (error) { /* El juego continúa aunque el navegador limite el almacenamiento. */ }
 }
 
 function loadRanking() {
-  try {
-    const entries = JSON.parse(localStorage.getItem(RANKING_KEY) || '[]');
-    return Array.isArray(entries) ? entries.filter((entry) => cleanPilotName(entry.name) && Number.isFinite(Number(entry.distance))).slice(0, 10) : [];
-  } catch (error) {
-    return [];
-  }
+  return globalRanking;
 }
 
-function recordRanking(result) {
-  if (flightMode !== 'mission' || result.practice) return null;
-  const name = getPilotName();
-  if (!name) return null;
+async function refreshGlobalRanking(force = false) {
+  if (rankingStatus === 'loading') return globalRanking;
+  if (!force && rankingStatus === 'ready' && Date.now() - rankingUpdatedAt < 15000) return globalRanking;
+  rankingStatus = 'loading';
+  rankingError = '';
+  if (route === 'ranking') render();
+  try {
+    globalRanking = await getGalacticLeaderboard(GAME_RELEASE, 10);
+    rankingStatus = 'ready';
+    rankingUpdatedAt = Date.now();
+  } catch (error) {
+    rankingStatus = 'error';
+    rankingError = error.message;
+  }
+  if (route === 'ranking') render();
+  return globalRanking;
+}
+
+async function recordRanking(result) {
+  if (flightMode !== 'mission' || result.practice) return { position: null };
+  const session = getPilotSession();
+  if (!session?.token) return { position: null, error: 'Registra tu apodo para entrar en la Liga Galáctica.' };
   const economy = loadEconomy();
-  const entry = {
-    name,
-    distance: Math.max(0, Math.round(result.distance)),
-    checkpoints: Math.max(0, Math.round(result.checkpoints)),
-    correct: Math.max(0, Math.round(result.correct)),
-    destroyed: Math.max(0, Math.round(result.destroyed)),
-    skin: economy.activeSkin,
-    trail: economy.activeTrail,
-    date: Date.now()
-  };
-  const ranking = loadRanking();
-  const existing = ranking.findIndex((item) => item.name.toLocaleLowerCase('es') === name.toLocaleLowerCase('es'));
-  if (existing < 0) ranking.push(entry);
-  else if (entry.distance > ranking[existing].distance || (entry.distance === ranking[existing].distance && entry.correct > ranking[existing].correct)) ranking[existing] = entry;
-  ranking.sort((a, b) => b.distance - a.distance || b.correct - a.correct || b.destroyed - a.destroyed);
-  const top = ranking.slice(0, 10);
-  localStorage.setItem(RANKING_KEY, JSON.stringify(top));
-  const position = top.findIndex((item) => item.name.toLocaleLowerCase('es') === name.toLocaleLowerCase('es'));
-  return position >= 0 ? position + 1 : null;
+  try {
+    const response = await submitGalacticScore({
+      token: session.token,
+      season: GAME_RELEASE,
+      seasonName: SEASON_NAME,
+      result,
+      skin: economy.activeSkin,
+      trail: economy.activeTrail
+    });
+    rankingStatus = 'idle';
+    refreshGlobalRanking(true);
+    return { position: Number(response?.position) || null, updated: Boolean(response?.updated) };
+  } catch (error) {
+    return { position: null, error: error.message, code: error.code };
+  }
 }
 
 function setRoute(next) {
@@ -267,21 +291,27 @@ function renderShop() {
 function renderRanking() {
   const ranking = loadRanking();
   const pilotName = getPilotName();
+  const isCurrentPilot = (name) => name?.toLocaleLowerCase('es') === pilotName?.toLocaleLowerCase('es');
   const medals = ['🥇', '🥈', '🥉'];
   const podium = [1, 0, 2].map((index) => {
     const entry = ranking[index];
     const place = index + 1;
     if (!entry) return '<div class="podium-place place-' + place + ' empty"><span>' + medals[index] + '</span><strong>Disponible</strong><small>¡Puede ser tu lugar!</small><i>' + place + '</i></div>';
     const skin = SHIP_SKINS[entry.skin] || SHIP_SKINS.nebula;
-    return '<div class="podium-place place-' + place + (entry.name === pilotName ? ' current' : '') + '"><span>' + medals[index] + '</span><b>' + skin.icon + '</b><strong>' + escapeHtml(entry.name) + '</strong><small>' + entry.distance + ' km · ' + entry.correct + ' aciertos</small><i>' + place + '</i></div>';
+    return '<div class="podium-place place-' + place + (isCurrentPilot(entry.name) ? ' current' : '') + '"><span>' + medals[index] + '</span><b>' + skin.icon + '</b><strong>' + escapeHtml(entry.name) + '</strong><small>' + entry.distance + ' km · ' + entry.correct + ' aciertos</small><i>' + place + '</i></div>';
   }).join('');
   const rows = ranking.map((entry, index) => {
     const skin = SHIP_SKINS[entry.skin] || SHIP_SKINS.nebula;
     const trail = SHIP_TRAILS[entry.trail] || SHIP_TRAILS.pulse;
-    return '<li class="ranking-row' + (entry.name === pilotName ? ' current' : '') + '"><span class="ranking-position">' + (index < 3 ? medals[index] : index + 1) + '</span><span class="ranking-pilot"><b>' + skin.icon + '</b><span><strong>' + escapeHtml(entry.name) + '</strong><small>' + trail.icon + ' ' + escapeHtml(trail.name) + '</small></span></span><span><strong>' + entry.distance + ' km</strong><small>Distancia</small></span><span><strong>' + entry.checkpoints + '</strong><small>Portales</small></span><span><strong>' + entry.correct + '</strong><small>Aciertos</small></span></li>';
+    return '<li class="ranking-row' + (isCurrentPilot(entry.name) ? ' current' : '') + '"><span class="ranking-position">' + (index < 3 ? medals[index] : index + 1) + '</span><span class="ranking-pilot"><b>' + skin.icon + '</b><span><strong>' + escapeHtml(entry.name) + '</strong><small>' + trail.icon + ' ' + escapeHtml(trail.name) + '</small></span></span><span><strong>' + entry.distance + ' km</strong><small>Distancia</small></span><span><strong>' + entry.checkpoints + '</strong><small>Portales</small></span><span><strong>' + entry.correct + '</strong><small>Aciertos</small></span></li>';
   }).join('');
-  const empty = '<div class="ranking-empty"><span>🪐</span><h2>La galaxia espera a su primera leyenda</h2><p>Completa una misión real para inaugurar esta clasificación.</p></div>';
-  return '<section class="screen screen-narrow galaxy-ranking" aria-labelledby="ranking-title"><div class="ranking-hero"><div><p class="eyebrow">🏆 Temporada local · ' + escapeHtml(SEASON_NAME) + '</p><h1 id="ranking-title">Liga Galáctica</h1><p class="lead">Los diez mejores vuelos realizados en este dispositivo.</p></div><div class="season-core" aria-hidden="true"><span>★</span><i></i><i></i></div></div><p class="season-rule"><span>🔄</span><strong>Clasificación justa:</strong> empieza vacía con cada actualización del juego. Solo cuentan las misiones reales y se conserva el mejor vuelo de cada piloto.</p><div class="space-podium">' + podium + '</div>' + (ranking.length ? '<ol class="ranking-list">' + rows + '</ol>' : empty) + '<div class="button-row"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Mejorar mi posición</button><button class="button shop-button" data-nav="shop">🛸 Visitar Hangar</button><button class="button ghost" data-nav="home">Volver</button></div></section>';
+  const waiting = rankingStatus === 'loading'
+    ? '<div class="ranking-empty ranking-loading"><span>🛰️</span><h2>Conectando con la galaxia…</h2><p>Estamos reuniendo los mejores vuelos de todos los dispositivos.</p></div>'
+    : rankingStatus === 'error'
+      ? '<div class="ranking-empty ranking-error"><span>📡</span><h2>Se perdió la señal espacial</h2><p>' + escapeHtml(rankingError) + '</p><button class="button ghost" type="button" data-refresh-ranking>🔄 Intentar otra vez</button></div>'
+      : '<div class="ranking-empty"><span>🪐</span><h2>La galaxia espera a su primera leyenda</h2><p>Completa una misión real para inaugurar esta temporada mundial.</p></div>';
+  const onlineStatus = rankingStatus === 'ready' ? '🟢 EN LÍNEA' : rankingStatus === 'error' ? '🔴 SIN SEÑAL' : '🟡 CONECTANDO';
+  return '<section class="screen screen-narrow galaxy-ranking" aria-labelledby="ranking-title"><div class="ranking-hero"><div><p class="eyebrow">🌎 Temporada mundial · ' + escapeHtml(SEASON_NAME) + '</p><h1 id="ranking-title">Liga Galáctica</h1><p class="lead">Los diez mejores vuelos, sin importar desde qué dispositivo jueguen.</p><span class="league-online-status">' + onlineStatus + '</span></div><div class="season-core" aria-hidden="true"><span>★</span><i></i><i></i></div></div><p class="season-rule"><span>🔄</span><strong>Clasificación justa:</strong> cada actualización abre una temporada nueva y vacía. Los apodos son únicos y solo se conserva el mejor vuelo de cada piloto.</p><div class="space-podium">' + podium + '</div>' + (ranking.length ? '<ol class="ranking-list">' + rows + '</ol>' : waiting) + '<div class="button-row"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Mejorar mi posición</button><button class="button ghost" type="button" data-refresh-ranking>🔄 Actualizar tabla</button><button class="button shop-button" data-nav="shop">🛸 Visitar Hangar</button><button class="button ghost" data-nav="home">Volver</button></div></section>';
 }
 
 function renderFlight() {
@@ -337,11 +367,11 @@ function renderInstructions() {
 }
 
 function renderTeacher() {
-  return '<article class="screen screen-narrow content-page" aria-labelledby="teacher-title"><p class="eyebrow">Guía docente</p><h1 id="teacher-title">Pilotaje y conocimiento general</h1><p class="lead">Experiencia para estudiantes de 10 a 12 años que combina coordinación visomotora, atención sostenida y recuperación de conocimientos.</p><section class="card"><h2>Progresión</h2><ul><li>El banco contiene 100 preguntas repartidas en cinco niveles.</li><li>Cada dos portales cambia el sector y aumenta el nivel cognitivo.</li><li>La dificultad se adapta y el aro verde solo aparece cuando queda una única ruta disponible.</li><li>Cada diez niveles, la estación permite tomar una decisión sencilla de administración de recursos.</li><li>La Liga Galáctica conserva un mejor resultado por piloto, solo acepta misiones reales y se reinicia con cada actualización.</li><li>Los cristales desbloquean personalización cosmética, sin dinero real ni ventaja académica.</li><li>El tutorial y el modo práctica permiten aprender sin castigo.</li></ul></section><section><h2>Áreas</h2><div class="knowledge-chips"><span>🪐 Espacio</span><span>🌱 Ciencias</span><span>🌎 Geografía</span><span>✖️ Matemáticas</span><span>📚 Lenguaje</span><span>🤝 Convivencia</span></div></section><section class="callout"><h2>Uso sugerido</h2><p>Realice intentos de 5 a 10 minutos. Use primero el tutorial, luego práctica y finalmente misión. La clasificación es local al dispositivo y sirve como motivación lúdica, no como calificación.</p></section><div class="button-row"><a class="button secondary" href="informe-actividad-1.html">Documento académico</a><button class="button primary" data-nav="home">Volver</button></div></article>';
+  return '<article class="screen screen-narrow content-page" aria-labelledby="teacher-title"><p class="eyebrow">Guía docente</p><h1 id="teacher-title">Pilotaje y conocimiento general</h1><p class="lead">Experiencia para estudiantes de 10 a 12 años que combina coordinación visomotora, atención sostenida y recuperación de conocimientos.</p><section class="card"><h2>Progresión</h2><ul><li>El banco contiene 100 preguntas repartidas en cinco niveles.</li><li>Cada dos portales cambia el sector y aumenta el nivel cognitivo.</li><li>La dificultad se adapta y el aro verde solo aparece cuando queda una única ruta disponible.</li><li>Cada diez niveles, la estación permite tomar una decisión sencilla de administración de recursos.</li><li>La Liga Galáctica mundial conserva un mejor resultado por apodo, solo acepta misiones reales y abre una temporada nueva con cada actualización.</li><li>Los cristales desbloquean personalización cosmética, sin dinero real ni ventaja académica.</li><li>El tutorial y el modo práctica permiten aprender sin castigo.</li></ul></section><section><h2>Áreas</h2><div class="knowledge-chips"><span>🪐 Espacio</span><span>🌱 Ciencias</span><span>🌎 Geografía</span><span>✖️ Matemáticas</span><span>📚 Lenguaje</span><span>🤝 Convivencia</span></div></section><section class="callout"><h2>Uso sugerido</h2><p>Realice intentos de 5 a 10 minutos. Use primero el tutorial, luego práctica y finalmente misión. Pida usar apodos que no revelen nombres reales; la clasificación es motivación lúdica, no una calificación.</p></section><div class="button-row"><a class="button secondary" href="informe-actividad-1.html">Documento académico</a><button class="button primary" data-nav="home">Volver</button></div></article>';
 }
 
 function renderCredits() {
-  return '<article class="screen screen-narrow content-page" aria-labelledby="credits-title"><p class="eyebrow">Créditos</p><h1 id="credits-title">Misión Nébula</h1><div class="card"><p class="lead"><strong>Diseñado y desarrollado por Danilo Olarte González.</strong></p><p>Maestría en Educación · Corporación Universitaria Iberoamericana.</p><p>Electiva Creatividad e Innovación Educativa · Actividad 1, “Jugando enseño a crear”.</p></div><section class="callout"><h2>Privacidad</h2><p>No utiliza cuentas, publicidad, dinero real ni analítica. El nombre opcionalmente recordado, la clasificación, el récord, los logros, los cristales y la personalización permanecen únicamente en este dispositivo.</p></section><div class="button-row"><button class="button primary" data-nav="home">Volver</button></div></article>';
+  return '<article class="screen screen-narrow content-page" aria-labelledby="credits-title"><p class="eyebrow">Créditos</p><h1 id="credits-title">Misión Nébula</h1><div class="card"><p class="lead"><strong>Diseñado y desarrollado por Danilo Olarte González.</strong></p><p>Maestría en Educación · Corporación Universitaria Iberoamericana.</p><p>Electiva Creatividad e Innovación Educativa · Actividad 1, “Jugando enseño a crear”.</p></div><section class="callout"><h2>Privacidad</h2><p>No utiliza publicidad, dinero real ni analítica. La Liga comparte únicamente el apodo y el resultado del vuelo; la contraseña se guarda cifrada. El récord, los logros, los cristales y las preferencias permanecen en el dispositivo.</p></section><div class="button-row"><button class="button primary" data-nav="home">Volver</button></div></article>';
 }
 
 function bindShop() {
@@ -398,8 +428,10 @@ function render() {
     else navigate();
   }));
   app.querySelectorAll('[data-change-pilot]').forEach((button) => button.addEventListener('click', () => openPilotDialog(() => render())));
+  app.querySelectorAll('[data-refresh-ranking]').forEach((button) => button.addEventListener('click', () => refreshGlobalRanking(true)));
   if (route === 'flight') bindFlight();
   if (route === 'shop') bindShop();
+  if (route === 'ranking' && rankingStatus === 'idle') window.setTimeout(() => refreshGlobalRanking(), 0);
   applySettings();
 }
 
@@ -732,14 +764,14 @@ function answerQuestion(selectedIndex) {
 
 function showGameOver(result) {
   stopMusic();
-  const rankingPosition = recordRanking(result);
+  const rankingPromise = recordRanking(result);
   const pilotName = getPilotName() || 'Piloto';
   const best = Math.max(result.distance, Number(localStorage.getItem('nebula-flight-best') || 0));
   localStorage.setItem('nebula-flight-best', String(best));
   const overlay = document.getElementById('flight-overlay');
   const fact = lastLearnedFact ? '<div class="learned-fact"><span>💡</span><p><small>HOY APRENDISTE</small><strong>' + escapeHtml(lastLearnedFact) + '</strong></p></div>' : '';
   const achievementNote = runAchievements.length ? '<p class="run-achievements">🏅 Desbloqueaste ' + runAchievements.length + (runAchievements.length === 1 ? ' logro nuevo' : ' logros nuevos') + '</p>' : '';
-  const rankingNote = rankingPosition ? '<p class="ranking-result">🏆 ' + escapeHtml(pilotName) + ', ocupas el puesto <strong>#' + rankingPosition + '</strong> de la Liga Galáctica</p>' : '';
+  const rankingNote = flightMode === 'mission' ? '<p class="ranking-result syncing" id="ranking-result">🛰️ Enviando tu mejor vuelo a la Liga Galáctica…</p>' : '';
   overlay.innerHTML = '<div class="overlay-card stranded-card"><div class="stranded-icon" aria-hidden="true">🛰️</div><p class="eyebrow">Bitácora de ' + escapeHtml(pilotName) + '</p><h2>¡Gran intento, piloto!</h2><p>' + escapeHtml(result.reason) + '</p><div class="flight-summary"><span><b>' + result.distance + '</b> km<small>Distancia</small></span><span><b>' + result.correct + '</b><small>Respuestas</small></span><span><b>' + result.bestStreak + '</b><small>Mejor racha</small></span><span><b>' + result.destroyed + '</b><small>Destruidos</small></span><span><b>' + result.checkpoints + '</b><small>Portales</small></span><span><b>' + best + '</b> km<small>Récord</small></span><span><b>+' + runCrystals + ' 💎</b><small>Cristales ganados</small></span></div>' + rankingNote + fact + achievementNote + '<div class="summary-actions"><button class="button primary launch-button" id="restart-flight">🚀 Intentar otra vez</button><button class="button ranking-button" id="ranking-after-game">🏆 Clasificación</button><button class="button ghost" id="shop-after-game">🛸 Hangar</button><button class="button ghost" id="practice-after-game">🧪 Practicar</button><button class="button text-button" data-nav="home">Salir</button></div></div>';
   overlay.hidden = false;
   overlay.querySelector('#restart-flight').addEventListener('click', () => {
@@ -753,6 +785,19 @@ function showGameOver(result) {
   overlay.querySelector('#shop-after-game').addEventListener('click', () => setRoute('shop'));
   overlay.querySelector('#ranking-after-game').addEventListener('click', () => setRoute('ranking'));
   overlay.querySelector('[data-nav]').addEventListener('click', () => setRoute('home'));
+  rankingPromise.then(({ position, error, updated }) => {
+    const note = document.getElementById('ranking-result');
+    if (!note) return;
+    note.classList.remove('syncing');
+    if (error) {
+      note.classList.add('sync-error');
+      note.textContent = '📡 Tu vuelo quedó en la nave, pero no pudo enviarse: ' + error;
+    } else if (position) {
+      note.innerHTML = (updated ? '🏆 ' : '✨ ') + escapeHtml(pilotName) + ', tu mejor marca ocupa el puesto <strong>#' + position + '</strong> de la Liga Galáctica mundial.';
+    } else {
+      note.textContent = '✨ Vuelo sincronizado con la Liga Galáctica.';
+    }
+  });
   announce('Misión terminada. Revisa tu bitácora y vuelve a intentarlo cuando quieras.');
 }
 
@@ -884,26 +929,59 @@ document.querySelectorAll('.site-header [data-nav]').forEach((button) => button.
   event.preventDefault();
   setRoute(button.dataset.nav);
 }));
-document.getElementById('pilot-form')?.addEventListener('submit', (event) => {
+document.getElementById('pilot-form')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const input = document.getElementById('pilot-name');
+  const pinInput = document.getElementById('pilot-pin');
+  const submitButton = event.currentTarget.querySelector('[type="submit"]');
+  const errorElement = document.getElementById('pilot-error');
   const name = cleanPilotName(input.value);
   if (name.length < 2) {
-    document.getElementById('pilot-error').textContent = 'Escribe un nombre o apodo de al menos 2 caracteres.';
+    errorElement.textContent = 'Escribe un apodo de al menos 2 caracteres.';
     input.focus();
     return;
   }
-  savePilot(name, document.getElementById('remember-pilot').checked);
-  pilotDialog.close();
-  playTone('achievement');
-  const action = pendingPilotAction;
-  pendingPilotAction = null;
-  if (action) action();
-  else render();
+  const pin = pinInput.value;
+  if (pin && (pin.length < 4 || pin.length > 8)) {
+    errorElement.textContent = 'La contraseña debe tener entre 4 y 8 caracteres.';
+    pinInput.focus();
+    return;
+  }
+  errorElement.textContent = '';
+  submitButton.disabled = true;
+  submitButton.textContent = '🛰️ Conectando…';
+  try {
+    const current = getPilotSession();
+    const samePilot = current?.token && current.name.toLocaleLowerCase('es') === name.toLocaleLowerCase('es');
+    const profile = samePilot ? { ...current, nickname: current.name } : await claimGalacticPilot(name, pin);
+    savePilot(profile, document.getElementById('remember-pilot').checked);
+    pilotDialog.close();
+    playTone('achievement');
+    const action = pendingPilotAction;
+    pendingPilotAction = null;
+    rankingStatus = 'idle';
+    if (action) action();
+    else render();
+  } catch (error) {
+    errorElement.textContent = error.message;
+    if (error.code === 'pin_required' || error.code === 'pin_invalid') pinInput.focus();
+    else input.focus();
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = '🚀 Entrar a la nave';
+  }
 });
 pilotDialog?.addEventListener('cancel', (event) => {
-  if (!getPilotName()) event.preventDefault();
+  if (!getPilotSession()?.token) event.preventDefault();
   else pendingPilotAction = null;
+});
+document.getElementById('toggle-pilot-pin')?.addEventListener('click', (event) => {
+  const input = document.getElementById('pilot-pin');
+  const visible = input.type === 'text';
+  input.type = visible ? 'password' : 'text';
+  event.currentTarget.textContent = visible ? '👁️' : '🙈';
+  event.currentTarget.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+  input.focus();
 });
 document.querySelectorAll('[data-open-settings]').forEach((button) => button.addEventListener('click', () => {
   settingsDialog.dataset.resumeMusic = ['running', 'quiz', 'station'].includes(flight?.mode) ? 'true' : 'false';
@@ -952,4 +1030,4 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 }
 purgePreviousRankings();
 render();
-if (!getPilotName()) window.setTimeout(() => { if (!getPilotName() && !pilotDialog?.open) openPilotDialog(); }, 180);
+if (!getPilotSession()?.token) window.setTimeout(() => { if (!getPilotSession()?.token && !pilotDialog?.open) openPilotDialog(); }, 180);

@@ -11,9 +11,9 @@
   <meta name="theme-color" content="#21144f">
   <title>Misión Nébula · Pilota, responde y avanza</title>
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/styles.css?v=22">
-  <link rel="stylesheet" href="css/accessibility.css?v=22">
-  <link rel="stylesheet" href="css/print.css?v=22" media="print">
+  <link rel="stylesheet" href="css/styles.css?v=23">
+  <link rel="stylesheet" href="css/accessibility.css?v=23">
+  <link rel="stylesheet" href="css/print.css?v=23" media="print">
 </head>
 <body>
   <a class="skip-link" href="#app">Saltar al contenido principal</a>
@@ -39,7 +39,7 @@
   <footer class="site-footer">
     <p><strong>Diseñado y desarrollado por Danilo Olarte González.</strong></p>
     <p>Maestría en Educación · Corporación Universitaria Iberoamericana · Actividad 1, “Jugando enseño a crear”.</p>
-    <p>Funciona localmente en tu navegador. No envía ni recopila datos personales.</p>
+    <p>La Liga Galáctica comparte únicamente el apodo y el resultado del vuelo. No escribas tu nombre real.</p>
   </footer>
 
   <dialog id="settings-dialog" aria-labelledby="settings-title">
@@ -60,8 +60,10 @@
       <div class="pilot-avatar" aria-hidden="true"><span>👨‍🚀</span><i></i><i></i></div>
       <p class="eyebrow">Identificación de la tripulación</p>
       <h2 id="pilot-title">¿Cómo te llamas, piloto?</h2>
-      <p>Tu nombre aparecerá en la bitácora y en la Liga Galáctica de este dispositivo.</p>
-      <label class="pilot-name-field"><span>Nombre o apodo</span><input id="pilot-name" name="pilot-name" type="text" required minlength="2" maxlength="18" autocomplete="nickname" placeholder="Ejemplo: Luna" aria-describedby="pilot-error"></label>
+      <p>Tu apodo será único y aparecerá en la Liga Galáctica mundial. No uses tu nombre real.</p>
+      <label class="pilot-name-field"><span>Apodo galáctico</span><input id="pilot-name" name="pilot-name" type="text" required minlength="2" maxlength="18" autocomplete="nickname" placeholder="Ejemplo: LunaEstelar" aria-describedby="pilot-error"></label>
+      <label class="pilot-name-field pilot-pin-field"><span>Contraseña del apodo <small>(opcional)</small></span><span class="pilot-pin-control"><input id="pilot-pin" name="pilot-pin" type="password" minlength="4" maxlength="8" autocomplete="current-password" placeholder="4 a 8 caracteres" aria-describedby="pilot-pin-help pilot-error"><button id="toggle-pilot-pin" type="button" aria-label="Mostrar contraseña">👁️</button></span></label>
+      <p id="pilot-pin-help" class="pilot-pin-help">Si el apodo es nuevo, la contraseña lo protege. Si ya es tuyo, úsala para desbloquearlo. Nunca la compartas.</p>
       <p id="pilot-error" class="pilot-error" role="alert"></p>
       <label class="remember-pilot"><input id="remember-pilot" type="checkbox"><span><strong>Recordarme en este dispositivo</strong><small>Si no lo marcas, volveremos a preguntarte al abrir el juego.</small></span></label>
       <button class="button primary launch-button" type="submit">🚀 Entrar a la nave</button>
@@ -77,6 +79,6 @@
   </dialog>
 
   <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-  <script type="module" src="js/app.js?v=22"></script>
+  <script type="module" src="js/app.js?v=23"></script>
 </body>
 </html>

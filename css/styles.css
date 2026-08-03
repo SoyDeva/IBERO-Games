@@ -309,7 +309,7 @@ dialog { color: var(--ink); background: transparent; border: 0; padding: 0; max-
 dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 .dialog-card { background: #26195c; border: 1px solid var(--border); padding: 1.4rem; border-radius: 18px; box-shadow: var(--shadow); }
 .dialog-heading { display: flex; justify-content: space-between; align-items: center; }
-.pilot-dialog { max-width: min(560px, calc(100% - 1rem)); }
+.pilot-dialog { max-width: min(560px, calc(100% - 1rem)); max-height: calc(100dvh - 1rem); overflow: auto; }
 .pilot-card { position: relative; overflow: hidden; padding: clamp(1rem, 4vw, 2rem); border: 2px solid var(--cyan); border-radius: 30px; background: radial-gradient(circle at 50% 0, rgba(94,232,239,.24), transparent 36%), linear-gradient(150deg, #291967, #130a3b 70%); text-align: center; }
 .pilot-card::before { content: ''; position: absolute; inset: 0; opacity: .16; pointer-events: none; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 26px 26px; }
 .pilot-card > * { position: relative; }
@@ -323,6 +323,13 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 .pilot-card > p { margin-inline: auto; }
 .pilot-name-field { display: grid; gap: .35rem; margin: 1rem 0 .25rem; text-align: left; font-weight: 900; }
 .pilot-name-field input { min-height: 56px; border-color: rgba(94,232,239,.62); font-size: 1.05rem; text-align: center; }
+.pilot-pin-field { margin-top: .65rem; }
+.pilot-pin-field > span:first-child { display: flex; justify-content: space-between; gap: .5rem; }
+.pilot-pin-field small { color: var(--muted); font-size: .72rem; }
+.pilot-pin-control { position: relative; display: grid; grid-template-columns: 1fr 50px; }
+.pilot-pin-control input { min-width: 0; padding-left: 52px; border-radius: 12px 0 0 12px; letter-spacing: .12em; }
+.pilot-pin-control button { border: 1px solid rgba(94,232,239,.62); border-left: 0; border-radius: 0 12px 12px 0; background: rgba(94,232,239,.12); font-size: 1.1rem; cursor: pointer; }
+.pilot-pin-help { margin: .4rem auto 0 !important; color: var(--muted); font-size: .7rem; line-height: 1.4; }
 .pilot-error { min-height: 1.35em; margin: .2rem 0; color: #ffb2bc; font-size: .78rem; font-weight: 800; }
 .remember-pilot { display: flex; align-items: center; gap: .7rem; margin: .7rem 0 1rem; padding: .7rem; border: 1px solid var(--border); border-radius: 15px; background: rgba(255,255,255,.055); text-align: left; cursor: pointer; }
 .remember-pilot input { flex: 0 0 auto; width: 22px; height: 22px; accent-color: var(--cyan); }
@@ -575,6 +582,7 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 .galaxy-ranking { padding-bottom: 3rem; }
 .ranking-hero { position: relative; display: grid; grid-template-columns: 1fr 190px; align-items: center; min-height: 220px; padding: clamp(1rem, 4vw, 2rem); overflow: hidden; border: 2px solid rgba(255,123,172,.48); border-radius: 30px; background: radial-gradient(circle at 80% 35%, rgba(255,123,172,.22), transparent 25%), radial-gradient(circle at 20% 0, rgba(94,232,239,.18), transparent 42%), #160a42; }
 .ranking-hero h1 { margin-bottom: .4rem; }
+.league-online-status { display: inline-flex; margin-top: .75rem; padding: .35rem .65rem; border: 1px solid rgba(94,232,239,.45); border-radius: 999px; background: rgba(5,2,25,.48); color: #d8fbff; font-size: .7rem; font-weight: 1000; letter-spacing: .06em; }
 .season-core { position: relative; width: 150px; aspect-ratio: 1; display: grid; place-items: center; justify-self: center; border: 3px solid var(--gold); border-radius: 50%; box-shadow: inset 0 0 35px rgba(247,203,98,.28), 0 0 40px rgba(255,123,172,.25); }
 .season-core span { font-size: 4rem; filter: drop-shadow(0 0 15px var(--gold)); animation: corePulse 2s ease-in-out infinite; }
 .season-core i { position: absolute; inset: -18px; border: 1px solid rgba(94,232,239,.55); border-radius: 50%; }
@@ -605,7 +613,11 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 .ranking-row small { color: var(--muted); font-size: .65rem; }
 .ranking-empty { display: grid; justify-items: center; padding: 2rem; border: 2px dashed var(--border); border-radius: 24px; text-align: center; }
 .ranking-empty > span { font-size: 4.5rem; animation: shipCruise 3s ease-in-out infinite; }
+.ranking-loading { border-color: rgba(94,232,239,.5); background: rgba(94,232,239,.05); }
+.ranking-error { border-color: rgba(255,123,132,.52); background: rgba(255,78,107,.06); }
 .ranking-result { max-width: none; padding: .6rem .8rem; border: 1px solid var(--gold); border-radius: 14px; color: #fff6d3; background: rgba(247,203,98,.1); font-weight: 800; }
+.ranking-result.syncing { border-color: var(--cyan); color: #d8fbff; animation: corePulse 1.5s ease-in-out infinite; }
+.ranking-result.sync-error { border-color: #ff7b84; color: #ffd8dc; background: rgba(255,78,107,.1); }
 
 .flight-page { width: calc(100% - .5rem); max-width: none; margin: 0 auto; padding: .25rem 0 1rem; }
 .flight-hud { display: grid; grid-template-columns: 1.5fr .72fr .8fr .92fr .75fr .78fr; gap: .55rem; margin-bottom: .55rem; }

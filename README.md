@@ -36,7 +36,7 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 - Cañón de plasma con 3 cargas, activado con la barra espaciadora o el botón táctil; el arsenal se recarga por completo al superar cada 5 niveles.
 - Categorías: espacio, ciencias, naturaleza, geografía, matemáticas, lenguaje, historia, tecnología y convivencia.
 - Explicación breve después de una respuesta incorrecta.
-- Récord de distancia guardado únicamente en `localStorage`.
+- Liga Galáctica mundial sincronizada con Supabase, con apodos únicos, contraseña opcional de 4 a 8 caracteres y temporadas separadas por versión.
 - Música espacial sintetizada y efectos con controles de volumen independientes.
 - Dificultad adaptativa: progresa con las respuestas y rachas, pero ofrece ayuda temporal después de los choques.
 - Cinco sectores galácticos con ambiente, colores y progresión visual propios.
@@ -44,7 +44,7 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 - Estación Nova cada 10 niveles con reparación, superplasma o estabilización del siguiente tramo.
 - Hangar Estelar con seis fuselajes y cinco estelas permanentes que cambian la nave y su motor en Canvas.
 - Perfil de piloto opcionalmente recordado y bitácoras personalizadas.
-- Liga Galáctica local con podio, top 10, un mejor vuelo por piloto y reinicio automático al actualizar el juego.
+- Liga Galáctica mundial con podio, top 10, apodos únicos, contraseña opcional y una temporada nueva al actualizar el juego.
 - Controles directos por carril y ruta segura verde únicamente en oleadas dobles.
 - Pausa disponible durante el vuelo y con la tecla `P`.
 - Cinco logros locales, celebraciones con partículas y bitácora educativa al final de cada intento.
@@ -88,7 +88,8 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 - JavaScript ES6 con módulos nativos
 - Canvas 2D
 - Web Audio API
-- `localStorage`
+- `localStorage` para preferencias y progreso cosmético local
+- Supabase/PostgreSQL para la clasificación mundial
 - Service Worker
 
 No existe backend, proceso de compilación, dependencia externa ni clave de API.
@@ -165,4 +166,4 @@ GitHub Pages publica la rama `main` desde la raíz del repositorio:
 
 ## Autoría y privacidad
 
-Concepto, interfaz, programación, figuras Canvas y contenido pedagógico originales. Los sonidos se sintetizan dentro del navegador. El proyecto no recopila datos personales; únicamente conserva de forma local el récord, los logros, el tutorial completado y las preferencias de accesibilidad y volumen.
+Concepto, interfaz, programación, figuras Canvas y contenido pedagógico originales. Los sonidos se sintetizan dentro del navegador. La Liga comparte el apodo elegido y el resultado del vuelo; no se debe utilizar el nombre real. El récord, los logros, el tutorial completado y las preferencias se conservan localmente.

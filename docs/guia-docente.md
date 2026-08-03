@@ -41,6 +41,6 @@ La música espacial se sintetiza dentro del navegador y acelera gradualmente par
 
 ## Privacidad
 
-No se solicitan nombres ni datos personales. El único dato persistente es el récord de distancia, almacenado localmente en el dispositivo.
+No se solicitan nombres reales ni datos personales. Cada estudiante debe elegir un apodo; la Liga Galáctica comparte ese apodo y el resultado del vuelo. La contraseña opcional del apodo se almacena cifrada.
 
 Diseñado y desarrollado por Danilo Olarte González.
