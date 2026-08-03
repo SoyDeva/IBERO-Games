@@ -1,9 +1,14 @@
-const PROGRESS_VERSION = 1;
+const PROGRESS_VERSION = 2;
+const MAX_SESSIONS = 12;
 const TRACKED_MODES = new Set(['mission', 'practice']);
 
-function safeCount(value) {
+function safeCount(value, maximum = Number.MAX_SAFE_INTEGER) {
   const count = Number(value);
-  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+  return Number.isFinite(count) && count > 0 ? Math.min(maximum, Math.floor(count)) : 0;
+}
+
+function safeText(value, maximum = 80) {
+  return String(value || '').trim().slice(0, maximum);
 }
 
 function normalizeStats(value = {}) {
@@ -15,11 +20,47 @@ function normalizeStats(value = {}) {
   return { attempts, correct, incorrect, currentStreak, bestStreak };
 }
 
+function normalizeMode(value) {
+  return TRACKED_MODES.has(value) ? value : 'practice';
+}
+
+function normalizeDate(value) {
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : '';
+}
+
+function normalizeSession(value = {}) {
+  const completedAt = normalizeDate(value.completedAt);
+  if (!completedAt) return null;
+
+  const answers = safeCount(value.answers, 1000);
+  const correct = Math.min(answers, safeCount(value.correct, 1000));
+  const accuracy = answers ? Math.round((correct / answers) * 100) : 0;
+  const targetAnswers = Math.max(1, safeCount(value.targetAnswers, 50) || 1);
+  const targetAccuracy = Math.max(40, Math.min(100, safeCount(value.targetAccuracy, 100) || 70));
+
+  return {
+    completedAt,
+    mode: normalizeMode(value.mode),
+    answers,
+    correct,
+    incorrect: Math.max(0, answers - correct),
+    accuracy,
+    distance: safeCount(value.distance, 1000000),
+    checkpoints: safeCount(value.checkpoints, 10000),
+    focusCategory: safeText(value.focusCategory, 48),
+    targetAnswers,
+    targetAccuracy,
+    goalReached: answers >= targetAnswers && accuracy >= targetAccuracy
+  };
+}
+
 export function createLearningProgress() {
   return {
     version: PROGRESS_VERSION,
     totals: normalizeStats(),
-    categories: {}
+    categories: {},
+    sessions: []
   };
 }
 
@@ -28,7 +69,7 @@ export function normalizeLearningProgress(value) {
   const categories = {};
   if (source.categories && typeof source.categories === 'object') {
     for (const [name, stats] of Object.entries(source.categories)) {
-      const category = String(name || '').trim().slice(0, 48);
+      const category = safeText(name, 48);
       if (!category) continue;
       categories[category] = normalizeStats(stats);
     }
@@ -46,6 +87,9 @@ export function normalizeLearningProgress(value) {
   const correct = Math.min(attempts, useCategoryTotals ? categoryTotals.correct : sourceTotals.correct);
   const currentStreak = Math.min(correct, sourceTotals.currentStreak);
   const bestStreak = Math.min(correct, Math.max(currentStreak, sourceTotals.bestStreak, categoryTotals.bestStreak));
+  const sessions = Array.isArray(source.sessions)
+    ? source.sessions.map(normalizeSession).filter(Boolean).slice(0, MAX_SESSIONS)
+    : [];
 
   return {
     version: PROGRESS_VERSION,
@@ -56,7 +100,8 @@ export function normalizeLearningProgress(value) {
       currentStreak,
       bestStreak
     },
-    categories
+    categories,
+    sessions
   };
 }
 
@@ -64,7 +109,7 @@ export function recordLearningAnswer(progress, { question, correct, mode = 'miss
   const normalized = normalizeLearningProgress(progress);
   if (!TRACKED_MODES.has(mode) || !question) return normalized;
 
-  const category = String(question.category || '').trim().slice(0, 48);
+  const category = safeText(question.category, 48);
   if (!category) return normalized;
 
   const isCorrect = Boolean(correct);
@@ -90,12 +135,13 @@ export function recordLearningAnswer(progress, { question, correct, mode = 'miss
         currentStreak: nextCategoryStreak,
         bestStreak: Math.max(categoryStats.bestStreak, nextCategoryStreak)
       }
-    }
+    },
+    sessions: normalized.sessions
   };
 }
 
 export function learningCategoryNeed(progress, category) {
-  const stats = normalizeLearningProgress(progress).categories[String(category || '').trim()];
+  const stats = normalizeLearningProgress(progress).categories[safeText(category, 48)];
   if (!stats?.attempts) return 0.5;
   const smoothedError = (stats.incorrect + 1) / (stats.attempts + 2);
   const evidence = Math.min(1, stats.attempts / 6);
@@ -113,11 +159,72 @@ function categoryView(progress, name, stats) {
   return { name, ...stats, accuracy, need, status };
 }
 
-export function summarizeLearningProgress(progress) {
+function categoryViews(progress) {
   const normalized = normalizeLearningProgress(progress);
-  const categories = Object.entries(normalized.categories)
+  return Object.entries(normalized.categories)
     .map(([name, stats]) => categoryView(normalized, name, stats))
     .filter((category) => category.attempts > 0);
+}
+
+export function createLearningGoal(progress, { mode = 'practice' } = {}) {
+  const categories = categoryViews(progress);
+  const focus = [...categories]
+    .sort((a, b) => b.need - a.need || b.attempts - a.attempts || a.name.localeCompare(b.name))[0] || null;
+  const normalizedMode = normalizeMode(mode);
+  const targetAnswers = normalizedMode === 'mission' ? 5 : 8;
+  const targetAccuracy = 70;
+  const focusCategory = focus?.name || '';
+
+  return {
+    mode: normalizedMode,
+    targetAnswers,
+    targetAccuracy,
+    focusCategory,
+    text: 'Responde ' + targetAnswers + ' preguntas con al menos ' + targetAccuracy + '% de aciertos' + (focusCategory ? ', reforzando ' + focusCategory : '') + '.'
+  };
+}
+
+export function createLearningSession(progress, {
+  baseline,
+  mode = 'mission',
+  result = {},
+  completedAt = new Date().toISOString()
+} = {}) {
+  if (!TRACKED_MODES.has(mode)) return null;
+
+  const current = normalizeLearningProgress(progress);
+  const start = normalizeLearningProgress(baseline);
+  const answers = Math.max(0, current.totals.attempts - start.totals.attempts);
+  const correct = Math.min(answers, Math.max(0, current.totals.correct - start.totals.correct));
+  if (!answers) return null;
+
+  const goal = createLearningGoal(start, { mode });
+  return normalizeSession({
+    completedAt,
+    mode,
+    answers,
+    correct,
+    distance: result.distance,
+    checkpoints: result.checkpoints,
+    focusCategory: goal.focusCategory,
+    targetAnswers: goal.targetAnswers,
+    targetAccuracy: goal.targetAccuracy
+  });
+}
+
+export function appendLearningSession(progress, session) {
+  const normalized = normalizeLearningProgress(progress);
+  const safeSession = normalizeSession(session);
+  if (!safeSession) return normalized;
+  return {
+    ...normalized,
+    sessions: [safeSession, ...normalized.sessions].slice(0, MAX_SESSIONS)
+  };
+}
+
+export function summarizeLearningProgress(progress) {
+  const normalized = normalizeLearningProgress(progress);
+  const categories = categoryViews(normalized);
   const accuracy = normalized.totals.attempts
     ? Math.round((normalized.totals.correct / normalized.totals.attempts) * 100)
     : 0;
@@ -137,8 +244,12 @@ export function summarizeLearningProgress(progress) {
     currentStreak: normalized.totals.currentStreak,
     bestStreak: normalized.totals.bestStreak,
     categoryCount: categories.length,
+    categories: [...categories].sort((a, b) => a.name.localeCompare(b.name)),
     focus,
     strength,
+    goal: createLearningGoal(normalized, { mode: 'practice' }),
+    recentSessions: normalized.sessions.slice(0, 5),
+    sessionCount: normalized.sessions.length,
     recommendation: focus.length
       ? 'La próxima práctica dará un poco más de prioridad a ' + focus.map((category) => category.name).join(', ') + '.'
       : 'Responde algunos portales para descubrir tus fortalezas y temas de refuerzo.'
