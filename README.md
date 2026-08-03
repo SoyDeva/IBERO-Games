@@ -24,7 +24,7 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 
 - Escena Canvas con perspectiva 2.5D, profundidad y sensación de velocidad.
 - Área de vuelo ampliada hasta 1540 px de ancho y 76 % de la altura visible.
-- Botón de pantalla completa que conserva tablero, escena y controles; incluye alternativa compatible cuando la API nativa no está disponible.
+- Botón de pantalla completa que conserva tablero, escena y controles; incluye modo inmersivo móvil, viewport dinámico, zonas seguras para notch y reajuste al cambiar de orientación.
 - Tres carriles y controles con teclado, botones táctiles o toque directo sobre la escena.
 - Obstáculos diferenciados: planetas, meteoritos, estrellas ardientes y naves rivales.
 - Tres escudos para que el aprendizaje inicial sea amable.

@@ -1,6 +1,6 @@
-import { SpaceFlight, SHIP_SKINS } from './space-game.js?v=19';
+import { SpaceFlight, SHIP_SKINS } from './space-game.js?v=20';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
-import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=19';
+import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=20';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
@@ -21,6 +21,7 @@ let currentCheckpointClean = false;
 let shopMessage = '';
 let stationPurchased = false;
 let runCrystals = 0;
+let viewportResizeFrame = 0;
 
 const ECONOMY_KEY = 'nebula-economy-v1';
 const STATION_OFFERS = {
@@ -611,6 +612,27 @@ function showGameOver(result) {
   announce('Misión terminada. Revisa tu bitácora y vuelve a intentarlo cuando quieras.');
 }
 
+function syncFlightViewport() {
+  window.cancelAnimationFrame(viewportResizeFrame);
+  viewportResizeFrame = window.requestAnimationFrame(() => {
+    const viewport = window.visualViewport;
+    const height = Math.round(viewport?.height || window.innerHeight || document.documentElement.clientHeight);
+    const width = Math.round(viewport?.width || window.innerWidth || document.documentElement.clientWidth);
+    document.documentElement.style.setProperty('--flight-viewport-height', height + 'px');
+    document.documentElement.style.setProperty('--flight-viewport-width', width + 'px');
+    if (route === 'flight') flight?.resize();
+  });
+}
+
+function setImmersiveLayout(enabled) {
+  const page = document.querySelector('.flight-page');
+  if (!page) return;
+  page.classList.toggle('pseudo-fullscreen', enabled);
+  document.body.classList.toggle('flight-screen-locked', enabled);
+  if (enabled) window.scrollTo(0, 0);
+  syncFlightViewport();
+}
+
 function updateFullscreenButton() {
   const page = document.querySelector('.flight-page');
   const button = document.getElementById('fullscreen-flight');
@@ -628,21 +650,19 @@ async function toggleFullscreen() {
   const activeElement = document.fullscreenElement || document.webkitFullscreenElement;
   const exit = document.exitFullscreen || document.webkitExitFullscreen;
   const request = page.requestFullscreen || page.webkitRequestFullscreen;
-  try {
+  const expanded = Boolean(activeElement || page.classList.contains('pseudo-fullscreen'));
+  if (expanded) {
+    setImmersiveLayout(false);
     if (activeElement && exit) {
-      await exit.call(document);
-    } else if (page.classList.contains('pseudo-fullscreen')) {
-      page.classList.remove('pseudo-fullscreen');
-      document.body.classList.remove('flight-screen-locked');
-    } else if (request) {
-      await request.call(page);
-    } else {
-      page.classList.add('pseudo-fullscreen');
-      document.body.classList.add('flight-screen-locked');
+      try { await exit.call(document); } catch (error) { /* El modo CSS ya se cerró. */ }
     }
-  } catch (error) {
-    page.classList.toggle('pseudo-fullscreen');
-    document.body.classList.toggle('flight-screen-locked', page.classList.contains('pseudo-fullscreen'));
+  } else {
+    // El respaldo CSS se activa primero: así funciona incluso cuando iOS o el
+    // navegador integrado no permiten fullscreen sobre elementos HTML.
+    setImmersiveLayout(true);
+    if (request) {
+      try { await request.call(page, { navigationUI: 'hide' }); } catch (error) { /* Se conserva el modo inmersivo CSS. */ }
+    }
   }
   updateFullscreenButton();
 }
@@ -713,6 +733,7 @@ function bindFlight() {
   document.querySelectorAll('[data-station-buy]').forEach((button) => button.addEventListener('click', () => buyStationItem(button.dataset.stationBuy)));
   document.getElementById('leave-station').addEventListener('click', leaveStation);
   applySettings();
+  syncFlightViewport();
 }
 
 document.querySelectorAll('.site-header [data-nav]').forEach((button) => button.addEventListener('click', (event) => {
@@ -732,6 +753,10 @@ settingsDialog.addEventListener('close', () => {
 });
 document.addEventListener('fullscreenchange', updateFullscreenButton);
 document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+window.addEventListener('resize', syncFlightViewport, { passive: true });
+window.addEventListener('orientationchange', () => window.setTimeout(syncFlightViewport, 120), { passive: true });
+window.visualViewport?.addEventListener('resize', syncFlightViewport, { passive: true });
+window.visualViewport?.addEventListener('scroll', syncFlightViewport, { passive: true });
 document.addEventListener('keydown', (event) => {
   const page = document.querySelector('.flight-page.pseudo-fullscreen');
   if (event.key === 'Escape' && page) {
