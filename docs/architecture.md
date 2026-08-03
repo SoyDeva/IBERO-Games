@@ -28,7 +28,8 @@ Ejemplos actuales:
 - evaluación de respuestas, mensajes pedagógicos y tiempos de retroalimentación;
 - catálogo de mejoras y sesión de compra única de la Estación Nova;
 - pasos, pregunta y evaluación sin penalización del tutorial guiado;
-- normalización de la bitácora de misión, cálculo de récord y estado de sincronización.
+- normalización de la bitácora de misión, cálculo de récord y estado de sincronización;
+- estado inicial del vuelo, dificultad adaptativa, sectores, recarga, HUD y resumen final.
 
 ### `js/services/`
 
@@ -57,11 +58,11 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ### Aplicación y presentación
 
-`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas, presentación pedagógica, Estación Nova, pausa, tutorial guiado y bitácora de cierre. La siguiente fase iniciará la división interna del motor de vuelo.
+`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas, presentación pedagógica, Estación Nova, pausa, tutorial guiado y bitácora de cierre.
 
 ### Motor de vuelo
 
-`js/space-game.js` conserva Canvas, física, entrada y ciclo de juego. Su división se realizará separando estado, simulación, entrada y renderizado, con fachadas compatibles durante cada etapa.
+`js/space-game.js` conserva Canvas, entrada, simulación y renderizado, pero ya delega en `js/core/flight-state.js` la creación y reinicialización del estado, la dificultad adaptativa, la progresión de sectores, la recarga de plasma, el modelo del HUD y el resumen final. Las siguientes fases extraerán simulación, colisiones y generación de oleadas; después entrada y dibujo.
 
 ## Reglas del refactor
 
@@ -83,5 +84,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 8. Barajas, evaluación y presentación de preguntas. **Completado.**
 9. Estación Nova y panel de pausa. **Completado.**
 10. Tutorial y cierre de partida. **Completado.**
-11. Motor de vuelo: estado, simulación, entrada y renderizado.
-12. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
+11. Motor de vuelo: estado y reglas derivadas. **Completado.**
+12. Motor de vuelo: simulación, colisiones y oleadas.
+13. Motor de vuelo: entrada y renderizado.
+14. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
