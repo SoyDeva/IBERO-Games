@@ -4,15 +4,18 @@ import { bindSettings, applySettings, getSettings, announce, playTone, startMusi
 import { claimGalacticPilot, getGalacticLeaderboard, submitGalacticScore } from './galactic-league.js?v=23';
 import { ACHIEVEMENTS } from './core/achievements.js?v=23';
 import { equipHangarItem, purchaseHangarItem } from './core/hangar.js?v=23';
+import { createRouteState } from './core/routes.js?v=23';
 import { createAchievementStore } from './services/achievement-store.js?v=23';
 import { createEconomyStore } from './services/economy-store.js?v=23';
 import { createRankingController } from './services/ranking-controller.js?v=23';
 import { cleanPilotName, getPilotName, getPilotSession, loadRememberedPilot, savePilot } from './services/pilot-profile-store.js?v=23';
+import { bindNavigation } from './ui/navigation-bindings.js?v=23';
+import { renderCredits, renderInstructions, renderTeacher } from './ui/static-screens.js?v=23';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
 const pilotDialog = document.getElementById('pilot-dialog');
-let route = 'home';
+const navigation = createRouteState('home');
 let flight = null;
 const questionDecks = new Map();
 let currentQuestion = null;
@@ -117,9 +120,9 @@ function purgePreviousRankings() {
 
 async function refreshGlobalRanking(force = false) {
   const request = rankingController.refresh({ season: GAME_RELEASE, limit: 10, force });
-  if (route === 'ranking') render();
+  if (navigation.get() === 'ranking') render();
   const { ranking } = await request;
-  if (route === 'ranking') render();
+  if (navigation.get() === 'ranking') render();
   return ranking;
 }
 
@@ -145,6 +148,7 @@ async function recordRanking(result) {
 }
 
 function setRoute(next) {
+  const transition = navigation.set(next);
   window.clearTimeout(quizTimer);
   window.clearTimeout(toastTimer);
   window.clearTimeout(achievementTimer);
@@ -158,8 +162,7 @@ function setRoute(next) {
   }
   flight?.destroy();
   flight = null;
-  if (next === 'shop' && route !== 'shop') shopMessage = '';
-  route = next;
+  if (transition.current === 'shop' && transition.previous !== 'shop') shopMessage = '';
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   window.setTimeout(() => app.focus(), 30);
@@ -281,18 +284,6 @@ function renderFlight() {
   </section>`;
 }
 
-function renderInstructions() {
-  return '<article class="screen screen-narrow flight-info" aria-labelledby="instructions-title"><p class="eyebrow">Cómo jugar</p><h1 id="instructions-title">Llega tan lejos como puedas</h1><p class="lead">Entra al portal, acierta la pregunta y continúa volando.</p><div class="instruction-grid"><article><b>1</b><span>↔️</span><h2>Elige carril</h2><p>Usa flechas, A/D o toca directamente uno de los 3 carriles.</p></article><article><b>2</b><span>⚡</span><h2>Dispara</h2><p>Usa ESPACIO. Tienes 3 cargas y recuperas todas al superar cada 5 niveles.</p></article><article><b>3</b><span>🟢</span><h2>Encuentra la salida</h2><p>Cuando dos carriles están ocupados, el aro verde muestra la única ruta disponible.</p></article><article><b>4</b><span>🧠</span><h2>Responde</h2><p>Un acierto recarga combustible. Una respuesta incorrecta termina la misión.</p></article></div><div class="shop-note"><span>💎</span><p><strong>Gana y personaliza:</strong> cada acierto entrega 12 cristales y cada objeto destruido entrega 3. Usa tus cristales en el Hangar Estelar.</p></div><div class="rule-banner"><span>⚠️</span><p><strong>Cuida la nave:</strong> cada choque quita 1 escudo y combustible. Tres choques o combustible vacío también terminan el intento.</p></div><div class="button-row"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Jugar ahora</button><button class="button shop-button" data-nav="shop">🛸 Visitar Hangar</button><button class="button ranking-button" data-nav="ranking">🏆 Liga Galáctica</button><button class="button tutorial-button" data-nav="flight" data-mode="tutorial">🎮 Aprender a pilotar</button><button class="button ghost" data-nav="home">Volver</button></div></article>';
-}
-
-function renderTeacher() {
-  return '<article class="screen screen-narrow content-page" aria-labelledby="teacher-title"><p class="eyebrow">Guía docente</p><h1 id="teacher-title">Pilotaje y conocimiento general</h1><p class="lead">Experiencia para estudiantes de 10 a 12 años que combina coordinación visomotora, atención sostenida y recuperación de conocimientos.</p><section class="card"><h2>Progresión</h2><ul><li>El banco contiene 100 preguntas repartidas en cinco niveles.</li><li>Cada dos portales cambia el sector y aumenta el nivel cognitivo.</li><li>La dificultad se adapta y el aro verde solo aparece cuando queda una única ruta disponible.</li><li>Cada diez niveles, la estación permite tomar una decisión sencilla de administración de recursos.</li><li>La Liga Galáctica mundial conserva un mejor resultado por apodo, solo acepta misiones reales y abre una temporada nueva con cada actualización.</li><li>Los cristales desbloquean personalización cosmética, sin dinero real ni ventaja académica.</li><li>El tutorial y el modo práctica permiten aprender sin castigo.</li></ul></section><section><h2>Áreas</h2><div class="knowledge-chips"><span>🪐 Espacio</span><span>🌱 Ciencias</span><span>🌎 Geografía</span><span>✖️ Matemáticas</span><span>📚 Lenguaje</span><span>🤝 Convivencia</span></div></section><section class="callout"><h2>Uso sugerido</h2><p>Realice intentos de 5 a 10 minutos. Use primero el tutorial, luego práctica y finalmente misión. Pida usar apodos que no revelen nombres reales; la clasificación es motivación lúdica, no una calificación.</p></section><div class="button-row"><a class="button secondary" href="informe-actividad-1.html">Documento académico</a><button class="button primary" data-nav="home">Volver</button></div></article>';
-}
-
-function renderCredits() {
-  return '<article class="screen screen-narrow content-page" aria-labelledby="credits-title"><p class="eyebrow">Créditos</p><h1 id="credits-title">Misión Nébula</h1><div class="card"><p class="lead"><strong>Diseñado y desarrollado por Danilo Olarte González.</strong></p><p>Maestría en Educación · Corporación Universitaria Iberoamericana.</p><p>Electiva Creatividad e Innovación Educativa · Actividad 1, “Jugando enseño a crear”.</p></div><section class="callout"><h2>Privacidad</h2><p>No utiliza publicidad, dinero real ni analítica. La Liga comparte únicamente el apodo y el resultado del vuelo; la contraseña se guarda cifrada. El récord, los logros, los cristales y las preferencias permanecen en el dispositivo.</p></section><div class="button-row"><button class="button primary" data-nav="home">Volver</button></div></article>';
-}
-
 function bindShop() {
   document.querySelectorAll('[data-buy-item]').forEach((button) => button.addEventListener('click', () => {
     const result = purchaseHangarItem(loadEconomy(), { kind: button.dataset.kind, id: button.dataset.item }, hangarCatalogs);
@@ -319,17 +310,16 @@ function bindShop() {
 }
 
 function render() {
+  const route = navigation.get();
   const screens = { home: renderHome, flight: renderFlight, shop: renderShop, ranking: renderRanking, instructions: renderInstructions, teacher: renderTeacher, credits: renderCredits };
   document.body.classList.toggle('flight-route', route === 'flight');
   app.innerHTML = (screens[route] || renderHome)();
-  app.querySelectorAll('[data-nav]').forEach((button) => button.addEventListener('click', () => {
-    const navigate = () => {
-      if (button.dataset.mode) flightMode = button.dataset.mode;
-      setRoute(button.dataset.nav);
-    };
-    if (button.dataset.nav === 'flight') requirePilot(navigate);
-    else navigate();
-  }));
+  bindNavigation(app, {
+    navigate: setRoute,
+    setMode: (mode) => { flightMode = mode; },
+    guardFlight: true,
+    requireFlightAccess: requirePilot
+  });
   app.querySelectorAll('[data-change-pilot]').forEach((button) => button.addEventListener('click', () => openPilotDialog(() => render())));
   app.querySelectorAll('[data-refresh-ranking]').forEach((button) => button.addEventListener('click', () => refreshGlobalRanking(true)));
   if (route === 'flight') bindFlight();
@@ -712,7 +702,7 @@ function syncFlightViewport() {
     const width = Math.round(viewport?.width || window.innerWidth || document.documentElement.clientWidth);
     document.documentElement.style.setProperty('--flight-viewport-height', height + 'px');
     document.documentElement.style.setProperty('--flight-viewport-width', width + 'px');
-    if (route === 'flight') flight?.resize();
+    if (navigation.get() === 'flight') flight?.resize();
   });
 }
 
@@ -828,10 +818,7 @@ function bindFlight() {
   syncFlightViewport();
 }
 
-document.querySelectorAll('.site-header [data-nav]').forEach((button) => button.addEventListener('click', (event) => {
-  event.preventDefault();
-  setRoute(button.dataset.nav);
-}));
+bindNavigation(document.querySelector('.site-header'), { navigate: setRoute, preventDefault: true });
 document.getElementById('pilot-form')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const input = document.getElementById('pilot-name');
@@ -909,7 +896,7 @@ document.addEventListener('keydown', (event) => {
     page.classList.remove('pseudo-fullscreen');
     document.body.classList.remove('flight-screen-locked');
     updateFullscreenButton();
-  } else if ((event.key === 'p' || event.key === 'P') && flight && route === 'flight') {
+  } else if ((event.key === 'p' || event.key === 'P') && flight && navigation.get() === 'flight') {
     event.preventDefault();
     togglePause();
   }
