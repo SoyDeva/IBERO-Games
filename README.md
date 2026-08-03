@@ -33,7 +33,7 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 - 100 preguntas de opción múltiple, sin escritura, organizadas en cinco niveles.
 - Tutorial interactivo paso a paso para movimiento, disparo y preguntas.
 - Modo práctica sin fin de partida por choques, combustible o respuestas incorrectas.
-- Cañón de plasma con 3 cargas por intento, activado con la barra espaciadora o el botón táctil.
+- Cañón de plasma con 3 cargas, activado con la barra espaciadora o el botón táctil; el arsenal se recarga por completo al superar cada 5 niveles.
 - Categorías: espacio, ciencias, naturaleza, geografía, matemáticas, lenguaje, historia, tecnología y convivencia.
 - Explicación breve después de una respuesta incorrecta.
 - Récord de distancia guardado únicamente en `localStorage`.
@@ -53,7 +53,7 @@ Para aprender sin frustración hay un tutorial jugable de 30 segundos y un modo 
 
 1. Pulsar **Despegar**.
 2. Usar `←` y `→`, las teclas `A` y `D`, los botones grandes o tocar un lado de la escena.
-3. Pulsar `ESPACIO` o **⚡ DISPARAR** para usar una de las tres cargas de plasma del intento.
+3. Pulsar `ESPACIO` o **⚡ DISPARAR** para usar una de las tres cargas de plasma; todas regresan al superar los niveles 5, 10, 15 y siguientes.
 4. Pulsar **⛶ Pantalla completa** para ampliar el juego cuando se desee.
 5. Pulsar **⏸ Pausa** o la tecla `P` cuando se necesite un descanso.
 6. Esquivar los objetos y entrar al portal brillante.
@@ -138,6 +138,9 @@ GitHub Pages publica la rama `main` desde la raíz del repositorio:
 - [x] Pausa, reanudación y reinicio sin perder los controles táctiles.
 - [x] Mezclador independiente de música y efectos, con persistencia local.
 - [x] Logros, celebraciones y bitácora educativa final.
+- [x] Recarga completa de plasma exactamente al superar los niveles 5, 10, 15 y siguientes.
+- [x] Contador de próxima recarga, racha visible y alerta visual de combustible crítico.
+- [x] Avisos de nuevo sector preservados sin ser reemplazados por mensajes simultáneos.
 - [x] Pérdida de escudos y combustible por colisión.
 - [x] Aumento de velocidad, frecuencia y oleadas dobles por nivel.
 - [x] Verificación de que ninguna oleada bloquea los tres carriles.

@@ -187,14 +187,18 @@ export class SpaceFlight {
     this.adaptiveAssist = Math.max(0, this.adaptiveAssist - (this.collisionsThisLeg === 0 ? .025 : .012));
     this.collisionsThisLeg = 0;
     this.fuel = Math.min(100, this.fuel + 38);
+    const ammoRecharged = this.rechargeAmmoAtMilestone();
     this.nextCheckpoint += 330 + this.checkpoints * 12;
     this.spawnTimer = 2;
     this.flash = 1;
     this.createCelebration();
     this.mode = 'running';
     this.callbacks.onLevelUp?.({ level: this.checkpoints + 1 });
-    if (this.getSectorIndex() !== previousSector) this.callbacks.onSectorChange?.(this.getSector());
+    const sectorChanged = this.getSectorIndex() !== previousSector;
+    const sector = this.getSector();
+    if (sectorChanged) this.callbacks.onSectorChange?.(sector);
     this.emitHud();
+    return { ammoRecharged, completedLevel: this.checkpoints, sectorChanged, sector };
   }
 
   answerPracticeMistake() {
@@ -205,12 +209,24 @@ export class SpaceFlight {
     this.adaptiveAssist = Math.min(.16, this.adaptiveAssist + .04);
     this.collisionsThisLeg = 0;
     this.fuel = Math.min(100, this.fuel + 24);
+    const ammoRecharged = this.rechargeAmmoAtMilestone();
     this.nextCheckpoint += 330 + this.checkpoints * 12;
     this.spawnTimer = 2.25;
     this.mode = 'running';
     this.callbacks.onLevelUp?.({ level: this.checkpoints + 1 });
-    if (this.getSectorIndex() !== previousSector) this.callbacks.onSectorChange?.(this.getSector());
+    const sectorChanged = this.getSectorIndex() !== previousSector;
+    const sector = this.getSector();
+    if (sectorChanged) this.callbacks.onSectorChange?.(sector);
     this.emitHud();
+    return { ammoRecharged, completedLevel: this.checkpoints, sectorChanged, sector };
+  }
+
+  rechargeAmmoAtMilestone() {
+    if (this.checkpoints <= 0 || this.checkpoints % 5 !== 0) return false;
+    const previousAmmo = this.ammo;
+    this.ammo = 3;
+    this.callbacks.onAmmoRecharge?.({ ammo: this.ammo, restored: this.ammo - previousAmmo, level: this.checkpoints });
+    return true;
   }
 
   finishTutorial() {
@@ -431,6 +447,7 @@ export class SpaceFlight {
       level: this.checkpoints + 1,
       speed: Math.round(this.getDifficulty().obstacleSpeed * 100),
       ammo: this.ammo,
+      levelsUntilAmmo: 5 - (this.checkpoints % 5),
       streak: this.correctStreak,
       sector: this.getSector(),
       practice: this.practice

@@ -490,13 +490,19 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 .fuel-track { height: 13px; overflow: hidden; align-self: center; border-radius: 999px; background: rgba(255,255,255,.1); }
 .fuel-track i { width: 62%; height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--cyan)); box-shadow: 0 0 14px var(--cyan); transition: width .2s; }
 .fuel-track i.low { background: linear-gradient(90deg, var(--danger), var(--gold)); box-shadow: 0 0 14px var(--danger); }
+.fuel-hud.critical { border-color: var(--danger); animation: fuelCritical .72s ease-in-out infinite alternate; }
+@keyframes fuelCritical { to { box-shadow: 0 0 25px rgba(255,109,125,.48); } }
 .hull-hud strong { color: var(--pink); letter-spacing: .18em; }
 .checkpoint-hud strong { color: var(--cyan); }
 .difficulty-hud { border-color: color-mix(in srgb, var(--danger) calc(var(--danger-level, 0) * 100%), var(--border)); background: linear-gradient(135deg, rgba(255,109,125,calc(var(--danger-level, 0) * .18)), rgba(22,13,59,.9)); }
 .difficulty-hud strong { color: var(--gold); }
+.difficulty-hud > small { color: var(--pink); font-size: .62rem; font-weight: 900; }
 .ammo-hud { border-color: rgba(216,150,255,.62); background: linear-gradient(135deg, rgba(141,115,255,.18), rgba(22,13,59,.94)); }
 .ammo-hud strong { color: #d896ff; text-transform: uppercase; }
+.ammo-hud > small { color: var(--muted); font-size: .58rem; font-weight: 800; }
 .ammo-hud.empty { border-color: var(--danger); opacity: .72; }
+.ammo-hud.recharged { border-color: white; animation: ammoRecharge 1.05s ease-in-out 2; }
+@keyframes ammoRecharge { 50% { color: white; background: rgba(153,84,238,.72); box-shadow: 0 0 38px rgba(216,150,255,.88); transform: scale(1.035); } }
 .flight-stage-actions { position: absolute; z-index: 9; top: .75rem; right: .75rem; display: flex; gap: .45rem; }
 .fullscreen-flight, .music-flight, .pause-flight, .exit-flight { min-height: 46px; display: flex; align-items: center; gap: .5rem; padding: .55rem .8rem; border: 2px solid var(--cyan); border-radius: 14px; color: white; background: rgba(13,8,43,.94); box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 0 18px rgba(94,232,239,.2); cursor: pointer; }
 .music-flight { border-color: var(--gold); box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 0 18px rgba(247,203,98,.2); }
@@ -514,6 +520,8 @@ dialog::backdrop { background: rgba(5,2,19,.82); backdrop-filter: blur(5px); }
 .sector-badge { position: absolute; z-index: 4; top: .7rem; left: .7rem; display: grid; gap: .05rem; padding: .48rem .72rem; border: 1px solid rgba(94,232,239,.5); border-radius: 13px; background: rgba(8,5,30,.84); box-shadow: 0 8px 24px rgba(0,0,0,.32); backdrop-filter: blur(7px); pointer-events: none; }
 .sector-badge span { color: var(--gold); font-size: .58rem; font-weight: 900; letter-spacing: .08em; }
 .sector-badge strong { font-size: .78rem; }
+.sector-badge.sector-arrival { animation: sectorArrival .9s ease-in-out 2; }
+@keyframes sectorArrival { 50% { border-color: var(--gold); box-shadow: 0 0 34px rgba(247,203,98,.6); transform: scale(1.045); } }
 #flight-canvas { width: 100%; height: clamp(560px, calc(100svh - 225px), 900px); min-height: 0; display: block; touch-action: none; cursor: crosshair; }
 .flight-overlay, .quiz-panel { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow: hidden; padding: .65rem; background: rgba(4,2,18,.66); backdrop-filter: blur(6px); }
 .overlay-card, .quiz-card { width: min(680px, 100%); max-height: calc(100% - .25rem); padding: clamp(.8rem, 2vh, 1.35rem); overflow: hidden; border: 1px solid var(--border); border-radius: 24px; background: linear-gradient(145deg, rgba(40,27,91,.98), rgba(19,12,56,.98)); box-shadow: 0 28px 80px rgba(0,0,0,.5); text-align: center; }
@@ -650,6 +658,7 @@ body.flight-screen-locked { overflow: hidden; }
   .hud-block { min-height: 48px; padding: .3rem .5rem; border-radius: 11px; }
   .hud-block > span { font-size: .58rem; }
   .hud-block > strong { font-size: .82rem; }
+  .ammo-hud > small, .difficulty-hud > small { font-size: .52rem; }
   #flight-canvas { min-height: 0; height: 100%; }
   .flight-stage { border-radius: 17px; }
   .flight-stage-actions { top: .45rem; right: .45rem; gap: .3rem; }

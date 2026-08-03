@@ -1,6 +1,6 @@
-import { SpaceFlight } from './space-game.js?v=17';
+import { SpaceFlight } from './space-game.js?v=18';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
-import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=17';
+import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=18';
 
 const app = document.getElementById('app');
 const settingsDialog = document.getElementById('settings-dialog');
@@ -14,6 +14,7 @@ let resumeMusicOnVisible = false;
 let resumeFlightOnVisible = false;
 let flightMode = 'mission';
 let achievementTimer = 0;
+let ammoRechargeTimer = 0;
 let lastLearnedFact = '';
 let runAchievements = [];
 let currentCheckpointClean = false;
@@ -46,6 +47,7 @@ function unlockAchievement(id) {
   const pop = document.getElementById('achievement-pop');
   if (!pop) return;
   window.clearTimeout(achievementTimer);
+  window.clearTimeout(ammoRechargeTimer);
   pop.innerHTML = '<span>' + achievement.icon + '</span><div><small>LOGRO DESBLOQUEADO</small><strong>' + achievement.title + '</strong><p>' + achievement.text + '</p></div>';
   pop.hidden = false;
   playTone('achievement');
@@ -102,8 +104,8 @@ function renderFlight() {
       <div class="hud-block hull-hud"><span>🛡️ Escudos</span><strong id="hull-value" aria-label="Tres escudos">♥ ♥ ♥</strong></div>
       <div class="hud-block distance-hud"><span>📍 Distancia</span><strong><b id="distance-value">0</b> km</strong></div>
       <div class="hud-block checkpoint-hud"><span>🌀 Portal <b id="checkpoint-number">1</b></span><strong>A <b id="remaining-value">280</b> km</strong></div>
-      <div class="hud-block difficulty-hud"><span>⚡ Dificultad</span><strong>Nivel <b id="level-value">1</b></strong></div>
-      <div class="hud-block ammo-hud"><span>💥 Plasma</span><strong><b id="ammo-value">3</b> disparos</strong></div>
+      <div class="hud-block difficulty-hud"><span>⚡ Dificultad</span><strong>Nivel <b id="level-value">1</b></strong><small id="streak-value" hidden></small></div>
+      <div class="hud-block ammo-hud"><span>💥 Plasma</span><strong><b id="ammo-value">3</b> disparos</strong><small id="ammo-recharge-value">Recarga en 5 niveles</small></div>
     </div>
     <div class="flight-stage">
       <canvas id="flight-canvas" tabindex="0" aria-label="Ruta espacial. Usa flecha izquierda y derecha para cambiar de carril, y la barra espaciadora para disparar una de las tres cargas de plasma."></canvas>
@@ -115,7 +117,7 @@ function renderFlight() {
       </div>
       <div class="sector-badge" id="sector-badge"><span>${modeBadge}</span><strong>🌌 Nebulosa Violeta</strong></div>
       <div id="flight-toast" class="flight-toast" hidden></div>
-      <div id="flight-overlay" class="flight-overlay ${isPractice ? 'practice-overlay' : ''}"><div class="overlay-card rules-card"><p class="eyebrow">${eyebrow}</p><h2>${title}</h2><div class="quick-rules" role="list"><div role="listitem"><b>1</b><span>↔️</span><strong>MUÉVETE</strong><small>Flechas o botones</small></div><div role="listitem"><b>2</b><span>⚡</span><strong>DISPARA</strong><small>ESPACIO · 3 cargas</small></div><div role="listitem"><b>3</b><span>🌀</span><strong>LLEGA</strong><small>Entra al portal</small></div><div role="listitem"><b>4</b><span>🧠</span><strong>RESPONDE</strong><small>Acierta y recarga</small></div></div><p class="quick-warning"><span>${isPractice ? '💚' : isTutorial ? '✨' : '⚠️'}</span><strong>${warning}</strong></p><button class="button primary launch-button" id="start-flight">${launch}</button></div></div>
+      <div id="flight-overlay" class="flight-overlay ${isPractice ? 'practice-overlay' : ''}"><div class="overlay-card rules-card"><p class="eyebrow">${eyebrow}</p><h2>${title}</h2><div class="quick-rules" role="list"><div role="listitem"><b>1</b><span>↔️</span><strong>MUÉVETE</strong><small>Flechas o botones</small></div><div role="listitem"><b>2</b><span>⚡</span><strong>DISPARA</strong><small>3 cargas · recarga N5</small></div><div role="listitem"><b>3</b><span>🌀</span><strong>LLEGA</strong><small>Entra al portal</small></div><div role="listitem"><b>4</b><span>🧠</span><strong>RESPONDE</strong><small>Acierta y recarga</small></div></div><p class="quick-warning"><span>${isPractice ? '💚' : isTutorial ? '✨' : '⚠️'}</span><strong>${warning}</strong></p><button class="button primary launch-button" id="start-flight">${launch}</button></div></div>
       <div id="tutorial-coach" class="tutorial-coach" hidden aria-live="assertive"></div>
       <div id="achievement-pop" class="achievement-pop" hidden aria-live="polite"></div>
       <section id="pause-panel" class="pause-panel" hidden aria-labelledby="pause-title"><div><span class="pause-icon">⏸</span><p class="eyebrow">Tiempo para respirar</p><h2 id="pause-title">Vuelo en pausa</h2><p>La nave y los obstáculos están congelados.</p><button class="button primary" id="resume-flight">▶ Continuar</button><button class="button ghost" id="restart-from-pause">↻ Reiniciar</button></div></section>
@@ -128,7 +130,7 @@ function renderFlight() {
 }
 
 function renderInstructions() {
-  return '<article class="screen screen-narrow flight-info" aria-labelledby="instructions-title"><p class="eyebrow">Cómo jugar</p><h1 id="instructions-title">Llega tan lejos como puedas</h1><p class="lead">Entra al portal, acierta la pregunta y continúa volando.</p><div class="instruction-grid"><article><b>1</b><span>↔️</span><h2>Muévete</h2><p>Usa flechas, A/D o los botones para cambiar entre 3 carriles.</p></article><article><b>2</b><span>⚡</span><h2>Dispara</h2><p>Usa ESPACIO. Tienes solo 3 cargas durante todo el intento.</p></article><article><b>3</b><span>🌀</span><h2>Portal</h2><p>Al entrar, el vuelo se detiene y aparece una pregunta.</p></article><article><b>4</b><span>🧠</span><h2>Responde</h2><p>Un acierto recarga combustible. Una respuesta incorrecta termina la misión.</p></article></div><div class="rule-banner"><span>⚠️</span><p><strong>Cuida la nave:</strong> cada choque quita 1 escudo y combustible. Tres choques o combustible vacío también terminan el intento.</p></div><div class="button-row"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Jugar ahora</button><button class="button tutorial-button" data-nav="flight" data-mode="tutorial">🎮 Aprender a pilotar</button><button class="button ghost" data-nav="home">Volver</button></div></article>';
+  return '<article class="screen screen-narrow flight-info" aria-labelledby="instructions-title"><p class="eyebrow">Cómo jugar</p><h1 id="instructions-title">Llega tan lejos como puedas</h1><p class="lead">Entra al portal, acierta la pregunta y continúa volando.</p><div class="instruction-grid"><article><b>1</b><span>↔️</span><h2>Muévete</h2><p>Usa flechas, A/D o los botones para cambiar entre 3 carriles.</p></article><article><b>2</b><span>⚡</span><h2>Dispara</h2><p>Usa ESPACIO. Tienes 3 cargas y recuperas todas al superar cada 5 niveles.</p></article><article><b>3</b><span>🌀</span><h2>Portal</h2><p>Al entrar, el vuelo se detiene y aparece una pregunta.</p></article><article><b>4</b><span>🧠</span><h2>Responde</h2><p>Un acierto recarga combustible. Una respuesta incorrecta termina la misión.</p></article></div><div class="rule-banner"><span>⚠️</span><p><strong>Cuida la nave:</strong> cada choque quita 1 escudo y combustible. Tres choques o combustible vacío también terminan el intento.</p></div><div class="button-row"><button class="button primary launch-button" data-nav="flight" data-mode="mission">🚀 Jugar ahora</button><button class="button tutorial-button" data-nav="flight" data-mode="tutorial">🎮 Aprender a pilotar</button><button class="button ghost" data-nav="home">Volver</button></div></article>';
 }
 
 function renderTeacher() {
@@ -166,6 +168,7 @@ function updateHud(state) {
   if (!fuelFill) return;
   fuelFill.style.width = state.fuel + '%';
   fuelFill.classList.toggle('low', state.fuel < 25);
+  document.querySelector('.fuel-hud')?.classList.toggle('critical', state.fuel < 25);
   document.getElementById('fuel-value').textContent = state.fuel + '%';
   document.getElementById('hull-value').textContent = Array.from({ length: 3 }, (_, index) => index < state.hull ? '♥' : '♡').join(' ');
   document.getElementById('hull-value').setAttribute('aria-label', state.hull + ' escudos disponibles');
@@ -177,10 +180,17 @@ function updateHud(state) {
   if (ammoValue) ammoValue.textContent = state.ammo;
   document.querySelectorAll('[data-fire-plasma]').forEach((fireButton) => {
     fireButton.classList.toggle('empty', state.ammo <= 0);
-    fireButton.setAttribute('aria-label', state.ammo > 0 ? 'Disparar plasma. Quedan ' + state.ammo + ' disparos' : 'Sin cargas de plasma');
+    fireButton.setAttribute('aria-label', state.ammo > 0 ? 'Disparar plasma. Quedan ' + state.ammo + ' disparos' : 'Sin cargas de plasma. Recarga en ' + state.levelsUntilAmmo + (state.levelsUntilAmmo === 1 ? ' nivel' : ' niveles'));
   });
   const mobileAmmo = document.getElementById('mobile-ammo-value');
   if (mobileAmmo) mobileAmmo.textContent = state.ammo;
+  const reloadValue = document.getElementById('ammo-recharge-value');
+  if (reloadValue) reloadValue.textContent = 'Recarga en ' + state.levelsUntilAmmo + (state.levelsUntilAmmo === 1 ? ' nivel' : ' niveles');
+  const streakValue = document.getElementById('streak-value');
+  if (streakValue) {
+    streakValue.hidden = state.streak < 2;
+    streakValue.textContent = state.streak >= 2 ? '🔥 Racha ×' + state.streak : '';
+  }
   document.querySelector('.ammo-hud')?.classList.toggle('empty', state.ammo <= 0);
   document.querySelector('.flight-page')?.style.setProperty('--danger-level', Math.min(1, (state.level - 1) / 8));
   const sectorBadge = document.getElementById('sector-badge');
@@ -372,11 +382,17 @@ function answerQuestion(selectedIndex) {
     quizTimer = window.setTimeout(() => {
       panel.hidden = true;
       panel.dataset.answered = 'false';
-      flight.answerCorrect();
+      const progress = flight.answerCorrect();
       if (flight.totalCorrect >= 1) unlockAchievement('first_portal');
       if (currentCheckpointClean) unlockAchievement('clean_pilot');
       if (flight.bestStreak >= 3) unlockAchievement('streak_three');
-      showToast('⛽ +38% · NIVEL ' + (flight.checkpoints + 1) + ' · MÁS RÁPIDO', 'success');
+      if (progress?.ammoRecharged) {
+        showToast('⚡ NIVEL ' + progress.completedLevel + ' SUPERADO · PLASMA RECARGADO: 3 CARGAS', 'plasma');
+      } else if (progress?.sectorChanged) {
+        showToast(progress.sector.icon + ' NUEVO SECTOR · ' + progress.sector.name.toUpperCase(), 'success');
+      } else {
+        showToast('⛽ +38% · NIVEL ' + (flight.checkpoints + 1) + ' · MÁS RÁPIDO', 'success');
+      }
       document.getElementById('flight-canvas')?.focus();
     }, 1050);
   } else {
@@ -387,8 +403,14 @@ function answerQuestion(selectedIndex) {
       panel.hidden = true;
       panel.dataset.answered = 'false';
       if (flightMode === 'practice') {
-        flight.answerPracticeMistake();
-        showToast('🧪 SEGUIMOS PRACTICANDO · +24% COMBUSTIBLE', 'success');
+        const progress = flight.answerPracticeMistake();
+        if (progress?.ammoRecharged) {
+          showToast('⚡ PRÁCTICA NIVEL ' + progress.completedLevel + ' · PLASMA RECARGADO', 'plasma');
+        } else if (progress?.sectorChanged) {
+          showToast(progress.sector.icon + ' PRÁCTICA EN ' + progress.sector.name.toUpperCase(), 'success');
+        } else {
+          showToast('🧪 SEGUIMOS PRACTICANDO · +24% COMBUSTIBLE', 'success');
+        }
         document.getElementById('flight-canvas')?.focus();
       } else {
         flight.strand('La respuesta no fue correcta. ' + currentQuestion.fact);
@@ -477,11 +499,21 @@ function bindFlight() {
     },
     onEmptyFire: () => {
       playTone('empty');
-      showToast('⚠️ SIN PLASMA · ¡ESQUIVA!', 'danger');
+      const remaining = 5 - (flight.checkpoints % 5);
+      showToast('⚠️ SIN PLASMA · RECARGA EN ' + remaining + (remaining === 1 ? ' NIVEL' : ' NIVELES') + ' · ¡ESQUIVA!', 'danger');
     },
     onSectorChange: (sector) => {
       playTone('achievement');
-      showToast(sector.icon + ' NUEVO SECTOR · ' + sector.name.toUpperCase(), 'success');
+      const badge = document.getElementById('sector-badge');
+      badge?.classList.add('sector-arrival');
+      window.setTimeout(() => badge?.classList.remove('sector-arrival'), 1800);
+    },
+    onAmmoRecharge: () => {
+      playTone('achievement');
+      const ammoHud = document.querySelector('.ammo-hud');
+      window.clearTimeout(ammoRechargeTimer);
+      ammoHud?.classList.add('recharged');
+      ammoRechargeTimer = window.setTimeout(() => ammoHud?.classList.remove('recharged'), 2200);
     },
     onPracticeRescue: ({ reason }) => {
       playTone('complete');
