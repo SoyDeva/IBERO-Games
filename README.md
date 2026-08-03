@@ -88,11 +88,18 @@ Estas validaciones reducen resultados manipulados, aunque ningún juego ejecutad
 
 No existe un servidor de aplicación tradicional ni un proceso de compilación del cliente. Supabase funciona como backend administrado y el repositorio incluye migraciones SQL reproducibles.
 
+## Arquitectura modular
+
+El código se está organizando gradualmente en capas de configuración, dominio puro, servicios externos y presentación. Las fachadas públicas existentes se conservan durante la migración para evitar cambios simultáneos en toda la aplicación.
+
+La estrategia y la ruta de separación están documentadas en [`docs/architecture.md`](docs/architecture.md).
+
 ## Estructura principal
 
 ```text
 IBERO-Games/
 ├── .github/workflows/quality.yml
+├── docs/architecture.md
 ├── index.html
 ├── informe-actividad-1.html
 ├── package.json
@@ -103,6 +110,15 @@ IBERO-Games/
 │   ├── accessibility.css
 │   └── print.css
 ├── js/
+│   ├── config/
+│   │   └── supabase.js
+│   ├── core/
+│   │   ├── galactic-errors.js
+│   │   ├── galactic-score.js
+│   │   └── galactic-season.js
+│   ├── services/
+│   │   ├── galactic-league-service.js
+│   │   └── supabase-rpc.js
 │   ├── app.js
 │   ├── space-game.js
 │   ├── questions.js
@@ -131,7 +147,7 @@ npm test
 npm run check
 ```
 
-`npm run check` ejecuta las pruebas de normalización de temporadas y valida la sintaxis de los módulos principales. GitHub Actions ejecuta el mismo control en ramas y pull requests.
+`npm run check` ejecuta las pruebas del dominio y valida recursivamente la sintaxis de todos los módulos JavaScript. GitHub Actions ejecuta el mismo control en ramas y pull requests.
 
 ## Publicación
 
