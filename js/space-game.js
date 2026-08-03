@@ -13,6 +13,7 @@ import {
   projectileHitsObstacle,
   resolveFuelDepletion
 } from './core/flight-simulation.js?v=23';
+import { createFlightInputController } from './services/flight-input-controller.js?v=23';
 
 export const SHIP_SKINS = Object.freeze({
   nebula: { name: 'Nébula', icon: '🚀', price: 0, body: '#e9efff', wing: '#8d73ff', glass: '#54def2', flame: '#5ee8ef', glow: '#5ee8ef', description: 'El uniforme clásico de la Asteria.' },
@@ -48,12 +49,17 @@ export class SpaceFlight {
     this.lastFrame = performance.now();
     this.stars = Array.from({ length: 105 }, () => this.createStar());
     this.boundFrame = (time) => this.frame(time);
-    this.boundKey = (event) => this.onKey(event);
-    this.boundPointer = (event) => this.onPointer(event);
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(canvas);
-    window.addEventListener('keydown', this.boundKey);
-    canvas.addEventListener('pointerdown', this.boundPointer);
+    this.inputController = createFlightInputController({
+      windowRef: window,
+      canvas,
+      getMode: () => this.mode,
+      moveLane: (direction) => this.moveLane(direction),
+      setLane: (lane) => this.setLane(lane),
+      fire: () => this.fire()
+    });
+    this.inputController.bind();
     this.resize();
     this.frameId = requestAnimationFrame(this.boundFrame);
   }
@@ -138,28 +144,6 @@ export class SpaceFlight {
     this.callbacks.onFire?.({ ammo: this.ammo });
     this.emitHud();
     return true;
-  }
-
-  onKey(event) {
-    if (['ArrowLeft', 'a', 'A'].includes(event.key)) {
-      event.preventDefault();
-      this.moveLane(-1);
-    }
-    if (['ArrowRight', 'd', 'D'].includes(event.key)) {
-      event.preventDefault();
-      this.moveLane(1);
-    }
-    if ((event.code === 'Space' || event.key === ' ') && this.mode === 'running') {
-      event.preventDefault();
-      if (!event.repeat) this.fire();
-    }
-  }
-
-  onPointer(event) {
-    if (this.mode !== 'running') return;
-    const rect = this.canvas.getBoundingClientRect();
-    const position = (event.clientX - rect.left) / Math.max(1, rect.width);
-    this.setLane(position < 1 / 3 ? -1 : position > 2 / 3 ? 1 : 0);
   }
 
   answerCorrect() {
