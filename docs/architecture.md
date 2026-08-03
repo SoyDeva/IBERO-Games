@@ -25,7 +25,8 @@ Ejemplos actuales:
 - compras y equipamiento del Hangar Estelar sin mutar el estado anterior;
 - catálogo, validación y transiciones del estado de rutas;
 - escape uniforme de contenido dinámico antes de insertarlo en HTML;
-- evaluación de respuestas, mensajes pedagógicos y tiempos de retroalimentación.
+- evaluación de respuestas, mensajes pedagógicos y tiempos de retroalimentación;
+- catálogo de mejoras y sesión de compra única de la Estación Nova.
 
 ### `js/services/`
 
@@ -43,6 +44,8 @@ Contiene renderizadores y enlaces de interacción. Recibe modelos ya preparados 
 - `hangar-screen.js` representa fuselajes, estelas, saldo y acciones de compra o equipamiento.
 - `ranking-screen.js` representa estados de carga, error, podio y tabla mundial.
 - `quiz-panel.js` presenta preguntas y opciones, enlaza respuestas y marca visualmente aciertos y errores.
+- `station-panel.js` genera las ofertas, refleja disponibilidad por saldo y administra la presentación de la Estación Nova.
+- `pause-panel.js` sincroniza la tarjeta de pausa, el bloqueo visual del vuelo y las etiquetas accesibles del botón.
 
 ### Fachadas públicas
 
@@ -50,7 +53,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 
 ### Aplicación y presentación
 
-`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas y presentación del panel pedagógico. La siguiente fase separará la coordinación completa de la misión.
+`js/app.js` conserva la coordinación de alto nivel. Ya delega identidad del piloto, persistencia económica, logros, decisiones del Hangar, estado remoto de la Liga, validación de rutas, enlace de navegación, renderizado de pantallas, barajas por nivel, evaluación de respuestas, presentación pedagógica, estado de la Estación Nova y panel de pausa. La siguiente fase separará el tutorial y el cierre de partida.
 
 ### Motor de vuelo
 
@@ -74,6 +77,7 @@ Los archivos históricos que ya importa la aplicación, como `js/galactic-league
 6. Navegación y pantallas informativas. **Completado.**
 7. Pantallas dinámicas de Inicio, Hangar y Liga. **Completado.**
 8. Barajas, evaluación y presentación de preguntas. **Completado.**
-9. Coordinación de la misión: tutorial, estación, pausa y cierre de partida.
-10. Motor de vuelo: estado, simulación, entrada y renderizado.
-11. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
+9. Estación Nova y panel de pausa. **Completado.**
+10. Tutorial y cierre de partida.
+11. Motor de vuelo: estado, simulación, entrada y renderizado.
+12. Panel pedagógico y adaptación por categorías sobre la arquitectura modular.
