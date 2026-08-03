@@ -46,6 +46,8 @@ export function createFlightRenderer(flight) {
 }
 `;
 
+source = `${source.slice(0, renderStart)}  draw() {\n    this.renderer.draw();\n  }\n\n${source.slice(renderEnd)}`;
+
 replaceOnce(
   'importar catálogos, geometría y renderizador',
   "import { createFlightInputController } from './services/flight-input-controller.js?v=23';",
@@ -84,8 +86,6 @@ replaceOnce(
 
   start(options = {}) {`
 );
-
-source = `${source.slice(0, renderStart)}  draw() {\n    this.renderer.draw();\n  }\n\n${source.slice(renderEnd)}`;
 
 replaceOnce(
   'desmontar el controlador de entrada',
