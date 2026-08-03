@@ -32,8 +32,6 @@ jobs:
             echo "$unexpected"
             exit 1
           fi
-      - name: Validate complete project
-        run: npm run check
       - name: Commit rendering extraction
         run: |
           if git diff --quiet -- js/space-game.js js/ui/flight-renderer.js; then
@@ -45,3 +43,5 @@ jobs:
           git add js/space-game.js js/ui/flight-renderer.js
           git commit -m "refactor: extract flight canvas renderer"
           git push origin HEAD:agent/refactor-flight-rendering-v24
+      - name: Validate generated project
+        run: npm run check
