@@ -44,7 +44,7 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     return normalized;
   }
 
-  function loadCollection() {
+  function loadCollection({ persistMigrations = true } = {}) {
     let collection = normalizeLearningProfileCollection(
       readStorageJson(STORAGE_KEYS.learningProfiles, createLearningProfileCollection(), options)
     );
@@ -58,7 +58,7 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
         progress: legacy,
         updatedAt: new Date().toISOString()
       });
-      if (writeStorageJson(STORAGE_KEYS.learningProfiles, collection, options)) {
+      if (persistMigrations && writeStorageJson(STORAGE_KEYS.learningProfiles, collection, options)) {
         removeStorageValue(STORAGE_KEYS.learningProgress, options);
       }
     }
@@ -66,7 +66,10 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
     const pilotName = activePilotName();
     const pilotId = createLearningProfileId(pilotName);
     const shouldAdopt = pilotId !== 'local' && !collection.profiles[pilotId] && Boolean(collection.profiles.local);
-    if (shouldAdopt) collection = writeCollection(adoptLocalLearningProfile(collection, pilotName));
+    if (shouldAdopt) {
+      collection = adoptLocalLearningProfile(collection, pilotName);
+      if (persistMigrations) collection = writeCollection(collection);
+    }
     return collection;
   }
 
@@ -157,16 +160,22 @@ export function createLearningProgressStore({ storage, resolvePilotName = getPil
   }
 
   function previewDeviceBackup(source) {
-    return createLearningDeviceRestorePreview(loadCollection(), source, {
+    return createLearningDeviceRestorePreview(loadCollection({ persistMigrations: false }), source, {
       activePilotName: activePilotName()
     });
   }
 
   function restoreDeviceBackup(source, decisions) {
-    const restored = restoreLearningDeviceProfiles(loadCollection(), source, decisions, {
-      activePilotName: activePilotName()
-    });
-    if (restored.applied) writeCollection(restored.collection);
+    const restored = restoreLearningDeviceProfiles(
+      loadCollection({ persistMigrations: false }),
+      source,
+      decisions,
+      { activePilotName: activePilotName() }
+    );
+    if (restored.applied && !writeStorageJson(STORAGE_KEYS.learningProfiles, restored.collection, options)) {
+      throw new Error('El navegador bloqueó el guardado. No se aplicó la restauración consolidada.');
+    }
+    if (restored.applied) removeStorageValue(STORAGE_KEYS.learningProgress, options);
     return restored;
   }
 
