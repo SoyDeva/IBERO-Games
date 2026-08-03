@@ -18,6 +18,7 @@ test('genera una identidad local estable sin guardar tokens', () => {
   assert.equal(createLearningProfileId('LunaEstelar'), createLearningProfileId('lunaestelar'));
   assert.equal(createLearningProfileId(''), 'local');
   assert.match(createLearningProfileId('Órbita 7'), /^pilot-[0-9a-f]{8}$/);
+  assert.notEqual(createLearningProfileId('Piloto local'), 'local');
 });
 
 test('mantiene progreso independiente para pilotos del mismo dispositivo', () => {
@@ -33,7 +34,7 @@ test('mantiene progreso independiente para pilotos del mismo dispositivo', () =>
 
 test('asigna el progreso local anterior al primer piloto identificado', () => {
   let collection = upsertLearningProfile(createLearningProfileCollection(), {
-    pilotName: 'Piloto local',
+    pilotName: '',
     progress: answered('Lenguaje', true)
   });
 
