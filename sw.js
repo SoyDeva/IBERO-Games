@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mision-nebula-v6';
+const CACHE_NAME = 'mision-nebula-v7';
 const FILES = [
   './', './index.html', './informe-actividad-1.html', './README.md',
   './css/styles.css', './css/accessibility.css', './css/print.css',

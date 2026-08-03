@@ -21,6 +21,8 @@ El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
 ## Características
 
 - Escena Canvas con perspectiva 2.5D, profundidad y sensación de velocidad.
+- Área de vuelo ampliada hasta 1540 px de ancho y 76 % de la altura visible.
+- Botón de pantalla completa que conserva tablero, escena y controles; incluye alternativa compatible cuando la API nativa no está disponible.
 - Tres carriles y controles con teclado, botones táctiles o toque directo sobre la escena.
 - Obstáculos diferenciados: planetas, meteoritos, estrellas ardientes y naves rivales.
 - Tres escudos para que el aprendizaje inicial sea amable.
@@ -43,10 +45,11 @@ El objetivo es viajar la mayor distancia posible y superar puestos de recarga.
 
 1. Pulsar **Despegar**.
 2. Usar `←` y `→`, las teclas `A` y `D`, los botones grandes o tocar un lado de la escena.
-3. Cambiar de carril para esquivar todos los objetos.
-4. Entrar al portal brillante.
-5. Elegir una de tres respuestas.
-6. Acertar para recargar combustible y continuar.
+3. Pulsar **⛶ Ampliar** para jugar a pantalla completa cuando se desee.
+4. Cambiar de carril para esquivar todos los objetos.
+5. Entrar al portal brillante.
+6. Elegir una de tres respuestas.
+7. Acertar para recargar combustible y continuar.
 
 ## Reglas pedagógicas
 
@@ -127,6 +130,7 @@ GitHub Pages publica la rama `main` desde la raíz del repositorio:
 - [x] Carga local de portada, estilos, motor y preguntas.
 - [x] Rutas relativas compatibles con GitHub Pages.
 - [x] Controles accesibles por teclado y pantalla táctil.
+- [x] Pantalla completa nativa, salida mediante el mismo botón y modo alternativo.
 
 ## Autoría y privacidad
 

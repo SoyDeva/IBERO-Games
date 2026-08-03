@@ -20,6 +20,12 @@ function setRoute(next) {
   window.clearTimeout(quizTimer);
   window.clearTimeout(toastTimer);
   stopMusic();
+  document.body.classList.remove('flight-screen-locked');
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    const exitResult = exit?.call(document);
+    exitResult?.catch?.(() => {});
+  }
   flight?.destroy();
   flight = null;
   route = next;
@@ -34,7 +40,7 @@ function renderHome() {
 }
 
 function renderFlight() {
-  return '<section class="flight-page" aria-labelledby="flight-title"><h1 id="flight-title" class="sr-only">Vuelo de la nave Asteria</h1><div class="flight-hud"><div class="hud-block fuel-hud"><span>⛽ Combustible</span><div class="fuel-track"><i id="fuel-fill"></i></div><strong id="fuel-value">62%</strong></div><div class="hud-block hull-hud"><span>🛡️ Escudos</span><strong id="hull-value" aria-label="Tres escudos">♥ ♥ ♥</strong></div><div class="hud-block"><span>📍 Distancia</span><strong><b id="distance-value">0</b> km</strong></div><div class="hud-block checkpoint-hud"><span>🌀 Portal <b id="checkpoint-number">1</b></span><strong>A <b id="remaining-value">280</b> km</strong></div><div class="hud-block difficulty-hud"><span>⚡ Dificultad</span><strong>Nivel <b id="level-value">1</b></strong></div></div><div class="flight-stage"><canvas id="flight-canvas" tabindex="0" aria-label="Ruta espacial. Usa flecha izquierda y derecha o los botones para mover la nave entre tres carriles."></canvas><div id="flight-toast" class="flight-toast" hidden></div><div id="flight-overlay" class="flight-overlay"><div class="overlay-card"><p class="eyebrow">Controles de vuelo</p><h2>Muévete entre 3 caminos</h2><div class="control-demo"><span>⬅️<small>Izquierda</small></span><b>🚀</b><span>➡️<small>Derecha</small></span></div><p>Esquiva todo y entra al portal brillante.</p><button class="button primary launch-button" id="start-flight">¡Despegar!</button></div></div><section id="quiz-panel" class="quiz-panel" hidden aria-labelledby="quiz-question"><div class="quiz-card"><p class="quiz-category" id="quiz-category"></p><div class="fuel-question-icon" aria-hidden="true">⛽</div><h2 id="quiz-question"></h2><div id="quiz-options" class="quiz-options"></div><p id="quiz-result" class="quiz-result" aria-live="assertive"></p></div></section></div><div class="touch-controls" aria-label="Controles táctiles"><button id="steer-left" type="button" aria-label="Mover nave a la izquierda">⬅️<span>IZQUIERDA</span></button><button id="steer-right" type="button" aria-label="Mover nave a la derecha"><span>DERECHA</span>➡️</button></div><p class="flight-tip">También puedes tocar el lado izquierdo o derecho del espacio.</p></section>';
+  return '<section class="flight-page" aria-labelledby="flight-title"><h1 id="flight-title" class="sr-only">Vuelo de la nave Asteria</h1><div class="flight-hud"><div class="hud-block fuel-hud"><span>⛽ Combustible</span><div class="fuel-track"><i id="fuel-fill"></i></div><strong id="fuel-value">62%</strong></div><div class="hud-block hull-hud"><span>🛡️ Escudos</span><strong id="hull-value" aria-label="Tres escudos">♥ ♥ ♥</strong></div><div class="hud-block"><span>📍 Distancia</span><strong><b id="distance-value">0</b> km</strong></div><div class="hud-block checkpoint-hud"><span>🌀 Portal <b id="checkpoint-number">1</b></span><strong>A <b id="remaining-value">280</b> km</strong></div><div class="hud-block difficulty-hud"><span>⚡ Dificultad</span><strong>Nivel <b id="level-value">1</b></strong></div><button class="hud-block fullscreen-flight" id="fullscreen-flight" type="button" aria-label="Activar pantalla completa" aria-pressed="false"><span>⛶</span><strong>Ampliar</strong></button></div><div class="flight-stage"><canvas id="flight-canvas" tabindex="0" aria-label="Ruta espacial. Usa flecha izquierda y derecha o los botones para mover la nave entre tres carriles."></canvas><div id="flight-toast" class="flight-toast" hidden></div><div id="flight-overlay" class="flight-overlay"><div class="overlay-card"><p class="eyebrow">Controles de vuelo</p><h2>Muévete entre 3 caminos</h2><div class="control-demo"><span>⬅️<small>Izquierda</small></span><b>🚀</b><span>➡️<small>Derecha</small></span></div><p>Esquiva todo y entra al portal brillante.</p><button class="button primary launch-button" id="start-flight">¡Despegar!</button></div></div><section id="quiz-panel" class="quiz-panel" hidden aria-labelledby="quiz-question"><div class="quiz-card"><p class="quiz-category" id="quiz-category"></p><div class="fuel-question-icon" aria-hidden="true">⛽</div><h2 id="quiz-question"></h2><div id="quiz-options" class="quiz-options"></div><p id="quiz-result" class="quiz-result" aria-live="assertive"></p></div></section></div><div class="touch-controls" aria-label="Controles táctiles"><button id="steer-left" type="button" aria-label="Mover nave a la izquierda">⬅️<span>IZQUIERDA</span></button><button id="steer-right" type="button" aria-label="Mover nave a la derecha"><span>DERECHA</span>➡️</button></div><p class="flight-tip">También puedes tocar el lado izquierdo o derecho del espacio.</p></section>';
 }
 
 function renderInstructions() {
@@ -155,6 +161,42 @@ function showGameOver(result) {
   announce('La nave quedó varada. Puedes volver a despegar.');
 }
 
+function updateFullscreenButton() {
+  const page = document.querySelector('.flight-page');
+  const button = document.getElementById('fullscreen-flight');
+  if (!page || !button) return;
+  const expanded = Boolean(document.fullscreenElement || document.webkitFullscreenElement || page.classList.contains('pseudo-fullscreen'));
+  button.setAttribute('aria-pressed', String(expanded));
+  button.setAttribute('aria-label', expanded ? 'Salir de pantalla completa' : 'Activar pantalla completa');
+  button.innerHTML = expanded ? '<span>⤢</span><strong>Reducir</strong>' : '<span>⛶</span><strong>Ampliar</strong>';
+  window.setTimeout(() => flight?.resize(), 80);
+}
+
+async function toggleFullscreen() {
+  const page = document.querySelector('.flight-page');
+  if (!page) return;
+  const activeElement = document.fullscreenElement || document.webkitFullscreenElement;
+  const exit = document.exitFullscreen || document.webkitExitFullscreen;
+  const request = page.requestFullscreen || page.webkitRequestFullscreen;
+  try {
+    if (activeElement && exit) {
+      await exit.call(document);
+    } else if (page.classList.contains('pseudo-fullscreen')) {
+      page.classList.remove('pseudo-fullscreen');
+      document.body.classList.remove('flight-screen-locked');
+    } else if (request) {
+      await request.call(page);
+    } else {
+      page.classList.add('pseudo-fullscreen');
+      document.body.classList.add('flight-screen-locked');
+    }
+  } catch (error) {
+    page.classList.toggle('pseudo-fullscreen');
+    document.body.classList.toggle('flight-screen-locked', page.classList.contains('pseudo-fullscreen'));
+  }
+  updateFullscreenButton();
+}
+
 function bindFlight() {
   const canvas = document.getElementById('flight-canvas');
   flight = new SpaceFlight(canvas, {
@@ -178,6 +220,7 @@ function bindFlight() {
   });
   document.getElementById('steer-left').addEventListener('click', () => flight.moveLane(-1));
   document.getElementById('steer-right').addEventListener('click', () => flight.moveLane(1));
+  document.getElementById('fullscreen-flight').addEventListener('click', toggleFullscreen);
 }
 
 document.querySelectorAll('.site-header [data-nav]').forEach((button) => button.addEventListener('click', (event) => {
@@ -193,6 +236,16 @@ document.querySelectorAll('[data-open-settings]').forEach((button) => button.add
 settingsDialog.addEventListener('close', () => {
   if (settingsDialog.dataset.resumeMusic === 'true' && flight && flight.mode !== 'gameover') startMusic(flight.checkpoints + 1);
   flight?.resume();
+});
+document.addEventListener('fullscreenchange', updateFullscreenButton);
+document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+document.addEventListener('keydown', (event) => {
+  const page = document.querySelector('.flight-page.pseudo-fullscreen');
+  if (event.key === 'Escape' && page) {
+    page.classList.remove('pseudo-fullscreen');
+    document.body.classList.remove('flight-screen-locked');
+    updateFullscreenButton();
+  }
 });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {

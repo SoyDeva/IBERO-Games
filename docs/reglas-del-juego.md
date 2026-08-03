@@ -13,6 +13,7 @@ Pilotar → esquivar → llegar al portal → responder → recargar → continu
 - Teclado: flechas izquierda y derecha o teclas A y D.
 - Pantalla táctil: botones grandes bajo la escena.
 - Toque directo: tocar el lado izquierdo o derecho del espacio.
+- Pantalla completa: pulsar **⛶ Ampliar**; el mismo botón permite regresar al tamaño normal.
 
 La nave se mueve entre tres carriles. Avanza automáticamente.
 

@@ -34,6 +34,7 @@ La música espacial se sintetiza dentro del navegador y acelera gradualmente par
 ## Accesibilidad
 
 - Se puede pilotar con teclado, botones táctiles o toque directo.
+- El área de vuelo puede maximizarse con el botón ⛶ sin ocultar los indicadores ni los controles.
 - La interfaz incluye ajustes de texto grande y alto contraste.
 - Todos los botones tienen nombres accesibles.
 - El sonido es opcional y no comunica información indispensable.
