@@ -1,3 +1,5 @@
+import { ammoMilestone, createFlightState, flightDifficulty, flightHud, flightSector, flightSectorIndex, flightSummary } from './core/flight-state.js?v=23';
+
 const LANES = [-1, 0, 1];
 const OBSTACLE_TYPES = ['planet', 'meteor', 'star', 'ship'];
 export const SHIP_SKINS = Object.freeze({
@@ -15,14 +17,6 @@ export const SHIP_TRAILS = Object.freeze({
   nature: { name: 'Aurora Viva', icon: '🌿', price: 95, primary: '#73ffd1', secondary: '#f7cb62', description: 'Partículas verdes inspiradas en la vida.' },
   rainbow: { name: 'Prisma Estelar', icon: '🌈', price: 130, primary: '#ff7bac', secondary: '#f7cb62', description: 'Una estela especial que cambia de color.' }
 });
-const SECTORS = [
-  { name: 'Nebulosa Violeta', icon: '🌌', top: '#09041f', middle: '#21125b', bottom: '#08051b', glow: '124,78,255', route: '94,232,239' },
-  { name: 'Cinturón Helado', icon: '❄️', top: '#031a32', middle: '#0d4c6f', bottom: '#071524', glow: '94,232,239', route: '151,225,255' },
-  { name: 'Galaxia Roja', icon: '🔥', top: '#260414', middle: '#681c3b', bottom: '#170510', glow: '255,83,125', route: '255,190,104' },
-  { name: 'Zona Alienígena', icon: '👽', top: '#041d18', middle: '#17523f', bottom: '#06120f', glow: '87,224,160', route: '174,255,113' },
-  { name: 'Vacío Dorado', icon: '✨', top: '#211503', middle: '#594113', bottom: '#130d03', glow: '247,203,98', route: '255,232,147' }
-];
-
 function clamp(value, minimum, maximum) {
   return Math.max(minimum, Math.min(maximum, value));
 }
@@ -36,40 +30,9 @@ export class SpaceFlight {
     this.canvas = canvas;
     this.context = canvas.getContext('2d');
     this.callbacks = callbacks;
-    this.mode = 'idle';
     this.width = 960;
     this.height = 600;
-    this.lane = 0;
-    this.lanePosition = 0;
-    this.fuel = 62;
-    this.hull = 3;
-    this.distance = 0;
-    this.checkpoints = 0;
-    this.nextCheckpoint = 280;
-    this.ammo = 3;
-    this.obstacles = [];
-    this.projectiles = [];
-    this.explosions = [];
-    this.spawnTimer = 1.8;
-    this.elapsed = 0;
-    this.shake = 0;
-    this.flash = 0;
-    this.weaponPulse = 0;
-    this.practice = false;
-    this.tutorial = false;
-    this.tutorialStep = '';
-    this.invulnerable = 0;
-    this.adaptiveAssist = 0;
-    this.correctStreak = 0;
-    this.bestStreak = 0;
-    this.totalCorrect = 0;
-    this.destroyed = 0;
-    this.totalCollisions = 0;
-    this.collisionsThisLeg = 0;
-    this.celebrationParticles = [];
-    this.shipSkin = 'nebula';
-    this.shipTrail = 'pulse';
-    this.stationSlowdown = 0;
+    Object.assign(this, createFlightState());
     this.lastFrame = performance.now();
     this.stars = Array.from({ length: 105 }, () => this.createStar());
     this.boundFrame = (time) => this.frame(time);
@@ -103,40 +66,13 @@ export class SpaceFlight {
   }
 
   start(options = {}) {
-    this.mode = 'running';
-    this.practice = Boolean(options.practice);
-    this.tutorial = Boolean(options.tutorial);
-    this.tutorialStep = this.tutorial ? 'left' : '';
-    this.shipSkin = SHIP_SKINS[options.skin] ? options.skin : 'nebula';
-    this.shipTrail = SHIP_TRAILS[options.trail] ? options.trail : 'pulse';
-    this.lane = 0;
-    this.lanePosition = 0;
-    this.fuel = this.practice ? 78 : 62;
-    this.hull = 3;
-    this.distance = 0;
-    this.checkpoints = 0;
-    this.nextCheckpoint = this.tutorial ? 99999 : 280;
-    this.ammo = 3;
-    this.obstacles = [];
-    this.projectiles = [];
-    this.explosions = [];
-    this.spawnTimer = 2.1;
-    this.elapsed = 0;
-    this.shake = 0;
-    this.flash = 0;
-    this.weaponPulse = 0;
-    this.invulnerable = 0;
-    this.adaptiveAssist = 0;
-    this.correctStreak = 0;
-    this.bestStreak = 0;
-    this.totalCorrect = 0;
-    this.destroyed = 0;
-    this.totalCollisions = 0;
-    this.collisionsThisLeg = 0;
-    this.celebrationParticles = [];
-    this.stationSlowdown = 0;
+    const practice = Boolean(options.practice);
+    const tutorial = Boolean(options.tutorial);
+    const shipSkin = SHIP_SKINS[options.skin] ? options.skin : 'nebula';
+    const shipTrail = SHIP_TRAILS[options.trail] ? options.trail : 'pulse';
+    Object.assign(this, createFlightState({ mode: 'running', practice, tutorial, shipSkin, shipTrail }));
     this.emitHud();
-    if (this.tutorial) this.callbacks.onTutorialStep?.({ step: 'left' });
+    if (tutorial) this.callbacks.onTutorialStep?.({ step: 'left' });
   }
 
   pause() {
@@ -261,10 +197,10 @@ export class SpaceFlight {
   }
 
   rechargeAmmoAtMilestone() {
-    if (this.checkpoints <= 0 || this.checkpoints % 5 !== 0) return false;
-    const previousAmmo = this.ammo;
-    this.ammo = Math.max(this.ammo, 3);
-    this.callbacks.onAmmoRecharge?.({ ammo: this.ammo, restored: this.ammo - previousAmmo, level: this.checkpoints });
+    const milestone = ammoMilestone(this.checkpoints, this.ammo);
+    if (!milestone.recharged) return false;
+    this.ammo = milestone.ammo;
+    this.callbacks.onAmmoRecharge?.({ ammo: milestone.ammo, restored: milestone.restored, level: milestone.level });
     return true;
   }
 
@@ -300,16 +236,7 @@ export class SpaceFlight {
   }
 
   getSummary() {
-    return {
-      distance: Math.round(this.distance),
-      checkpoints: this.checkpoints,
-      correct: this.totalCorrect,
-      bestStreak: this.bestStreak,
-      destroyed: this.destroyed,
-      collisions: this.totalCollisions,
-      sector: this.getSector().name,
-      practice: this.practice
-    };
+    return flightSummary(this);
   }
 
   frame(time) {
@@ -399,24 +326,15 @@ export class SpaceFlight {
   }
 
   getDifficulty() {
-    const introEase = this.checkpoints < 2 ? (2 - this.checkpoints) * .045 : 0;
-    const hullAssist = Math.max(0, 3 - this.hull) * .018;
-    const practiceEase = this.practice ? .075 : 0;
-    const streakPressure = Math.min(.045, this.correctStreak * .009);
-    return {
-      level: this.checkpoints + 1,
-      obstacleSpeed: clamp(.36 + this.checkpoints * .042 - introEase - this.adaptiveAssist - hullAssist - practiceEase - this.stationSlowdown + streakPressure, .26, .7),
-      spawnInterval: clamp(1.42 - this.checkpoints * .085 + introEase * 1.8 + this.adaptiveAssist + practiceEase + this.stationSlowdown * 1.6 - streakPressure, .62, 1.75),
-      pairChance: clamp(.12 + this.checkpoints * .115 - this.adaptiveAssist * .8 - practiceEase - this.stationSlowdown * 1.2, .08, .82)
-    };
+    return flightDifficulty(this);
   }
 
   getSectorIndex() {
-    return Math.min(SECTORS.length - 1, Math.floor(this.checkpoints / 2));
+    return flightSectorIndex(this.checkpoints);
   }
 
   getSector() {
-    return { ...SECTORS[this.getSectorIndex()], index: this.getSectorIndex() };
+    return flightSector(this.checkpoints);
   }
 
   updateProjectiles(delta) {
@@ -494,20 +412,7 @@ export class SpaceFlight {
   }
 
   emitHud() {
-    this.callbacks.onHud?.({
-      fuel: Math.round(this.fuel),
-      hull: this.hull,
-      distance: Math.round(this.distance),
-      checkpoint: this.checkpoints + 1,
-      remaining: Math.max(0, Math.round(this.nextCheckpoint - this.distance)),
-      level: this.checkpoints + 1,
-      speed: Math.round(this.getDifficulty().obstacleSpeed * 100),
-      ammo: this.ammo,
-      levelsUntilAmmo: 5 - (this.checkpoints % 5),
-      streak: this.correctStreak,
-      sector: this.getSector(),
-      practice: this.practice
-    });
+    this.callbacks.onHud?.(flightHud(this));
   }
 
   createCelebration(count = 46) {
