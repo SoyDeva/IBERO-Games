@@ -1,8 +1,10 @@
+import { GENERATED_QUESTIONS } from './data/generated-question-bank.js';
+
 function question(level, category, icon, text, options, answer, fact) {
   return { id: 'n' + level + '-' + text, level, category, icon, text, options, answer, fact };
 }
 
-export const QUESTIONS = [
+const CURATED_QUESTIONS = [
   // Nivel 1 · reconocimiento y conocimientos básicos
   question(1, 'Espacio', '🪐', '¿Cuál es el planeta más grande del Sistema Solar?', ['Marte', 'Júpiter', 'Mercurio'], 1, 'Júpiter es el planeta más grande.'),
   question(1, 'Espacio', '🌙', '¿Cómo se llama el satélite natural de la Tierra?', ['La Luna', 'El Sol', 'Venus'], 0, 'La Luna es el satélite natural de la Tierra.'),
@@ -113,6 +115,11 @@ export const QUESTIONS = [
   question(5, 'Tecnología', '0️⃣', '¿Qué número decimal representa 101 en sistema binario?', ['4', '5', '6'], 1, '101 en binario equivale a 4 + 0 + 1 = 5.'),
   question(5, 'Tecnología', '🧩', '¿Qué es un algoritmo?', ['Una secuencia ordenada de pasos', 'Una pieza física del computador', 'Un tipo de pantalla'], 0, 'Un algoritmo organiza pasos para resolver una tarea o problema.')
 ];
+
+export const QUESTIONS = Object.freeze([
+  ...CURATED_QUESTIONS,
+  ...GENERATED_QUESTIONS
+]);
 
 export function shuffledQuestions(level = null, random = Math.random) {
   const deck = QUESTIONS.filter((item) => level === null || item.level === level);
