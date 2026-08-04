@@ -20,6 +20,10 @@ function finite(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
+function clamp(value, minimum, maximum) {
+  return Math.max(minimum, Math.min(maximum, value));
+}
+
 function randomValue(random) {
   const value = finite(random(), 0);
   return Math.max(0, Math.min(.999999999, value));
@@ -34,6 +38,7 @@ export function advanceFlightVitals(state, delta) {
   const practice = Boolean(state?.practice);
   const distance = Math.max(0, finite(state?.distance));
   const fuel = Math.max(0, finite(state?.fuel));
+  const fuelDrainMultiplier = clamp(finite(state?.fuelDrainMultiplier, 1), .65, 1.2);
 
   return {
     elapsed: Math.max(0, finite(state?.elapsed)) + elapsedDelta,
@@ -41,7 +46,7 @@ export function advanceFlightVitals(state, delta) {
     distance: tutorial ? distance : distance + (17 + checkpoints * 1.8) * elapsedDelta,
     fuel: tutorial
       ? fuel
-      : Math.max(0, fuel - elapsedDelta * (1.05 + checkpoints * .035) * (practice ? .7 : 1)),
+      : Math.max(0, fuel - elapsedDelta * (1.05 + checkpoints * .035) * (practice ? .7 : 1) * fuelDrainMultiplier),
     flash: Math.max(0, finite(state?.flash) - elapsedDelta * 1.8),
     shake: Math.max(0, finite(state?.shake) - elapsedDelta * 2.5),
     weaponPulse: Math.max(0, finite(state?.weaponPulse) - elapsedDelta * 5),
@@ -161,7 +166,8 @@ export function createObstacleWave({ checkpoints = 0, pairChance = 0, random = M
 
 export function collisionOutcome(state, obstacle, random = Math.random) {
   const rawHull = finite(state?.hull) - 1;
-  const fuelAfterHit = Math.max(0, finite(state?.fuel) - 12);
+  const collisionFuelLossMultiplier = clamp(finite(state?.collisionFuelLossMultiplier, 1), .3, 1.25);
+  const fuelAfterHit = Math.max(0, finite(state?.fuel) - 12 * collisionFuelLossMultiplier);
   const practice = Boolean(state?.practice);
   const randomSource = typeof random === 'function' ? random : Math.random;
   const patch = {
