@@ -7,6 +7,10 @@ class FlightExcitementRenderer {
     this.flight = flight;
   }
 
+  detailRatio() {
+    return clamp(this.flight.performanceProfile?.detailRatio || 1, .4, 1);
+  }
+
   project(lane, depth) {
     return projectFlightPoint({
       width: this.flight.width,
@@ -20,9 +24,7 @@ class FlightExcitementRenderer {
     const { context: ctx } = this.flight;
     if (!ctx) return;
     ctx.save();
-    [...(this.flight.energyCores || [])]
-      .sort((left, right) => left.depth - right.depth)
-      .forEach((core) => this.drawEnergyCore(ctx, core));
+    for (const core of this.flight.energyCores || []) this.drawEnergyCore(ctx, core);
     if (this.flight.rushTime > 0) this.drawRushField(ctx);
     this.drawRushMeter(ctx);
     this.drawChallengeCard(ctx);
@@ -31,6 +33,7 @@ class FlightExcitementRenderer {
   }
 
   drawEnergyCore(ctx, core) {
+    const detail = this.detailRatio();
     const point = this.project(core.lane, core.depth);
     const size = Math.max(8, 28 * point.scale);
     const pulse = 1 + Math.sin(this.flight.elapsed * 6 + core.pulse) * .12;
@@ -40,7 +43,7 @@ class FlightExcitementRenderer {
     ctx.rotate(core.spin);
     ctx.globalCompositeOperation = 'lighter';
     ctx.shadowColor = '#56e7ff';
-    ctx.shadowBlur = size * 1.45;
+    ctx.shadowBlur = size * 1.45 * detail;
 
     const aura = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 1.7);
     aura.addColorStop(0, 'rgba(255,255,255,.94)');
@@ -60,12 +63,14 @@ class FlightExcitementRenderer {
     ctx.ellipse(0, 0, size * 1.08, size * .48, .45, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.rotate(-core.spin * 1.7);
-    ctx.strokeStyle = '#d86cff';
-    ctx.lineWidth = Math.max(1, size * .07);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, size * .82, size * .82, 0, 0, Math.PI * 2);
-    ctx.stroke();
+    if (detail > .6) {
+      ctx.rotate(-core.spin * 1.7);
+      ctx.strokeStyle = '#d86cff';
+      ctx.lineWidth = Math.max(1, size * .07);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, size * .82, size * .82, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
 
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
@@ -76,6 +81,7 @@ class FlightExcitementRenderer {
 
   drawRushMeter(ctx) {
     if (this.flight.mode === 'idle' || this.flight.tutorial) return;
+    const detail = this.detailRatio();
     const width = clamp(this.flight.width * .3, 190, 310);
     const height = 20;
     const x = (this.flight.width - width) / 2;
@@ -102,7 +108,7 @@ class FlightExcitementRenderer {
       gradient.addColorStop(1, '#d86cff');
       ctx.fillStyle = gradient;
       ctx.shadowColor = active ? '#ffc857' : '#56e7ff';
-      ctx.shadowBlur = active ? 20 : 12;
+      ctx.shadowBlur = (active ? 20 : 12) * detail;
       this.roundedRect(ctx, x + inset, y + inset, fillWidth, height - inset * 2, 7);
       ctx.fill();
     }
@@ -123,6 +129,7 @@ class FlightExcitementRenderer {
     const challenge = this.flight.sectorChallenge;
     if (!challenge || this.flight.tutorial || this.flight.mode === 'idle') return;
 
+    const detail = this.detailRatio();
     const compact = this.flight.width < 620;
     const width = compact ? Math.min(this.flight.width - 24, 248) : 270;
     const height = compact ? 70 : 78;
@@ -141,7 +148,7 @@ class FlightExcitementRenderer {
     ctx.strokeStyle = accent;
     ctx.lineWidth = complete || failed ? 2.4 : 1.5;
     ctx.shadowColor = accent;
-    ctx.shadowBlur = complete ? 18 : failed ? 10 : 8;
+    ctx.shadowBlur = (complete ? 18 : failed ? 10 : 8) * detail;
     this.roundedRect(ctx, 0, 0, width, height, 14);
     ctx.fill();
     ctx.stroke();
@@ -160,12 +167,12 @@ class FlightExcitementRenderer {
 
     ctx.fillStyle = complete ? '#5ce5a2' : failed ? '#ffb2bd' : '#bdc5e1';
     ctx.font = `700 ${compact ? 10 : 11}px system-ui, sans-serif`;
-    const detail = complete
+    const detailText = complete
       ? `Recompensa: ${challenge.reward.label}`
       : failed
         ? 'Sin penalización · nuevo reto tras el portal'
         : challenge.instruction;
-    ctx.fillText(detail, 13, 44);
+    ctx.fillText(detailText, 13, 44);
 
     if (!complete && !failed) {
       const ratio = clamp(challenge.progress / Math.max(1, challenge.target), 0, 1);
@@ -184,6 +191,8 @@ class FlightExcitementRenderer {
 
   drawRushField(ctx) {
     const { width, height, elapsed } = this.flight;
+    const detail = this.detailRatio();
+    const lineCount = Math.max(8, Math.round(18 * detail));
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     const aura = ctx.createRadialGradient(width * .5, height * .72, 0, width * .5, height * .72, width * .58);
@@ -194,8 +203,8 @@ class FlightExcitementRenderer {
     ctx.fillRect(0, 0, width, height);
 
     ctx.lineCap = 'round';
-    for (let index = 0; index < 18; index += 1) {
-      const phase = (elapsed * 1.8 + index / 18) % 1;
+    for (let index = 0; index < lineCount; index += 1) {
+      const phase = (elapsed * 1.8 + index / lineCount) % 1;
       const side = index % 2 ? 1 : -1;
       const x = width * .5 + side * width * (.1 + phase * .48);
       const y = height * (.2 + phase * .78);
@@ -211,6 +220,7 @@ class FlightExcitementRenderer {
   }
 
   drawRushMessage(ctx) {
+    const detail = this.detailRatio();
     const progress = clamp(this.flight.rushMessageTime / 2.2, 0, 1);
     const scale = 1 + (1 - progress) * .18;
     ctx.save();
@@ -222,12 +232,12 @@ class FlightExcitementRenderer {
     ctx.font = `900 ${clamp(this.flight.width * .045, 28, 54)}px system-ui, sans-serif`;
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = '#56e7ff';
-    ctx.shadowBlur = 28;
+    ctx.shadowBlur = 28 * detail;
     ctx.fillText('¡MODO NÉBULA!', 0, 0);
     ctx.font = `800 ${clamp(this.flight.width * .018, 13, 20)}px system-ui, sans-serif`;
     ctx.fillStyle = '#ffc857';
     ctx.shadowColor = '#ffc857';
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 16 * detail;
     ctx.fillText('MENOR CONSUMO · +1 PLASMA', 0, 38);
     ctx.restore();
   }
