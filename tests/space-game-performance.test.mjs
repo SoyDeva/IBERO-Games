@@ -31,7 +31,7 @@ test('la claridad móvil sigue el perfil y no crea infraestructura paralela', ()
   assert.match(excitementRenderer, /drawCrispShip/);
   assert.match(excitementRenderer, /compact \? 12 : 18/);
   assert.doesNotMatch(excitementRenderer, /requestAnimationFrame|setInterval|fetch\(/);
-  assert.match(serviceWorker, /mision-nebula-mobile-controls-v30/);
+  assert.match(serviceWorker, /mision-nebula-mobile-controls-visible-v31/);
   assert.match(serviceWorker, /flight-performance\.js/);
   assert.match(serviceWorker, /ignoreSearch: true/);
 });
