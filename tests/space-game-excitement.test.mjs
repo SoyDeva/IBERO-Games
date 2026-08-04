@@ -17,8 +17,8 @@ test('SpaceFlight integra núcleos, carga por habilidad y penalización por choq
 
 test('la emoción se representa dentro del Canvas sin infraestructura paralela', () => {
   assert.match(rendererSource, /drawEnergyCore/);
-  assert.match(rendererSource, /IMPULSO NÉBULA/);
-  assert.match(rendererSource, /MODO IMPULSO/);
+  assert.match(rendererSource, /IMPULSO/);
+  assert.match(rendererSource, /drawRushMessage/);
   assert.match(rendererSource, /¡MODO NÉBULA!/);
 
   const combined = coreSource + rendererSource;

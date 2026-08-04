@@ -1,5 +1,6 @@
 import { clamp, projectFlightPoint } from '../core/flight-geometry.js?v=23';
 import { NEBULA_RUSH_MAX } from '../core/flight-excitement.js?v=23';
+import { SHIP_SKINS, SHIP_TRAILS } from '../config/ship-catalog.js?v=23';
 
 class FlightExcitementRenderer {
   constructor(flight) {
@@ -9,6 +10,10 @@ class FlightExcitementRenderer {
 
   detailRatio() {
     return clamp(this.flight.performanceProfile?.detailRatio || 1, .4, 1);
+  }
+
+  compactView() {
+    return this.flight.width < 620;
   }
 
   project(lane, depth) {
@@ -24,16 +29,175 @@ class FlightExcitementRenderer {
     const { context: ctx } = this.flight;
     if (!ctx) return;
     ctx.save();
-    for (const core of this.flight.energyCores || []) this.drawEnergyCore(ctx, core);
     if (this.flight.rushTime > 0) this.drawRushField(ctx);
+    if (this.compactView()) this.drawMobileClarity(ctx);
+    for (const core of this.flight.energyCores || []) this.drawEnergyCore(ctx, core);
     this.drawRushMeter(ctx);
     this.drawChallengeCard(ctx);
     if (this.flight.rushMessageTime > 0) this.drawRushMessage(ctx);
     ctx.restore();
   }
 
+  drawMobileClarity(ctx) {
+    const { width, height } = this.flight;
+    const horizonY = height * .235;
+    ctx.save();
+
+    // Reduce el halo acumulado del render base sin apagar colores ni obstáculos.
+    ctx.fillStyle = 'rgba(4,3,18,.09)';
+    ctx.fillRect(0, 0, width, height);
+
+    // Guías sólidas y sin desenfoque para que la ruta conserve lectura en Retina.
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(86,231,255,.58)';
+    ctx.lineWidth = 1.6;
+    [[.455, .93], [.545, .07]].forEach(([top, bottom]) => {
+      ctx.beginPath();
+      ctx.moveTo(width * top, horizonY);
+      ctx.lineTo(width * bottom, height);
+      ctx.stroke();
+    });
+
+    ctx.strokeStyle = 'rgba(137,151,255,.44)';
+    ctx.lineWidth = 1.25;
+    [-.5, .5].forEach((divider) => {
+      ctx.beginPath();
+      ctx.moveTo(width / 2 + divider * width * .035, horizonY);
+      ctx.lineTo(width / 2 + divider * width * .29, height);
+      ctx.stroke();
+    });
+
+    this.drawCrispShip(ctx);
+    ctx.restore();
+  }
+
+  drawCrispShip(ctx) {
+    const nearObstacle = (this.flight.obstacles || []).some((obstacle) => (
+      !obstacle.hit
+      && obstacle.depth > .9
+      && Math.abs(obstacle.lane - this.flight.lanePosition) < .55
+    ));
+    if (nearObstacle) return;
+
+    const skin = SHIP_SKINS[this.flight.shipSkin] || SHIP_SKINS.nebula;
+    const trail = SHIP_TRAILS[this.flight.shipTrail] || SHIP_TRAILS.pulse;
+    const width = this.flight.width;
+    const height = this.flight.height;
+    const x = width / 2 + this.flight.lanePosition * width * .27;
+    const shipHeight = height < 520 ? .66 : .72;
+    const y = height * shipHeight;
+    const size = clamp(width / 12.4, 60, 82);
+    const bank = (this.flight.lane - this.flight.lanePosition) * .13;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(bank);
+    ctx.lineJoin = 'round';
+
+    // Máscara oscura: tapa el halo del modelo anterior y separa la silueta del fondo.
+    ctx.fillStyle = 'rgba(5,5,18,.96)';
+    this.shipHullPath(ctx, size * 1.09);
+    ctx.fill();
+
+    // Motores definidos, sin una nube de desenfoque alrededor de toda la nave.
+    [-.2, .2].forEach((side) => {
+      const flame = ctx.createLinearGradient(0, size * .38, 0, size * .94);
+      flame.addColorStop(0, '#ffffff');
+      flame.addColorStop(.28, trail.primary);
+      flame.addColorStop(1, 'rgba(86,231,255,0)');
+      ctx.fillStyle = flame;
+      ctx.beginPath();
+      ctx.moveTo(size * (side - .075), size * .38);
+      ctx.lineTo(size * side, size * .94);
+      ctx.lineTo(size * (side + .075), size * .38);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    const hull = ctx.createLinearGradient(-size * .5, -size * .72, size * .48, size * .54);
+    hull.addColorStop(0, '#ffffff');
+    hull.addColorStop(.2, skin.body);
+    hull.addColorStop(.66, skin.wing);
+    hull.addColorStop(1, '#4a315f');
+    ctx.fillStyle = hull;
+    this.shipHullPath(ctx, size);
+    ctx.fill();
+    ctx.strokeStyle = '#f7f8ff';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    // Alas y paneles con contornos definidos.
+    ctx.fillStyle = skin.wing;
+    ctx.strokeStyle = 'rgba(7,6,24,.85)';
+    ctx.lineWidth = 2;
+    [-1, 1].forEach((side) => {
+      ctx.beginPath();
+      ctx.moveTo(side * size * .24, -size * .02);
+      ctx.lineTo(side * size * .82, size * .43);
+      ctx.lineTo(side * size * .34, size * .39);
+      ctx.lineTo(side * size * .18, size * .18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    ctx.strokeStyle = 'rgba(255,255,255,.58)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(0, -size * .65);
+    ctx.lineTo(0, size * .32);
+    ctx.moveTo(-size * .31, size * .17);
+    ctx.lineTo(-size * .11, size * .34);
+    ctx.moveTo(size * .31, size * .17);
+    ctx.lineTo(size * .11, size * .34);
+    ctx.stroke();
+
+    const canopy = ctx.createLinearGradient(-size * .12, -size * .42, size * .16, size * .04);
+    canopy.addColorStop(0, '#ecfeff');
+    canopy.addColorStop(.28, skin.glass);
+    canopy.addColorStop(1, '#28466f');
+    ctx.fillStyle = canopy;
+    ctx.beginPath();
+    ctx.ellipse(0, -size * .22, size * .18, size * .28, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(5,8,28,.78)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,.86)';
+    ctx.beginPath();
+    ctx.ellipse(-size * .055, -size * .33, size * .045, size * .09, -.35, 0, Math.PI * 2);
+    ctx.fill();
+
+    [-.2, .2].forEach((side) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(size * side, size * .39, size * .045, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = trail.primary;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  shipHullPath(ctx, size) {
+    ctx.beginPath();
+    ctx.moveTo(0, -size * .76);
+    ctx.quadraticCurveTo(size * .34, -size * .42, size * .39, size * .12);
+    ctx.lineTo(size * .29, size * .49);
+    ctx.lineTo(0, size * .36);
+    ctx.lineTo(-size * .29, size * .49);
+    ctx.lineTo(-size * .39, size * .12);
+    ctx.quadraticCurveTo(-size * .34, -size * .42, 0, -size * .76);
+    ctx.closePath();
+  }
+
   drawEnergyCore(ctx, core) {
     const detail = this.detailRatio();
+    const compact = this.compactView();
     const point = this.project(core.lane, core.depth);
     const size = Math.max(8, 28 * point.scale);
     const pulse = 1 + Math.sin(this.flight.elapsed * 6 + core.pulse) * .12;
@@ -43,7 +207,7 @@ class FlightExcitementRenderer {
     ctx.rotate(core.spin);
     ctx.globalCompositeOperation = 'lighter';
     ctx.shadowColor = '#56e7ff';
-    ctx.shadowBlur = size * 1.45 * detail;
+    ctx.shadowBlur = size * (compact ? .72 : 1.45) * detail;
 
     const aura = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 1.7);
     aura.addColorStop(0, 'rgba(255,255,255,.94)');
@@ -82,24 +246,25 @@ class FlightExcitementRenderer {
   drawRushMeter(ctx) {
     if (this.flight.mode === 'idle' || this.flight.tutorial) return;
     const detail = this.detailRatio();
-    const width = clamp(this.flight.width * .3, 190, 310);
-    const height = 20;
-    const x = (this.flight.width - width) / 2;
-    const y = 16;
+    const compact = this.compactView();
+    const width = compact ? clamp(this.flight.width * .46, 148, 182) : clamp(this.flight.width * .3, 190, 310);
+    const height = compact ? 14 : 20;
+    const x = compact ? 12 : (this.flight.width - width) / 2;
+    const y = compact ? 20 : 16;
     const active = this.flight.rushTime > 0;
     const ratio = active
       ? clamp(this.flight.rushTime / 6, 0, 1)
       : clamp(this.flight.rushCharge / NEBULA_RUSH_MAX, 0, 1);
 
     ctx.save();
-    ctx.fillStyle = 'rgba(8,5,28,.78)';
-    ctx.strokeStyle = active ? 'rgba(255,200,87,.92)' : 'rgba(86,231,255,.55)';
-    ctx.lineWidth = 2;
-    this.roundedRect(ctx, x, y, width, height, 10);
+    ctx.fillStyle = compact ? 'rgba(6,5,22,.9)' : 'rgba(8,5,28,.78)';
+    ctx.strokeStyle = active ? 'rgba(255,200,87,.92)' : 'rgba(86,231,255,.68)';
+    ctx.lineWidth = compact ? 1.25 : 2;
+    this.roundedRect(ctx, x, y, width, height, height / 2);
     ctx.fill();
     ctx.stroke();
 
-    const inset = 4;
+    const inset = compact ? 3 : 4;
     const fillWidth = Math.max(0, (width - inset * 2) * ratio);
     if (fillWidth > 0) {
       const gradient = ctx.createLinearGradient(x + inset, 0, x + width - inset, 0);
@@ -108,20 +273,20 @@ class FlightExcitementRenderer {
       gradient.addColorStop(1, '#d86cff');
       ctx.fillStyle = gradient;
       ctx.shadowColor = active ? '#ffc857' : '#56e7ff';
-      ctx.shadowBlur = (active ? 20 : 12) * detail;
-      this.roundedRect(ctx, x + inset, y + inset, fillWidth, height - inset * 2, 7);
+      ctx.shadowBlur = (compact ? 4 : active ? 20 : 12) * detail;
+      this.roundedRect(ctx, x + inset, y + inset, fillWidth, height - inset * 2, height / 2);
       ctx.fill();
     }
 
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#f7f8ff';
-    ctx.font = '800 12px system-ui, sans-serif';
-    ctx.textAlign = 'center';
+    ctx.font = `800 ${compact ? 9 : 12}px system-ui, sans-serif`;
+    ctx.textAlign = compact ? 'left' : 'center';
     ctx.textBaseline = 'bottom';
     const label = active
-      ? `⚡ MODO IMPULSO · ${this.flight.rushTime.toFixed(1)} s`
-      : `✦ IMPULSO NÉBULA · ${Math.round(this.flight.rushCharge)}%`;
-    ctx.fillText(label, this.flight.width / 2, y - 4);
+      ? `⚡ IMPULSO · ${this.flight.rushTime.toFixed(1)} s`
+      : `✦ IMPULSO · ${Math.round(this.flight.rushCharge)}%`;
+    ctx.fillText(label, compact ? x : this.flight.width / 2, y - 3);
     ctx.restore();
   }
 
@@ -130,74 +295,87 @@ class FlightExcitementRenderer {
     if (!challenge || this.flight.tutorial || this.flight.mode === 'idle') return;
 
     const detail = this.detailRatio();
-    const compact = this.flight.width < 620;
-    const width = compact ? Math.min(this.flight.width - 24, 248) : 270;
-    const height = compact ? 70 : 78;
-    const x = 14;
-    const y = compact ? 48 : 54;
+    const compact = this.compactView();
+    const width = compact ? Math.min(this.flight.width - 112, 208) : 270;
+    const height = compact ? 54 : 78;
+    const x = 12;
+    const y = compact ? 52 : 54;
     const complete = challenge.status === 'completed';
     const failed = challenge.status === 'failed';
     const accent = complete ? '#5ce5a2' : failed ? '#ff7285' : '#56e7ff';
-    const pulse = this.flight.challengeMessageTime > 0 ? 1 + Math.sin(this.flight.elapsed * 9) * .015 : 1;
+    const pulse = this.flight.challengeMessageTime > 0 ? 1 + Math.sin(this.flight.elapsed * 9) * .01 : 1;
 
     ctx.save();
     ctx.translate(x + width / 2, y + height / 2);
     ctx.scale(pulse, pulse);
     ctx.translate(-width / 2, -height / 2);
-    ctx.fillStyle = 'rgba(8,5,28,.84)';
-    ctx.strokeStyle = accent;
-    ctx.lineWidth = complete || failed ? 2.4 : 1.5;
+    ctx.fillStyle = compact ? 'rgba(6,7,24,.82)' : 'rgba(8,5,28,.84)';
+    ctx.strokeStyle = compact ? 'rgba(189,197,225,.3)' : accent;
+    ctx.lineWidth = compact ? 1 : complete || failed ? 2.4 : 1.5;
     ctx.shadowColor = accent;
-    ctx.shadowBlur = (complete ? 18 : failed ? 10 : 8) * detail;
-    this.roundedRect(ctx, 0, 0, width, height, 14);
+    ctx.shadowBlur = compact ? 0 : (complete ? 18 : failed ? 10 : 8) * detail;
+    this.roundedRect(ctx, 0, 0, width, height, compact ? 10 : 14);
     ctx.fill();
     ctx.stroke();
     ctx.shadowBlur = 0;
 
+    if (compact) {
+      ctx.fillStyle = accent;
+      this.roundedRect(ctx, 0, 0, 3, height, 2);
+      ctx.fill();
+    }
+
+    const left = compact ? 10 : 13;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.fillStyle = accent;
-    ctx.font = `900 ${compact ? 10 : 11}px system-ui, sans-serif`;
-    const eyebrow = complete ? '✓ DESAFÍO COMPLETADO' : failed ? 'DESAFÍO NO COMPLETADO' : 'DESAFÍO DE RUTA';
-    ctx.fillText(eyebrow, 13, 9);
+    ctx.font = `900 ${compact ? 8 : 11}px system-ui, sans-serif`;
+    const eyebrow = complete ? '✓ COMPLETADO' : failed ? 'RETO FINALIZADO' : 'DESAFÍO';
+    ctx.fillText(eyebrow, left, compact ? 6 : 9);
 
     ctx.fillStyle = '#f7f8ff';
-    ctx.font = `800 ${compact ? 13 : 14}px system-ui, sans-serif`;
-    ctx.fillText(`${challenge.icon} ${challenge.title}`, 13, 25);
+    ctx.font = `800 ${compact ? 11 : 14}px system-ui, sans-serif`;
+    ctx.fillText(this.trimText(`${challenge.icon} ${challenge.title}`, compact ? 25 : 34), left, compact ? 18 : 25);
 
     ctx.fillStyle = complete ? '#5ce5a2' : failed ? '#ffb2bd' : '#bdc5e1';
-    ctx.font = `700 ${compact ? 10 : 11}px system-ui, sans-serif`;
+    ctx.font = `700 ${compact ? 8.5 : 11}px system-ui, sans-serif`;
     const detailText = complete
-      ? `Recompensa: ${challenge.reward.label}`
+      ? `Premio: ${challenge.reward.label}`
       : failed
-        ? 'Sin penalización · nuevo reto tras el portal'
+        ? 'Continúa sin penalización'
         : challenge.instruction;
-    ctx.fillText(detailText, 13, 44);
+    ctx.fillText(this.trimText(detailText, compact ? 34 : 44), left, compact ? 33 : 44);
 
     if (!complete && !failed) {
       const ratio = clamp(challenge.progress / Math.max(1, challenge.target), 0, 1);
-      const barY = height - 10;
-      ctx.fillStyle = 'rgba(255,255,255,.12)';
-      this.roundedRect(ctx, 13, barY, width - 26, 4, 2);
+      const barY = height - (compact ? 6 : 10);
+      ctx.fillStyle = 'rgba(255,255,255,.13)';
+      this.roundedRect(ctx, left, barY, width - left * 2, compact ? 3 : 4, 2);
       ctx.fill();
       if (ratio > 0) {
         ctx.fillStyle = accent;
-        this.roundedRect(ctx, 13, barY, (width - 26) * ratio, 4, 2);
+        this.roundedRect(ctx, left, barY, (width - left * 2) * ratio, compact ? 3 : 4, 2);
         ctx.fill();
       }
     }
     ctx.restore();
   }
 
+  trimText(text, maximum) {
+    const value = String(text || '');
+    return value.length > maximum ? `${value.slice(0, maximum - 1)}…` : value;
+  }
+
   drawRushField(ctx) {
     const { width, height, elapsed } = this.flight;
     const detail = this.detailRatio();
-    const lineCount = Math.max(8, Math.round(18 * detail));
+    const compact = this.compactView();
+    const lineCount = Math.max(7, Math.round((compact ? 12 : 18) * detail));
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     const aura = ctx.createRadialGradient(width * .5, height * .72, 0, width * .5, height * .72, width * .58);
-    aura.addColorStop(0, 'rgba(255,200,87,.11)');
-    aura.addColorStop(.42, 'rgba(86,231,255,.07)');
+    aura.addColorStop(0, 'rgba(255,200,87,.09)');
+    aura.addColorStop(.42, 'rgba(86,231,255,.055)');
     aura.addColorStop(1, 'rgba(216,108,255,0)');
     ctx.fillStyle = aura;
     ctx.fillRect(0, 0, width, height);
@@ -208,9 +386,9 @@ class FlightExcitementRenderer {
       const side = index % 2 ? 1 : -1;
       const x = width * .5 + side * width * (.1 + phase * .48);
       const y = height * (.2 + phase * .78);
-      const length = 18 + phase * 80;
-      ctx.strokeStyle = `rgba(${index % 3 ? '86,231,255' : '255,200,87'},${.08 + phase * .32})`;
-      ctx.lineWidth = 1 + phase * 3.2;
+      const length = 18 + phase * (compact ? 58 : 80);
+      ctx.strokeStyle = `rgba(${index % 3 ? '86,231,255' : '255,200,87'},${.06 + phase * (compact ? .2 : .32)})`;
+      ctx.lineWidth = .8 + phase * (compact ? 1.8 : 3.2);
       ctx.beginPath();
       ctx.moveTo(x, y - length);
       ctx.lineTo(x + side * length * .22, y + length * .2);
@@ -221,24 +399,25 @@ class FlightExcitementRenderer {
 
   drawRushMessage(ctx) {
     const detail = this.detailRatio();
+    const compact = this.compactView();
     const progress = clamp(this.flight.rushMessageTime / 2.2, 0, 1);
     const scale = 1 + (1 - progress) * .18;
     ctx.save();
-    ctx.translate(this.flight.width / 2, this.flight.height * .36);
+    ctx.translate(this.flight.width / 2, this.flight.height * (compact ? .3 : .36));
     ctx.scale(scale, scale);
     ctx.globalAlpha = Math.min(1, progress * 1.8);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = `900 ${clamp(this.flight.width * .045, 28, 54)}px system-ui, sans-serif`;
+    ctx.font = `900 ${clamp(this.flight.width * (compact ? .055 : .045), 22, 54)}px system-ui, sans-serif`;
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = '#56e7ff';
-    ctx.shadowBlur = 28 * detail;
+    ctx.shadowBlur = (compact ? 10 : 28) * detail;
     ctx.fillText('¡MODO NÉBULA!', 0, 0);
-    ctx.font = `800 ${clamp(this.flight.width * .018, 13, 20)}px system-ui, sans-serif`;
+    ctx.font = `800 ${clamp(this.flight.width * .018, 11, 20)}px system-ui, sans-serif`;
     ctx.fillStyle = '#ffc857';
     ctx.shadowColor = '#ffc857';
-    ctx.shadowBlur = 16 * detail;
-    ctx.fillText('MENOR CONSUMO · +1 PLASMA', 0, 38);
+    ctx.shadowBlur = (compact ? 6 : 16) * detail;
+    ctx.fillText('MENOR CONSUMO · +1 PLASMA', 0, compact ? 28 : 38);
     ctx.restore();
   }
 

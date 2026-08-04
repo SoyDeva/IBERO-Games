@@ -1,29 +1,29 @@
 export const FLIGHT_QUALITY_PROFILES = Object.freeze({
   economy: Object.freeze({
     id: 'economy',
-    pixelRatioCap: 1.25,
-    starCount: 46,
-    particleRatio: .38,
+    pixelRatioCap: 1.5,
+    starCount: 42,
+    particleRatio: .34,
     renderEvery: 2,
     idleRenderEvery: 3,
     hudInterval: 150,
-    detailRatio: .52
+    detailRatio: .5
   }),
   balanced: Object.freeze({
     id: 'balanced',
-    pixelRatioCap: 2,
-    starCount: 72,
-    particleRatio: .68,
+    pixelRatioCap: 2.25,
+    starCount: 64,
+    particleRatio: .62,
     renderEvery: 1,
     idleRenderEvery: 2,
     hudInterval: 110,
-    detailRatio: .78
+    detailRatio: .76
   }),
   high: Object.freeze({
     id: 'high',
-    pixelRatioCap: 2.5,
-    starCount: 105,
-    particleRatio: 1,
+    pixelRatioCap: 3,
+    starCount: 82,
+    particleRatio: .9,
     renderEvery: 1,
     idleRenderEvery: 2,
     hudInterval: 85,

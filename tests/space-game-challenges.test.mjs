@@ -25,9 +25,9 @@ test('las recompensas usan límites existentes y no alteran Liga, preguntas o al
 
 test('el Canvas muestra objetivo, progreso, recompensa y resultado sin nuevos eventos', () => {
   assert.match(renderer, /drawChallengeCard\(ctx\)/);
-  assert.match(renderer, /DESAFÍO DE RUTA/);
-  assert.match(renderer, /DESAFÍO COMPLETADO/);
-  assert.match(renderer, /Sin penalización/);
+  assert.match(renderer, /DESAFÍO/);
+  assert.match(renderer, /COMPLETADO/);
+  assert.match(renderer, /Continúa sin penalización/);
   assert.match(renderer, /challenge\.reward\.label/);
   assert.doesNotMatch(renderer, /addEventListener|requestAnimationFrame|setInterval|setTimeout/);
 });
