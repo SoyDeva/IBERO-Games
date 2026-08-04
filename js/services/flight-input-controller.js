@@ -1,3 +1,15 @@
+const FLIGHT_CONTROL_BINDINGS = Object.freeze({
+  'steer-left': Object.freeze({ action: 'move', direction: -1 }),
+  'mobile-steer-left': Object.freeze({ action: 'move', direction: -1 }),
+  'steer-right': Object.freeze({ action: 'move', direction: 1 }),
+  'mobile-steer-right': Object.freeze({ action: 'move', direction: 1 }),
+  'fire-plasma': Object.freeze({ action: 'fire' }),
+  'mobile-fire-plasma': Object.freeze({ action: 'fire' })
+});
+
+const CONTROL_IDS = Object.freeze(Object.keys(FLIGHT_CONTROL_BINDINGS));
+const SYNTHETIC_CLICK_WINDOW_MS = 800;
+
 export function keyboardFlightCommand(event, mode) {
   const key = String(event?.key || '');
   if (['ArrowLeft', 'a', 'A'].includes(key)) {
@@ -26,8 +38,16 @@ export function pointerFlightLane({ clientX, left, width, mode } = {}) {
   return 0;
 }
 
+export function flightControlCommand(id, mode) {
+  const binding = FLIGHT_CONTROL_BINDINGS[String(id || '')];
+  if (!binding) return { handled: false, preventDefault: false, action: 'none' };
+  if (mode !== 'running') return { handled: true, preventDefault: true, action: 'none' };
+  return { handled: true, preventDefault: true, ...binding };
+}
+
 export function createFlightInputController({
   windowRef,
+  documentRef = windowRef?.document,
   canvas,
   getMode,
   moveLane,
@@ -45,6 +65,17 @@ export function createFlightInputController({
   }
 
   let bound = false;
+  let controlButtons = [];
+  const pointerActivatedAt = new WeakMap();
+  const now = () => Number(windowRef.performance?.now?.()) || Date.now();
+
+  const executeControl = (button) => {
+    const command = flightControlCommand(button?.id, getMode());
+    if (!command.handled || command.action === 'none') return false;
+    if (command.action === 'move') moveLane(command.direction);
+    if (command.action === 'fire') fire();
+    return true;
+  };
 
   const onKey = (event) => {
     const command = keyboardFlightCommand(event, getMode());
@@ -65,11 +96,57 @@ export function createFlightInputController({
     if (lane !== null) setLane(lane);
   };
 
+  const onControlPointerDown = (event) => {
+    if (event?.isPrimary === false) return;
+    if (Number.isFinite(event?.button) && event.button !== 0) return;
+    event.preventDefault?.();
+    event.stopImmediatePropagation?.();
+    const button = event.currentTarget;
+    pointerActivatedAt.set(button, now());
+    button.classList?.add?.('is-pressed');
+    try { button.setPointerCapture?.(event.pointerId); } catch (error) { /* Safari puede rechazar captura durante cambios de viewport. */ }
+    executeControl(button);
+  };
+
+  const releaseControl = (event) => {
+    event.currentTarget?.classList?.remove?.('is-pressed');
+  };
+
+  const onControlClick = (event) => {
+    event.preventDefault?.();
+    event.stopImmediatePropagation?.();
+    const button = event.currentTarget;
+    const elapsed = now() - (pointerActivatedAt.get(button) ?? -Infinity);
+    if (elapsed >= 0 && elapsed < SYNTHETIC_CLICK_WINDOW_MS) return;
+    executeControl(button);
+  };
+
+  const bindControlButton = (button) => {
+    button.addEventListener('pointerdown', onControlPointerDown, { passive: false });
+    button.addEventListener('pointerup', releaseControl);
+    button.addEventListener('pointercancel', releaseControl);
+    button.addEventListener('lostpointercapture', releaseControl);
+    button.addEventListener('click', onControlClick);
+  };
+
+  const unbindControlButton = (button) => {
+    button.removeEventListener('pointerdown', onControlPointerDown);
+    button.removeEventListener('pointerup', releaseControl);
+    button.removeEventListener('pointercancel', releaseControl);
+    button.removeEventListener('lostpointercapture', releaseControl);
+    button.removeEventListener('click', onControlClick);
+    button.classList?.remove?.('is-pressed');
+  };
+
   return {
     bind() {
       if (bound) return false;
       windowRef.addEventListener('keydown', onKey);
       canvas.addEventListener('pointerdown', onPointer);
+      controlButtons = CONTROL_IDS
+        .map((id) => documentRef?.getElementById?.(id))
+        .filter(Boolean);
+      controlButtons.forEach(bindControlButton);
       bound = true;
       return true;
     },
@@ -77,6 +154,8 @@ export function createFlightInputController({
       if (!bound) return false;
       windowRef.removeEventListener('keydown', onKey);
       canvas.removeEventListener('pointerdown', onPointer);
+      controlButtons.forEach(unbindControlButton);
+      controlButtons = [];
       bound = false;
       return true;
     },
@@ -84,6 +163,8 @@ export function createFlightInputController({
       return bound;
     },
     onKey,
-    onPointer
+    onPointer,
+    onControlPointerDown,
+    onControlClick
   };
 }
