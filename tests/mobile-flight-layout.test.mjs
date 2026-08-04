@@ -14,14 +14,14 @@ test('la vista de vuelo queda anclada al viewport y no conserva desplazamiento p
   assert.match(css, /touch-action: none/);
 });
 
-test('la composición móvil elimina superposiciones y reserva una fila para controles', () => {
+test('la composición móvil elimina superposiciones y fija los controles al viewport', () => {
   assert.match(css, /body\.flight-route \.sector-badge\s*\{\s*display: none;/);
   assert.match(css, /body\.flight-route \.fullscreen-flight,[\s\S]*body\.flight-route \.music-flight\s*\{\s*display: none;/);
   assert.match(css, /body\.flight-route \.pause-flight,[\s\S]*body\.flight-route \.exit-flight[\s\S]*width: 38px;/);
-  assert.match(css, /grid-template-rows: minmax\(0, 1fr\) auto/);
-  assert.match(css, /body\.flight-route \.mobile-flight-controls[\s\S]*position: relative;/);
-  assert.match(css, /body\.flight-route \.mobile-flight-controls[\s\S]*grid-row: 2;/);
-  assert.match(css, /body\.flight-route \.mobile-flight-controls button[\s\S]*min-height: 52px;/);
+  assert.match(css, /grid-template-rows: minmax\(0, 1fr\)/);
+  assert.match(css, /body\.flight-route \.mobile-flight-controls[\s\S]*position: fixed !important;/);
+  assert.match(css, /body\.flight-route \.mobile-flight-controls[\s\S]*bottom: max\(0\.35rem, env\(safe-area-inset-bottom\)\)/);
+  assert.match(css, /body\.flight-route \.mobile-flight-controls button[\s\S]*min-height: 54px;/);
   assert.match(css, /env\(safe-area-inset-bottom\)/);
 });
 
@@ -48,7 +48,7 @@ test('la capa correctiva conserva orden, caché local y ausencia de dependencias
   const accessibility = indexHtml.indexOf('css/accessibility.css?v=23');
 
   assert.ok(polish >= 0 && cleanup > polish && accessibility > cleanup);
-  assert.match(serviceWorker, /mision-nebula-mobile-controls-v30/);
+  assert.match(serviceWorker, /mision-nebula-mobile-controls-visible-v31/);
   assert.match(serviceWorker, /\.\/css\/flight-mobile-cleanup\.css/);
   assert.doesNotMatch(css, /@import|https?:\/\/|url\s*\(/i);
 });
