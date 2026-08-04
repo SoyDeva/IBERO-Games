@@ -9,6 +9,7 @@
     height: var(--flight-viewport-height);
     overflow: hidden;
     overscroll-behavior: none;
+    touch-action: none;
   }
 
   body.flight-route #app {
@@ -106,6 +107,7 @@
     min-height: 0;
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
+    isolation: isolate;
     border-width: 1px;
     border-radius: 15px;
     background: #060417;
@@ -119,6 +121,7 @@
     min-height: 0;
     display: block;
     border-radius: 14px 14px 0 0;
+    touch-action: none;
   }
 
   body.flight-route .sector-badge {
@@ -126,9 +129,11 @@
   }
 
   body.flight-route .flight-stage-actions {
+    z-index: 9;
     top: 0.42rem;
     right: 0.42rem;
     gap: 0.26rem;
+    pointer-events: auto;
   }
 
   body.flight-route .fullscreen-flight,
@@ -148,6 +153,7 @@
     background: rgba(7, 6, 22, 0.94);
     box-shadow: 0 4px 12px rgba(2, 1, 12, 0.32);
     backdrop-filter: none;
+    touch-action: manipulation;
   }
 
   body.flight-route .pause-flight > span,
@@ -175,9 +181,13 @@
     background: #09061d;
     box-shadow: none;
     backdrop-filter: none;
+    isolation: isolate;
+    pointer-events: auto;
   }
 
   body.flight-route .mobile-flight-controls button {
+    position: relative;
+    z-index: 1;
     min-height: 52px;
     gap: 0.01rem;
     padding: 0.24rem 0.2rem;
@@ -186,6 +196,22 @@
     border-radius: 11px;
     background: #15102e;
     box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  body.flight-route .mobile-flight-controls button > * {
+    pointer-events: none;
+  }
+
+  body.flight-route .mobile-flight-controls button.is-pressed {
+    transform: scale(0.96);
+    border-color: #56e7ff;
+    background: #211a46;
   }
 
   body.flight-route .mobile-flight-controls .mobile-fire-control {
