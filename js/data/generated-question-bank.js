@@ -181,7 +181,7 @@ family(3, 'promedio', (i, f) => {
   const middle = 8 + i;
   const gap = 2 + (i % 4);
   const values = [middle - gap, middle, middle + gap];
-  addQuestion(3, f, i, 'Estadística', '📊', `¿Cuál es el promedio de ${values.join(', ')}?`, middle, [middle + gap, middle - 1], `La suma es ${middle * 3}; al dividir entre 3 se obtiene ${middle}.`);
+  addQuestion(3, f, i, 'Estadística', '📊', `En una bitácora aparecen ${values.join(', ')}. ¿Cuál es su promedio?`, middle, [middle + gap, middle - 1], `La suma es ${middle * 3}; al dividir entre 3 se obtiene ${middle}.`);
 });
 family(3, 'potencias', (i, f) => {
   const base = 2 + (i % 10);
@@ -346,12 +346,12 @@ family(5, 'pitagoras', (i, f) => {
   const a = a0 * factor;
   const b = b0 * factor;
   const c = c0 * factor;
-  addQuestion(5, f, i, 'Geometría', '📐', `Un triángulo rectángulo tiene catetos ${a} y ${b}. ¿Cuánto mide la hipotenusa?`, c, [c + factor, b], `${a}² + ${b}² = ${c}²; la hipotenusa mide ${c}.`);
+  addQuestion(5, f, i, 'Geometría', '📐', `En el reto ${i + 1}, un triángulo rectángulo tiene catetos ${a} y ${b}. ¿Cuánto mide la hipotenusa?`, c, [c + factor, b], `${a}² + ${b}² = ${c}²; la hipotenusa mide ${c}.`);
 });
 family(5, 'binario', (i, f) => {
   const decimal = 5 + i;
   const binary = decimal.toString(2);
-  addQuestion(5, f, i, 'Tecnología', '0️⃣', `¿Qué número decimal representa ${binary} en sistema binario?`, decimal, [decimal + 1, decimal - 2], `${binary} en binario equivale a ${decimal} en decimal.`);
+  addQuestion(5, f, i, 'Tecnología', '0️⃣', `Convierte ${binary} del sistema binario a decimal. ¿Qué valor obtienes?`, decimal, [decimal + 1, decimal - 2], `${binary} en binario equivale a ${decimal} en decimal.`);
 });
 family(5, 'patron', (i, f) => {
   const start = 2 + i;
