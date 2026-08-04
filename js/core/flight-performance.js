@@ -1,7 +1,7 @@
 export const FLIGHT_QUALITY_PROFILES = Object.freeze({
   economy: Object.freeze({
     id: 'economy',
-    pixelRatioCap: 1,
+    pixelRatioCap: 1.25,
     starCount: 46,
     particleRatio: .38,
     renderEvery: 2,
@@ -11,7 +11,7 @@ export const FLIGHT_QUALITY_PROFILES = Object.freeze({
   }),
   balanced: Object.freeze({
     id: 'balanced',
-    pixelRatioCap: 1.35,
+    pixelRatioCap: 2,
     starCount: 72,
     particleRatio: .68,
     renderEvery: 1,
@@ -21,7 +21,7 @@ export const FLIGHT_QUALITY_PROFILES = Object.freeze({
   }),
   high: Object.freeze({
     id: 'high',
-    pixelRatioCap: 1.75,
+    pixelRatioCap: 2.5,
     starCount: 105,
     particleRatio: 1,
     renderEvery: 1,
@@ -54,13 +54,15 @@ export function detectFlightQuality({
   saveData = false,
   reducedMotion = false
 } = {}) {
-  const width = Math.max(320, finite(viewportWidth, 960));
+  finite(viewportWidth, 960);
   const ratio = Math.max(1, finite(devicePixelRatio, 1));
   const cores = Math.max(1, finite(hardwareConcurrency, 8));
   const memory = Math.max(1, finite(deviceMemory, 8));
 
-  if (saveData || width <= 520 || cores <= 4 || memory <= 4 || ratio >= 2.75) return 'economy';
-  if (reducedMotion || width <= 980 || cores <= 6 || memory <= 6 || ratio > 1.75) return 'balanced';
+  if (saveData || cores <= 4 || memory <= 4) return 'economy';
+  if (reducedMotion) return 'balanced';
+  if (ratio >= 2.5 && cores >= 6 && memory >= 8) return 'high';
+  if (cores <= 6 || memory <= 6) return 'balanced';
   return 'high';
 }
 
