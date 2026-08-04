@@ -16,6 +16,29 @@
     width: 100%;
     height: 100%;
   }
+
+  /* Los controles salen del flujo recortable del escenario y se fijan al
+     viewport visible. Así Safari no puede esconderlos bajo su barra inferior. */
+  body.flight-route .flight-page {
+    padding-bottom: calc(92px + max(0.35rem, env(safe-area-inset-bottom)));
+  }
+
+  body.flight-route .mobile-flight-controls {
+    position: fixed !important;
+    z-index: 40;
+    left: 50%;
+    right: auto;
+    bottom: max(0.35rem, env(safe-area-inset-bottom));
+    width: min(560px, calc(100% - 0.7rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    max-width: none;
+    display: grid !important;
+    grid-template-columns: 1fr 1.12fr 1fr;
+    transform: translateX(-50%);
+    translate: none;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto;
+  }
 }
 
 @media (max-width: 680px) {
@@ -28,6 +51,7 @@
       max(0.16rem, env(safe-area-inset-right))
       max(0.16rem, env(safe-area-inset-bottom))
       max(0.16rem, env(safe-area-inset-left));
+    padding-bottom: calc(72px + max(0.28rem, env(safe-area-inset-bottom)));
   }
 
   body.flight-route .flight-hud {
@@ -106,7 +130,7 @@
     flex: 1 1 auto;
     min-height: 0;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr);
     isolation: isolate;
     border-width: 1px;
     border-radius: 15px;
@@ -120,7 +144,7 @@
     height: 100%;
     min-height: 0;
     display: block;
-    border-radius: 14px 14px 0 0;
+    border-radius: 14px;
     touch-action: none;
   }
 
@@ -163,36 +187,25 @@
   }
 
   body.flight-route .mobile-flight-controls {
-    position: relative;
-    z-index: 6;
-    grid-row: 2;
-    left: auto;
-    bottom: auto;
-    translate: none;
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1.08fr 1fr;
     gap: 0.24rem;
     margin: 0;
-    padding: 0.28rem 0.28rem max(0.28rem, env(safe-area-inset-bottom));
-    border: 0;
-    border-top: 1px solid rgba(189, 197, 225, 0.16);
-    border-radius: 0 0 14px 14px;
+    padding: 0.28rem;
+    border: 1px solid rgba(86, 231, 255, 0.24);
+    border-radius: 14px;
     background: #09061d;
-    box-shadow: none;
+    box-shadow: 0 10px 28px rgba(2, 1, 12, 0.55);
     backdrop-filter: none;
     isolation: isolate;
-    pointer-events: auto;
   }
 
   body.flight-route .mobile-flight-controls button {
     position: relative;
     z-index: 1;
-    min-height: 52px;
+    min-height: 54px;
     gap: 0.01rem;
     padding: 0.24rem 0.2rem;
     border-width: 1px;
-    border-color: rgba(137, 147, 181, 0.42);
+    border-color: rgba(137, 147, 181, 0.5);
     border-radius: 11px;
     background: #15102e;
     box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
@@ -215,9 +228,14 @@
   }
 
   body.flight-route .mobile-flight-controls .mobile-fire-control {
-    border-color: rgba(86, 231, 255, 0.5);
-    background: linear-gradient(180deg, #211a46, #15102e);
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+    min-height: 58px;
+    border: 2px solid #56e7ff;
+    color: #ffffff;
+    background: linear-gradient(180deg, #31275f, #181238);
+    box-shadow:
+      0 0 0 1px rgba(86, 231, 255, 0.14),
+      0 6px 18px rgba(2, 1, 12, 0.4),
+      inset 0 1px rgba(255, 255, 255, 0.1);
   }
 
   body.flight-route .mobile-flight-controls button > span {
@@ -235,6 +253,10 @@
 }
 
 @media (max-width: 380px), (max-height: 700px) and (max-width: 680px) {
+  body.flight-route .flight-page {
+    padding-bottom: calc(66px + max(0.2rem, env(safe-area-inset-bottom)));
+  }
+
   body.flight-route .flight-hud {
     gap: 0.13rem;
     margin-bottom: 0.13rem;
@@ -254,8 +276,42 @@
     min-height: 36px;
   }
 
+  body.flight-route .mobile-flight-controls {
+    bottom: max(0.2rem, env(safe-area-inset-bottom));
+    padding: 0.22rem;
+  }
+
   body.flight-route .mobile-flight-controls button {
     min-height: 48px;
+  }
+
+  body.flight-route .mobile-flight-controls .mobile-fire-control {
+    min-height: 52px;
+  }
+}
+
+@media (max-width: 850px) and (max-height: 500px) {
+  body.flight-route .flight-page {
+    padding-bottom: calc(58px + max(0.18rem, env(safe-area-inset-bottom)));
+  }
+
+  body.flight-route .mobile-flight-controls {
+    bottom: max(0.18rem, env(safe-area-inset-bottom));
+    padding: 0.18rem;
+    border-radius: 11px;
+  }
+
+  body.flight-route .mobile-flight-controls button {
+    min-height: 42px;
+    padding-block: 0.12rem;
+  }
+
+  body.flight-route .mobile-flight-controls .mobile-fire-control {
+    min-height: 46px;
+  }
+
+  body.flight-route .mobile-flight-controls button > small {
+    display: none;
   }
 }
 
