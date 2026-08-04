@@ -25,6 +25,7 @@ export function renderGameOverScreen({ documentRef = document, summary, actions 
     + metric(summary.bestStreak, 'Mejor racha')
     + metric(summary.destroyed, 'Destruidos')
     + metric(summary.checkpoints, 'Portales')
+    + metric(summary.challengesCompleted, 'Desafíos')
     + metric(summary.best, 'Récord', ' km')
     + metric('+' + summary.crystals + ' 💎', 'Cristales ganados')
     + '</div>' + rankingNote + learned + achievementNote
