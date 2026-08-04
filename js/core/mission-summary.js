@@ -19,6 +19,7 @@ export function createMissionSummary({
     bestStreak: Math.max(0, Number(safeResult.bestStreak) || 0),
     destroyed: Math.max(0, Number(safeResult.destroyed) || 0),
     checkpoints: Math.max(0, Number(safeResult.checkpoints) || 0),
+    challengesCompleted: Math.max(0, Number(safeResult.challengesCompleted) || 0),
     best,
     crystals: Math.max(0, Number(crystals) || 0),
     achievements: Array.isArray(achievements) ? [...achievements] : [],
