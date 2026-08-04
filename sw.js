@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mision-nebula-mobile-overhaul-v29';
+const CACHE_NAME = 'mision-nebula-mobile-controls-v30';
 
 const APP_SHELL = [
   './',
