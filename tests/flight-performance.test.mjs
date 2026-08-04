@@ -13,7 +13,7 @@ import {
 import { resizeFlightCanvas } from '../js/core/flight-geometry.js';
 
 test('clasifica por capacidad y no confunde una pantalla Retina con un equipo lento', () => {
-  assert.equal(detectFlightQuality({ viewportWidth: 390, devicePixelRatio: 3, hardwareConcurrency: 8, deviceMemory: 8 }), 'high');
+  assert.equal(detectFlightQuality({ viewportWidth: 390, devicePixelRatio: 3, hardwareConcurrency: 6, deviceMemory: 8 }), 'high');
   assert.equal(detectFlightQuality({ viewportWidth: 390, devicePixelRatio: 3, hardwareConcurrency: 4, deviceMemory: 4 }), 'economy');
   assert.equal(detectFlightQuality({ viewportWidth: 820, hardwareConcurrency: 6, deviceMemory: 6 }), 'balanced');
   assert.equal(detectFlightQuality({ viewportWidth: 1440, hardwareConcurrency: 12, deviceMemory: 16, devicePixelRatio: 1 }), 'high');
@@ -35,7 +35,7 @@ test('los perfiles preservan nitidez Retina y limitan efectos de forma independi
 });
 
 test('degrada calidad ante fotogramas lentos y no eleva un equipo restringido', () => {
-  let performanceState = createFlightPerformanceState({ viewportWidth: 390, devicePixelRatio: 3, hardwareConcurrency: 8, deviceMemory: 8 });
+  let performanceState = createFlightPerformanceState({ viewportWidth: 390, devicePixelRatio: 3, hardwareConcurrency: 6, deviceMemory: 8 });
   assert.equal(performanceState.quality, 'high');
   for (let index = 0; index < 190; index += 1) {
     performanceState = updateFlightPerformance(performanceState, 34).state;
