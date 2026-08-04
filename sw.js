@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mision-nebula-pwa-v26';
+const CACHE_NAME = 'mision-nebula-mobile-cleanup-v27';
 
 const APP_SHELL = [
   './',
@@ -17,6 +17,7 @@ const APP_SHELL = [
   './css/learning-repair.css',
   './css/nebula-bright.css',
   './css/flight-polish.css',
+  './css/flight-mobile-cleanup.css',
   './css/mission-results.css',
   './css/hangar-polish.css',
   './css/hangar-gameplay.css',
