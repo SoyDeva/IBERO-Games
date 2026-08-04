@@ -1,7 +1,7 @@
 import { SpaceFlight, SHIP_SKINS, SHIP_TRAILS } from './space-game.js?v=23';
 import { shuffledQuestions, levelForPortal, shuffledQuestionOptions } from './questions.js';
 import { bindSettings, applySettings, getSettings, announce, playTone, startMusic, setMusicIntensity, stopMusic } from './accessibility.js?v=23';
-import { claimGalacticPilot, getGalacticLeaderboard, submitGalacticScore } from './galactic-league.js?v=23';
+import { claimGalacticPilot, getGalacticLeaderboard, submitGalacticScore } from './galactic-league.js?v=25';
 import { ACHIEVEMENTS } from './core/achievements.js?v=23';
 import { equipHangarItem, purchaseHangarItem } from './core/hangar.js?v=23';
 import { adaptiveQuestionIndex } from './core/question-adaptation.js?v=23';
@@ -749,8 +749,8 @@ document.getElementById('pilot-form')?.addEventListener('submit', async (event) 
     return;
   }
   const pin = pinInput.value;
-  if (pin && (pin.length < 4 || pin.length > 8)) {
-    errorElement.textContent = 'La contraseña debe tener entre 4 y 8 caracteres.';
+  if (pin && (pin.length < 4 || pin.length > 12)) {
+    errorElement.textContent = 'La contraseña debe tener entre 4 y 12 caracteres.';
     pinInput.focus();
     return;
   }
