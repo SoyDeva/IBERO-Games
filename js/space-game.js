@@ -13,13 +13,24 @@ import {
   projectileHitsObstacle,
   resolveFuelDepletion
 } from './core/flight-simulation.js?v=23';
+import {
+  advanceEnergyCores,
+  advanceExcitementTimers,
+  chargeNebulaRush,
+  cleanupEnergyCores,
+  collectEnergyCore,
+  createEnergyCore,
+  isEnergyCoreCollected,
+  nebulaRushFuelMultiplier,
+  penalizeNebulaRush
+} from './core/flight-excitement.js?v=23';
 import { createFlightInputController } from './services/flight-input-controller.js?v=23';
 import { SHIP_SKINS, SHIP_TRAILS } from './config/ship-catalog.js?v=23';
 import { clamp, resizeFlightCanvas } from './core/flight-geometry.js?v=23';
 import { createFlightRenderer } from './ui/flight-renderer.js?v=23';
+import { createFlightExcitementRenderer } from './ui/flight-excitement-renderer.js?v=23';
 
 export { SHIP_SKINS, SHIP_TRAILS };
-
 
 export class SpaceFlight {
   constructor(canvas, callbacks = {}) {
@@ -27,6 +38,7 @@ export class SpaceFlight {
     this.context = canvas.getContext('2d');
     this.callbacks = callbacks;
     this.renderer = createFlightRenderer(this);
+    this.excitementRenderer = createFlightExcitementRenderer(this);
     this.width = 960;
     this.height = 600;
     Object.assign(this, createFlightState());
@@ -147,6 +159,7 @@ export class SpaceFlight {
     this.flash = 1;
     this.createCelebration();
     this.mode = 'running';
+    this.chargeRush(28, 'answer');
     this.callbacks.onLevelUp?.({ level: this.checkpoints + 1 });
     const sectorChanged = this.getSectorIndex() !== previousSector;
     const sector = this.getSector();
@@ -164,6 +177,7 @@ export class SpaceFlight {
     this.adaptiveAssist = Math.min(.16, this.adaptiveAssist + .04);
     this.collisionsThisLeg = 0;
     this.fuel = Math.min(100, this.fuel + 24);
+    Object.assign(this, penalizeNebulaRush(this));
     const ammoRecharged = this.rechargeAmmoAtMilestone();
     this.nextCheckpoint += 330 + this.checkpoints * 12;
     this.spawnTimer = 2.25;
@@ -222,7 +236,8 @@ export class SpaceFlight {
   frame(time) {
     const delta = Math.min((time - this.lastFrame) / 1000, .04);
     this.lastFrame = time;
-    this.updateStars(delta, this.mode === 'running' ? 1 : .18);
+    const flightPace = this.mode === 'running' ? (this.rushTime > 0 ? 1.72 : 1) : .18;
+    this.updateStars(delta, flightPace);
     if (this.mode === 'running') this.update(delta);
     this.updateCelebration(delta);
     this.draw();
@@ -237,7 +252,12 @@ export class SpaceFlight {
   }
 
   update(delta) {
-    Object.assign(this, advanceFlightVitals(this, delta));
+    const rushFuelMultiplier = nebulaRushFuelMultiplier(this);
+    Object.assign(this, advanceFlightVitals({
+      ...this,
+      fuelDrainMultiplier: this.fuelDrainMultiplier * rushFuelMultiplier
+    }, delta));
+    Object.assign(this, advanceExcitementTimers(this, delta));
     const difficulty = this.getDifficulty();
 
     const fuelOutcome = resolveFuelDepletion(this);
@@ -263,6 +283,7 @@ export class SpaceFlight {
       delta,
       obstacleSpeed: difficulty.obstacleSpeed
     });
+    this.updateEnergyCores(delta, difficulty, remaining);
     this.updateProjectiles(delta);
     for (const obstacle of this.obstacles) {
       if (isShipCollision({ obstacle, lanePosition: this.lanePosition, invulnerable: this.invulnerable })) {
@@ -283,6 +304,7 @@ export class SpaceFlight {
     this.explosions = activeObjects.explosions;
     this.projectiles = activeObjects.projectiles;
     this.obstacles = activeObjects.obstacles;
+    this.energyCores = cleanupEnergyCores(this.energyCores);
     if (this.mode !== 'running') {
       this.emitHud();
       return;
@@ -292,9 +314,65 @@ export class SpaceFlight {
       this.mode = 'quiz';
       this.obstacles = [];
       this.projectiles = [];
+      this.energyCores = [];
       this.callbacks.onCheckpoint?.({ number: this.checkpoints + 1, fuel: Math.round(this.fuel), clean: this.collisionsThisLeg === 0 });
     }
     this.emitHud();
+  }
+
+  updateEnergyCores(delta, difficulty, remaining) {
+    if (this.tutorial) return;
+    if (this.coreSpawnTimer <= 0 && remaining > 90 && this.energyCores.length === 0) {
+      const blockedLanes = this.obstacles
+        .filter((obstacle) => !obstacle.hit && obstacle.depth < .34)
+        .map((obstacle) => obstacle.lane);
+      this.energyCores.push(createEnergyCore({ blockedLanes, random: Math.random }));
+      this.coreSpawnTimer = 10.5 + Math.random() * 6.5;
+    }
+
+    this.energyCores = advanceEnergyCores(this.energyCores, {
+      delta,
+      speed: difficulty.obstacleSpeed
+    });
+
+    for (const core of this.energyCores) {
+      if (!isEnergyCoreCollected({ core, lanePosition: this.lanePosition })) continue;
+      this.collectCore(core);
+    }
+  }
+
+  collectCore(core) {
+    core.collected = true;
+    const outcome = collectEnergyCore(this);
+    Object.assign(this, outcome.patch);
+    if (outcome.activated) this.activateRushCelebration('core');
+    this.callbacks.onEnergyCore?.({
+      collected: this.coresCollected,
+      fuel: this.fuel,
+      ammo: this.ammo,
+      ammoBonus: outcome.ammoBonus,
+      rushCharge: this.rushCharge,
+      rushActive: this.rushTime > 0
+    });
+    this.emitHud();
+  }
+
+  chargeRush(amount, source = '') {
+    if (this.tutorial) return false;
+    const outcome = chargeNebulaRush(this, amount);
+    Object.assign(this, outcome.patch);
+    if (outcome.activated) this.activateRushCelebration(source);
+    return outcome.activated;
+  }
+
+  activateRushCelebration(source) {
+    this.createCelebration(38);
+    this.callbacks.onNebulaRush?.({
+      source,
+      duration: this.rushTime,
+      ammo: this.ammo,
+      rushes: this.rushes
+    });
   }
 
   getDifficulty() {
@@ -332,7 +410,7 @@ export class SpaceFlight {
 
   collide(obstacle) {
     const outcome = collisionOutcome(this, obstacle, Math.random);
-    Object.assign(this, outcome.patch);
+    Object.assign(this, outcome.patch, penalizeNebulaRush(this));
     this.explosions.push(outcome.explosion);
     this.callbacks.onCollision?.(outcome.collision);
     if (outcome.rescueReason) {
@@ -346,6 +424,7 @@ export class SpaceFlight {
     obstacle.hit = true;
     const outcome = destructionOutcome(this, obstacle, Math.random);
     Object.assign(this, outcome.patch);
+    if (!this.tutorial) this.chargeRush(18, 'destroy');
     this.explosions.push(outcome.explosion);
     this.callbacks.onDestroy?.(outcome.destroyed);
     if (outcome.tutorialStep) this.callbacks.onTutorialStep?.({ step: outcome.tutorialStep });
@@ -388,6 +467,7 @@ export class SpaceFlight {
 
   draw() {
     this.renderer.draw();
+    this.excitementRenderer.draw();
   }
 
   destroy() {

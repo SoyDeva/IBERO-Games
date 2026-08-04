@@ -6,10 +6,12 @@ const source = readFileSync(new URL('../js/space-game.js', import.meta.url), 'ut
 
 test('SpaceFlight conecta las reglas de simulación y conserva la dificultad local', () => {
   assert.match(source, /from '\.\/core\/flight-simulation\.js\?v=23'/);
+  assert.match(source, /const rushFuelMultiplier = nebulaRushFuelMultiplier\(this\);/);
   assert.match(
     source,
-    /update\(delta\) \{\s+Object\.assign\(this, advanceFlightVitals\(this, delta\)\);\s+const difficulty = this\.getDifficulty\(\);/
+    /advanceFlightVitals\(\{\s+\.\.\.this,\s+fuelDrainMultiplier: this\.fuelDrainMultiplier \* rushFuelMultiplier\s+\}, delta\)/
   );
+  assert.match(source, /Object\.assign\(this, advanceExcitementTimers\(this, delta\)\);\s+const difficulty = this\.getDifficulty\(\);/);
   assert.match(source, /obstacleSpeed: difficulty\.obstacleSpeed/);
   assert.match(source, /this\.spawnTimer = difficulty\.spawnInterval \+ Math\.random\(\) \* \.32/);
 });
