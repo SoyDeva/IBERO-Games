@@ -1,11 +1,15 @@
-const CACHE_NAME = 'mision-nebula-release-v25';
+const CACHE_NAME = 'mision-nebula-pwa-v26';
 
 const APP_SHELL = [
   './',
   './index.html',
   './informe-actividad-1.html',
   './README.md',
+  './manifest.webmanifest',
   './assets/icons/favicon.svg',
+  './assets/icons/app-icon-180.png',
+  './assets/icons/app-icon-192.png',
+  './assets/icons/app-icon-512.png',
 
   './css/styles.css',
   './css/learning-progress.css',
@@ -101,7 +105,7 @@ const APP_SHELL = [
   './js/ui/tutorial-panel.js'
 ];
 
-const CODE_REQUEST = /\.(?:html|css|js)$/i;
+const CODE_REQUEST = /\.(?:html|css|js|webmanifest)$/i;
 
 async function cacheSuccessfulResponse(request, response) {
   if (response?.ok) {
