@@ -1,0 +1,29 @@
+{
+  "name": "Misión Nébula · Pilota, responde y avanza",
+  "short_name": "Misión Nébula",
+  "description": "Juego educativo de pilotaje espacial 2.5D y preguntas de conocimiento general para niñas y niños de 10 a 12 años.",
+  "id": "./",
+  "start_url": "./#inicio",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0B071B",
+  "theme_color": "#0B071B",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["education", "games"],
+  "icons": [
+    {
+      "src": "assets/icons/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
