@@ -29,6 +29,7 @@ test('los efectos secundarios siguen la calidad y el modo sin conexión precarga
   assert.match(excitementRenderer, /this\.flight\.performanceProfile\?\.detailRatio/);
   assert.match(excitementRenderer, /Math\.max\(8, Math\.round\(18 \* detail\)\)/);
   assert.doesNotMatch(excitementRenderer, /requestAnimationFrame|setInterval|fetch\(/);
-  assert.match(serviceWorker, /mision-nebula-performance-v24/);
-  assert.match(serviceWorker, /flight-performance\.js\?v=23/);
+  assert.match(serviceWorker, /mision-nebula-release-v25/);
+  assert.match(serviceWorker, /flight-performance\.js/);
+  assert.match(serviceWorker, /ignoreSearch: true/);
 });
