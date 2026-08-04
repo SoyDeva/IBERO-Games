@@ -1,8 +1,8 @@
 export const GALACTIC_ERROR_MESSAGES = Object.freeze({
   invalid_nickname: 'Usa un apodo de 2 a 18 caracteres.',
-  invalid_pin_length: 'La contraseña debe tener entre 4 y 8 caracteres.',
+  invalid_pin_length: 'La contraseña debe tener entre 4 y 12 caracteres.',
   nickname_taken: 'Ese apodo ya pertenece a otro piloto. Elige uno diferente.',
-  pin_required: 'La Liga Galáctica requiere una contraseña de 4 a 8 caracteres para proteger y recuperar tu apodo.',
+  pin_required: 'La Liga Galáctica requiere una contraseña de 4 a 12 caracteres para proteger y recuperar tu apodo.',
   pin_invalid: 'La contraseña no coincide con ese apodo.',
   invalid_session: 'La sesión del piloto venció. Registra o desbloquea el apodo otra vez.',
   invalid_season: 'La versión de esta expedición no es válida. Recarga el juego e inténtalo de nuevo.',
