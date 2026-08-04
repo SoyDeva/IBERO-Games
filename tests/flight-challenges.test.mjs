@@ -73,6 +73,7 @@ test('aplica recompensas sin superar combustible, plasma ni conteos defensivos',
   assert.equal(patch.challengesCompleted, 3);
   assert.equal(patch.challengeMessageTime, 2.6);
 
-  assert.deepEqual(advanceChallengeTimer({ challengeMessageTime: 1.2 }, .4), { challengeMessageTime: .8 });
+  const ticking = advanceChallengeTimer({ challengeMessageTime: 1.2 }, .4);
+  assert.ok(Math.abs(ticking.challengeMessageTime - .8) < Number.EPSILON * 2);
   assert.deepEqual(advanceChallengeTimer({ challengeMessageTime: .2 }, 1), { challengeMessageTime: 0 });
 });
