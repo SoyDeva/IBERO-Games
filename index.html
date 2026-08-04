@@ -77,7 +77,7 @@
       <h2 id="pilot-title">¿Cómo te llamas, piloto?</h2>
       <p>Tu apodo será único y aparecerá en la Liga Galáctica mundial. No uses tu nombre real.</p>
       <label class="pilot-name-field"><span>Apodo galáctico</span><input id="pilot-name" name="pilot-name" type="text" required minlength="2" maxlength="18" autocomplete="nickname" placeholder="Ejemplo: LunaEstelar" aria-describedby="pilot-error"></label>
-      <label class="pilot-name-field pilot-pin-field"><span>Contraseña del apodo</span><span class="pilot-pin-control"><input id="pilot-pin" name="pilot-pin" type="password" required minlength="4" maxlength="8" autocomplete="current-password" placeholder="4 a 8 caracteres" aria-describedby="pilot-pin-help pilot-error"><button id="toggle-pilot-pin" type="button" aria-label="Mostrar contraseña">👁️</button></span></label>
+      <label class="pilot-name-field pilot-pin-field"><span>Contraseña del apodo</span><span class="pilot-pin-control"><input id="pilot-pin" name="pilot-pin" type="password" required minlength="4" maxlength="12" autocomplete="current-password" placeholder="4 a 12 caracteres" aria-describedby="pilot-pin-help pilot-error"><button id="toggle-pilot-pin" type="button" aria-label="Mostrar contraseña">👁️</button></span></label>
       <p id="pilot-pin-help" class="pilot-pin-help">La contraseña protege el apodo nuevo y permite desbloquearlo después en este u otro dispositivo. Nunca la compartas.</p>
       <p id="pilot-error" class="pilot-error" role="alert"></p>
       <label class="remember-pilot"><input id="remember-pilot" type="checkbox"><span><strong>Recordarme en este dispositivo</strong><small>Si no lo marcas, volveremos a preguntarte al abrir el juego.</small></span></label>
@@ -95,6 +95,6 @@
 
   <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
   <script src="js/compatibility.js?v=24"></script>
-  <script type="module" src="js/app.js?v=24"></script>
+  <script type="module" src="js/app.js?v=25"></script>
 </body>
 </html>

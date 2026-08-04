@@ -29,7 +29,7 @@ test('el disparo central conserva mayor presencia y un objetivo táctil seguro',
 });
 
 test('la corrección fuerza una caché nueva para reemplazar recursos anteriores', () => {
-  assert.match(serviceWorker, /mision-nebula-system-audit-v32/);
+  assert.match(serviceWorker, /mision-nebula-pin-length-v33/);
   assert.match(serviceWorker, /\.\/css\/flight-mobile-cleanup\.css/);
   assert.match(serviceWorker, /\.\/css\/system-fixes\.css/);
 });

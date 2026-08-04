@@ -68,9 +68,33 @@ test('conserva códigos y mensajes de error comprensibles', () => {
   assert.match(error.message, /versión/i);
 });
 
-test('rechaza contraseñas inválidas antes de intentar una conexión', async () => {
+test('acepta una contraseña de 12 caracteres y la envía completa', async () => {
+  const previousFetch = globalThis.fetch;
+  let payload = null;
+  globalThis.fetch = async (_url, options) => {
+    payload = JSON.parse(options.body);
+    return {
+      ok: true,
+      json: async () => ({ nickname: 'Piloto', token: 't'.repeat(64), protected: true })
+    };
+  };
+
+  try {
+    const profile = await claimGalacticPilot('Piloto', '123456789012');
+    assert.equal(profile.nickname, 'Piloto');
+    assert.equal(payload.p_pin, '123456789012');
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test('rechaza contraseñas menores de 4 o mayores de 12 antes de conectar', async () => {
   await assert.rejects(
     claimGalacticPilot('Piloto', '123'),
+    (error) => error.code === 'pin_required'
+  );
+  await assert.rejects(
+    claimGalacticPilot('Piloto', '1234567890123'),
     (error) => error.code === 'pin_required'
   );
 });

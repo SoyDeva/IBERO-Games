@@ -7,7 +7,7 @@ import { normalizeSeasonCode } from '../core/galactic-season.js';
 import { callSupabaseRpc } from './supabase-rpc.js';
 
 const MIN_PIN_LENGTH = 4;
-const MAX_PIN_LENGTH = 8;
+const MAX_PIN_LENGTH = 12;
 
 function normalizePin(pin) {
   return String(pin || '');
