@@ -30,6 +30,13 @@ import {
   createSectorChallenge,
   progressSectorChallenge
 } from './core/flight-challenges.js?v=23';
+import {
+  createFlightPerformanceState,
+  getFlightQualityProfile,
+  scaledVisualCount,
+  shouldRenderFlightFrame,
+  updateFlightPerformance
+} from './core/flight-performance.js?v=23';
 import { createFlightInputController } from './services/flight-input-controller.js?v=23';
 import { SHIP_SKINS, SHIP_TRAILS } from './config/ship-catalog.js?v=23';
 import { clamp, resizeFlightCanvas } from './core/flight-geometry.js?v=23';
@@ -38,18 +45,36 @@ import { createFlightExcitementRenderer } from './ui/flight-excitement-renderer.
 
 export { SHIP_SKINS, SHIP_TRAILS };
 
+function browserPerformanceCapabilities() {
+  const browserWindow = globalThis.window || {};
+  const browserNavigator = globalThis.navigator || {};
+  return {
+    viewportWidth: browserWindow.innerWidth || 960,
+    devicePixelRatio: browserWindow.devicePixelRatio || 1,
+    hardwareConcurrency: browserNavigator.hardwareConcurrency || 8,
+    deviceMemory: browserNavigator.deviceMemory || 8,
+    saveData: Boolean(browserNavigator.connection?.saveData),
+    reducedMotion: Boolean(browserWindow.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)
+  };
+}
+
 export class SpaceFlight {
   constructor(canvas, callbacks = {}) {
     this.canvas = canvas;
-    this.context = canvas.getContext('2d');
+    this.context = canvas.getContext('2d', { alpha: false, desynchronized: true }) || canvas.getContext('2d');
     this.callbacks = callbacks;
-    this.renderer = createFlightRenderer(this);
-    this.excitementRenderer = createFlightExcitementRenderer(this);
     this.width = 960;
     this.height = 600;
+    this.performanceState = createFlightPerformanceState(browserPerformanceCapabilities());
+    this.performanceProfile = getFlightQualityProfile(this.performanceState.quality);
+    this.frameNumber = 0;
+    this.lastHudAt = -Infinity;
+    this.lastHudSignature = '';
+    this.renderer = createFlightRenderer(this);
+    this.excitementRenderer = createFlightExcitementRenderer(this);
     Object.assign(this, createFlightState());
-    this.lastFrame = performance.now();
-    this.stars = Array.from({ length: 105 }, () => this.createStar());
+    this.lastFrame = globalThis.performance?.now?.() || 0;
+    this.stars = Array.from({ length: this.performanceProfile.starCount }, () => this.createStar());
     this.boundFrame = (time) => this.frame(time);
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(canvas);
@@ -75,14 +100,32 @@ export class SpaceFlight {
     };
   }
 
+  syncStarCount() {
+    const target = this.performanceProfile.starCount;
+    if (this.stars.length > target) this.stars.length = target;
+    while (this.stars.length < target) this.stars.push(this.createStar());
+  }
+
+  applyPerformanceProfile() {
+    this.performanceProfile = getFlightQualityProfile(this.performanceState.quality);
+    this.syncStarCount();
+    this.resize();
+    this.callbacks.onPerformanceProfile?.({
+      quality: this.performanceProfile.id,
+      averageFrameMs: this.performanceState.averageFrameMs
+    });
+  }
+
   resize() {
     const metrics = resizeFlightCanvas({
       canvas: this.canvas,
       context: this.context,
-      devicePixelRatio: window.devicePixelRatio
+      devicePixelRatio: globalThis.window?.devicePixelRatio || 1,
+      maxPixelRatio: this.performanceProfile.pixelRatioCap
     });
     this.width = metrics.width;
     this.height = metrics.height;
+    this.context.imageSmoothingEnabled = this.performanceProfile.id !== 'economy';
   }
 
   start(options = {}) {
@@ -91,6 +134,8 @@ export class SpaceFlight {
     const shipSkin = SHIP_SKINS[options.skin] ? options.skin : 'nebula';
     const shipTrail = SHIP_TRAILS[options.trail] ? options.trail : 'pulse';
     Object.assign(this, createFlightState({ mode: 'running', practice, tutorial, shipSkin, shipTrail }));
+    this.lastHudAt = -Infinity;
+    this.lastHudSignature = '';
     if (!tutorial) this.startNextChallenge();
     this.emitHud();
     if (tutorial) this.callbacks.onTutorialStep?.({ step: 'left' });
@@ -243,13 +288,22 @@ export class SpaceFlight {
   }
 
   frame(time) {
-    const delta = Math.min((time - this.lastFrame) / 1000, .04);
+    const frameMs = Math.min(Math.max(time - this.lastFrame, 0), 80);
+    const delta = Math.min(frameMs / 1000, .04);
     this.lastFrame = time;
+
+    if (this.mode === 'running') {
+      const performanceUpdate = updateFlightPerformance(this.performanceState, frameMs);
+      this.performanceState = performanceUpdate.state;
+      if (performanceUpdate.changed) this.applyPerformanceProfile();
+    }
+
     const flightPace = this.mode === 'running' ? (this.rushTime > 0 ? 1.72 : 1) : .18;
     this.updateStars(delta, flightPace);
     if (this.mode === 'running') this.update(delta);
     this.updateCelebration(delta);
-    this.draw();
+    this.frameNumber += 1;
+    if (shouldRenderFlightFrame(this.frameNumber, this.performanceProfile, this.mode === 'running')) this.draw();
     this.frameId = requestAnimationFrame(this.boundFrame);
   }
 
@@ -329,7 +383,7 @@ export class SpaceFlight {
       this.energyCores = [];
       this.callbacks.onCheckpoint?.({ number: this.checkpoints + 1, fuel: Math.round(this.fuel), clean });
     }
-    this.emitHud();
+    this.emitHud(false);
   }
 
   updateEnergyCores(delta, difficulty, remaining) {
@@ -480,13 +534,39 @@ export class SpaceFlight {
     if (outcome.tutorialStep) this.callbacks.onTutorialStep?.({ step: outcome.tutorialStep });
   }
 
-  emitHud() {
-    this.callbacks.onHud?.(flightHud(this));
+  emitHud(force = true) {
+    const hud = flightHud(this);
+    const now = globalThis.performance?.now?.() ?? this.elapsed * 1000;
+    const signature = [
+      hud.fuel,
+      hud.hull,
+      hud.distance,
+      hud.checkpoint,
+      hud.remaining,
+      hud.level,
+      hud.ammo,
+      hud.levelsUntilAmmo,
+      hud.streak,
+      Math.round(hud.rushCharge),
+      hud.rushActive ? Math.round(hud.rushTime * 10) : 0,
+      hud.coresCollected,
+      hud.sector.index,
+      hud.practice ? 1 : 0
+    ].join('|');
+
+    if (!force && now - this.lastHudAt < this.performanceProfile.hudInterval) return false;
+    if (!force && signature === this.lastHudSignature) return false;
+    this.lastHudAt = now;
+    this.lastHudSignature = signature;
+    this.callbacks.onHud?.(hud);
+    return true;
   }
 
   createCelebration(count = 46) {
     const colors = ['#5ee8ef', '#f7cb62', '#ff7bac', '#8d73ff', '#57e0a0', '#ffffff'];
-    for (let index = 0; index < count; index += 1) {
+    const requested = scaledVisualCount(count, this.performanceProfile, count > 0 ? 8 : 0);
+    const particleCount = Math.min(requested, Math.max(0, 72 - this.celebrationParticles.length));
+    for (let index = 0; index < particleCount; index += 1) {
       this.celebrationParticles.push({
         x: this.width * (.18 + Math.random() * .64),
         y: this.height * (.16 + Math.random() * .25),
