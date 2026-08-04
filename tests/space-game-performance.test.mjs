@@ -33,7 +33,7 @@ test('la claridad móvil sigue el perfil sin oscurecer ni redibujar la nave', ()
   assert.doesNotMatch(excitementRenderer, /rgba\(4,3,18,\.09\)|rgba\(5,5,18,\.96\)/);
   assert.doesNotMatch(excitementRenderer, /SHIP_SKINS|SHIP_TRAILS/);
   assert.doesNotMatch(excitementRenderer, /requestAnimationFrame|setInterval|fetch\(/);
-  assert.match(serviceWorker, /mision-nebula-mobile-controls-visible-v31/);
+  assert.match(serviceWorker, /mision-nebula-system-audit-v32/);
   assert.match(serviceWorker, /flight-performance\.js/);
   assert.match(serviceWorker, /ignoreSearch: true/);
 });
