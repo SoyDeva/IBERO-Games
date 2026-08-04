@@ -25,11 +25,13 @@ test('el HUD y las celebraciones reducen trabajo sin cambiar la simulación', ()
   assert.match(source, /isShipCollision\(/);
 });
 
-test('los efectos secundarios siguen la calidad y el modo sin conexión precarga el módulo', () => {
+test('la claridad móvil sigue el perfil y no crea infraestructura paralela', () => {
   assert.match(excitementRenderer, /this\.flight\.performanceProfile\?\.detailRatio/);
-  assert.match(excitementRenderer, /Math\.max\(8, Math\.round\(18 \* detail\)\)/);
+  assert.match(excitementRenderer, /drawMobileClarity/);
+  assert.match(excitementRenderer, /drawCrispShip/);
+  assert.match(excitementRenderer, /compact \? 12 : 18/);
   assert.doesNotMatch(excitementRenderer, /requestAnimationFrame|setInterval|fetch\(/);
-  assert.match(serviceWorker, /mision-nebula-retina-sharpness-v28/);
+  assert.match(serviceWorker, /mision-nebula-mobile-overhaul-v29/);
   assert.match(serviceWorker, /flight-performance\.js/);
   assert.match(serviceWorker, /ignoreSearch: true/);
 });
