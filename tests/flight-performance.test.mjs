@@ -12,17 +12,19 @@ import {
 } from '../js/core/flight-performance.js';
 import { resizeFlightCanvas } from '../js/core/flight-geometry.js';
 
-test('clasifica celulares modestos, equipos equilibrados y computadores capaces', () => {
-  assert.equal(detectFlightQuality({ viewportWidth: 390, hardwareConcurrency: 8, deviceMemory: 8 }), 'economy');
-  assert.equal(detectFlightQuality({ viewportWidth: 820, hardwareConcurrency: 8, deviceMemory: 8 }), 'balanced');
+test('clasifica por capacidad y no confunde una pantalla Retina con un equipo lento', () => {
+  assert.equal(detectFlightQuality({ viewportWidth: 390, devicePixelRatio: 3, hardwareConcurrency: 6, deviceMemory: 8 }), 'high');
+  assert.equal(detectFlightQuality({ viewportWidth: 390, devicePixelRatio: 3, hardwareConcurrency: 4, deviceMemory: 4 }), 'economy');
+  assert.equal(detectFlightQuality({ viewportWidth: 820, hardwareConcurrency: 6, deviceMemory: 6 }), 'balanced');
   assert.equal(detectFlightQuality({ viewportWidth: 1440, hardwareConcurrency: 12, deviceMemory: 16, devicePixelRatio: 1 }), 'high');
   assert.equal(detectFlightQuality({ viewportWidth: 1440, hardwareConcurrency: 12, deviceMemory: 16, saveData: true }), 'economy');
 });
 
-test('los perfiles limitan densidad, estrellas, partículas y frecuencia visual', () => {
+test('los perfiles preservan nitidez Retina y limitan efectos de forma independiente', () => {
   assert.deepEqual(Object.keys(FLIGHT_QUALITY_PROFILES), ['economy', 'balanced', 'high']);
-  assert.equal(getFlightQualityProfile('economy').pixelRatioCap, 1);
-  assert.equal(getFlightQualityProfile('high').pixelRatioCap, 1.75);
+  assert.equal(getFlightQualityProfile('economy').pixelRatioCap, 1.25);
+  assert.equal(getFlightQualityProfile('balanced').pixelRatioCap, 2);
+  assert.equal(getFlightQualityProfile('high').pixelRatioCap, 2.5);
   assert.ok(getFlightQualityProfile('economy').starCount < getFlightQualityProfile('balanced').starCount);
   assert.ok(getFlightQualityProfile('balanced').starCount < getFlightQualityProfile('high').starCount);
   assert.equal(scaledVisualCount(40, 'economy'), 15);
@@ -32,23 +34,23 @@ test('los perfiles limitan densidad, estrellas, partículas y frecuencia visual'
   assert.equal(shouldRenderFlightFrame(1, 'high', true), true);
 });
 
-test('degrada calidad ante fotogramas lentos y solo recupera hasta el perfil inicial', () => {
-  let performanceState = createFlightPerformanceState({ viewportWidth: 1440, hardwareConcurrency: 12, deviceMemory: 16 });
+test('degrada calidad ante fotogramas lentos y no eleva un equipo restringido', () => {
+  let performanceState = createFlightPerformanceState({ viewportWidth: 390, devicePixelRatio: 3, hardwareConcurrency: 6, deviceMemory: 8 });
   assert.equal(performanceState.quality, 'high');
   for (let index = 0; index < 190; index += 1) {
     performanceState = updateFlightPerformance(performanceState, 34).state;
   }
   assert.equal(performanceState.quality, 'balanced');
 
-  let mobileState = createFlightPerformanceState({ viewportWidth: 390, hardwareConcurrency: 8, deviceMemory: 8 });
+  let constrainedState = createFlightPerformanceState({ viewportWidth: 390, devicePixelRatio: 3, hardwareConcurrency: 4, deviceMemory: 4 });
   for (let index = 0; index < 1000; index += 1) {
-    mobileState = updateFlightPerformance(mobileState, 10).state;
+    constrainedState = updateFlightPerformance(constrainedState, 10).state;
   }
-  assert.equal(mobileState.maximumQuality, 'economy');
-  assert.equal(mobileState.quality, 'economy');
+  assert.equal(constrainedState.maximumQuality, 'economy');
+  assert.equal(constrainedState.quality, 'economy');
 });
 
-test('el Canvas evita reinicios repetidos y respeta el límite dinámico de píxeles', () => {
+test('el Canvas evita reinicios repetidos y usa hasta 2.5 píxeles por punto CSS', () => {
   const transforms = [];
   const canvas = {
     width: 0,
@@ -57,11 +59,11 @@ test('el Canvas evita reinicios repetidos y respeta el límite dinámico de píx
   };
   const context = { setTransform: (...values) => transforms.push(values) };
 
-  const first = resizeFlightCanvas({ canvas, context, devicePixelRatio: 3, maxPixelRatio: 1.35 });
-  const second = resizeFlightCanvas({ canvas, context, devicePixelRatio: 3, maxPixelRatio: 1.35 });
-  assert.deepEqual(first, { width: 400, height: 500, ratio: 1.35 });
+  const first = resizeFlightCanvas({ canvas, context, devicePixelRatio: 3, maxPixelRatio: 2.5 });
+  const second = resizeFlightCanvas({ canvas, context, devicePixelRatio: 3, maxPixelRatio: 2.5 });
+  assert.deepEqual(first, { width: 400, height: 500, ratio: 2.5 });
   assert.deepEqual(second, first);
-  assert.equal(canvas.width, 540);
-  assert.equal(canvas.height, 675);
-  assert.deepEqual(transforms, [[1.35, 0, 0, 1.35, 0, 0]]);
+  assert.equal(canvas.width, 1000);
+  assert.equal(canvas.height, 1250);
+  assert.deepEqual(transforms, [[2.5, 0, 0, 2.5, 0, 0]]);
 });

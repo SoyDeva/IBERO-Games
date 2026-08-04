@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mision-nebula-mobile-cleanup-v27';
+const CACHE_NAME = 'mision-nebula-retina-sharpness-v28';
 
 const APP_SHELL = [
   './',
