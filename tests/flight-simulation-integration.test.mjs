@@ -11,7 +11,8 @@ test('SpaceFlight conecta las reglas de simulación y conserva la dificultad loc
     source,
     /advanceFlightVitals\(\{\s+\.\.\.this,\s+fuelDrainMultiplier: this\.fuelDrainMultiplier \* rushFuelMultiplier\s+\}, delta\)/
   );
-  assert.match(source, /Object\.assign\(this, advanceExcitementTimers\(this, delta\)\);\s+const difficulty = this\.getDifficulty\(\);/);
+  assert.match(source, /Object\.assign\(this, advanceExcitementTimers\(this, delta\)\);/);
+  assert.match(source, /Object\.assign\(this, advanceChallengeTimer\(this, delta\)\);\s+const difficulty = this\.getDifficulty\(\);/);
   assert.match(source, /obstacleSpeed: difficulty\.obstacleSpeed/);
   assert.match(source, /this\.spawnTimer = difficulty\.spawnInterval \+ Math\.random\(\) \* \.32/);
 });
