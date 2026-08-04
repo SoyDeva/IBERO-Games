@@ -88,11 +88,25 @@ La capa no modifica precios, saldos, identificadores del catálogo ni eventos de
 
 La capa usa exclusivamente las clases, posiciones y textos que genera `ranking-screen.js`. No ordena resultados, no cambia puntuaciones y no realiza consultas a Supabase.
 
+`js/ui/flight-renderer.js` incorpora el sexto paquete visual directamente al Canvas existente:
+
+- dos capas de nebulosa, resplandor del horizonte y cuerpo celeste distante;
+- estrellas y bandas laterales que refuerzan la sensación de velocidad;
+- ruta con bordes energéticos y marcas de profundidad más visibles;
+- portal con aura, núcleo, anillos contrarrotatorios y partículas orbitales;
+- halos preventivos derivados de la profundidad ya calculada para cada obstáculo;
+- planetas, meteoritos, estrellas y naves rivales con materiales y detalles más ricos;
+- Asteria con fuselaje iluminado, cabina reflectante, motores visibles y estela multicapa;
+- viñeta final para concentrar la atención en el carril y la nave.
+
+Todos los movimientos visuales se derivan de `elapsed`, `depth`, `checkpoints` y del catálogo cosmético existente. El renderizador no cambia combustible, distancia, escudo, posiciones, colisiones, oleadas ni resultados; tampoco añade temporizadores, almacenamiento o solicitudes de red.
+
 ## Reglas
 
 1. No cambiar selectores de navegación ni atributos `data-*` por una mejora visual.
 2. Mantener botones táctiles con al menos 44 px de altura.
 3. Reservar el brillo intenso para la acción principal, elementos activos y recompensas.
 4. Evitar dependencias de fuentes, imágenes o scripts remotos.
-5. Respetar `prefers-reduced-motion` y la hoja `accessibility.css`.
-6. Aplicar las siguientes mejoras por paquetes pequeños: Inicio, HUD y preguntas, cierre de misión, Hangar y Liga.
+5. Respetar `prefers-reduced-motion` y la hoja `accessibility.css` en la interfaz HTML.
+6. Mantener los efectos de Canvas derivados del reloj y estado ya existentes, sin crear un segundo ciclo de animación.
+7. Aplicar las mejoras por paquetes pequeños y verificables.
