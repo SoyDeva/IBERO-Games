@@ -54,14 +54,15 @@ export function detectFlightQuality({
   saveData = false,
   reducedMotion = false
 } = {}) {
-  finite(viewportWidth, 960);
+  const width = Math.max(320, finite(viewportWidth, 960));
   const ratio = Math.max(1, finite(devicePixelRatio, 1));
   const cores = Math.max(1, finite(hardwareConcurrency, 8));
   const memory = Math.max(1, finite(deviceMemory, 8));
+  const compactRetina = width <= 520 && ratio >= 2.5;
 
   if (saveData || cores <= 4 || memory <= 4) return 'economy';
   if (reducedMotion) return 'balanced';
-  if (ratio >= 2.5 && cores >= 6 && memory >= 8) return 'high';
+  if (compactRetina && cores >= 6 && memory >= 8) return 'high';
   if (cores <= 6 || memory <= 6) return 'balanced';
   return 'high';
 }
