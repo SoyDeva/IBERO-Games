@@ -20,15 +20,15 @@ test('clasifica por capacidad y no confunde una pantalla Retina con un equipo le
   assert.equal(detectFlightQuality({ viewportWidth: 1440, hardwareConcurrency: 12, deviceMemory: 16, saveData: true }), 'economy');
 });
 
-test('los perfiles preservan nitidez Retina y limitan efectos de forma independiente', () => {
+test('los perfiles reservan resolución para nitidez y reducen efectos por separado', () => {
   assert.deepEqual(Object.keys(FLIGHT_QUALITY_PROFILES), ['economy', 'balanced', 'high']);
-  assert.equal(getFlightQualityProfile('economy').pixelRatioCap, 1.25);
-  assert.equal(getFlightQualityProfile('balanced').pixelRatioCap, 2);
-  assert.equal(getFlightQualityProfile('high').pixelRatioCap, 2.5);
+  assert.equal(getFlightQualityProfile('economy').pixelRatioCap, 1.5);
+  assert.equal(getFlightQualityProfile('balanced').pixelRatioCap, 2.25);
+  assert.equal(getFlightQualityProfile('high').pixelRatioCap, 3);
   assert.ok(getFlightQualityProfile('economy').starCount < getFlightQualityProfile('balanced').starCount);
   assert.ok(getFlightQualityProfile('balanced').starCount < getFlightQualityProfile('high').starCount);
-  assert.equal(scaledVisualCount(40, 'economy'), 15);
-  assert.equal(scaledVisualCount(40, 'balanced'), 27);
+  assert.equal(scaledVisualCount(40, 'economy'), 14);
+  assert.equal(scaledVisualCount(40, 'balanced'), 25);
   assert.equal(shouldRenderFlightFrame(1, 'economy', true), false);
   assert.equal(shouldRenderFlightFrame(2, 'economy', true), true);
   assert.equal(shouldRenderFlightFrame(1, 'high', true), true);
@@ -50,7 +50,7 @@ test('degrada calidad ante fotogramas lentos y no eleva un equipo restringido', 
   assert.equal(constrainedState.quality, 'economy');
 });
 
-test('el Canvas evita reinicios repetidos y usa hasta 2.5 píxeles por punto CSS', () => {
+test('el Canvas evita reinicios repetidos y usa la densidad Retina completa cuando corresponde', () => {
   const transforms = [];
   const canvas = {
     width: 0,
@@ -59,11 +59,11 @@ test('el Canvas evita reinicios repetidos y usa hasta 2.5 píxeles por punto CSS
   };
   const context = { setTransform: (...values) => transforms.push(values) };
 
-  const first = resizeFlightCanvas({ canvas, context, devicePixelRatio: 3, maxPixelRatio: 2.5 });
-  const second = resizeFlightCanvas({ canvas, context, devicePixelRatio: 3, maxPixelRatio: 2.5 });
-  assert.deepEqual(first, { width: 400, height: 500, ratio: 2.5 });
+  const first = resizeFlightCanvas({ canvas, context, devicePixelRatio: 3, maxPixelRatio: 3 });
+  const second = resizeFlightCanvas({ canvas, context, devicePixelRatio: 3, maxPixelRatio: 3 });
+  assert.deepEqual(first, { width: 400, height: 500, ratio: 3 });
   assert.deepEqual(second, first);
-  assert.equal(canvas.width, 1000);
-  assert.equal(canvas.height, 1250);
-  assert.deepEqual(transforms, [[2.5, 0, 0, 2.5, 0, 0]]);
+  assert.equal(canvas.width, 1200);
+  assert.equal(canvas.height, 1500);
+  assert.deepEqual(transforms, [[3, 0, 0, 3, 0, 0]]);
 });
