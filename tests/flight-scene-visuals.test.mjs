@@ -34,7 +34,7 @@ test('los efectos de Canvas no modifican mecánicas ni crean infraestructura par
   assert.match(source, /this\.obstacles\.filter/);
   assert.match(source, /FLIGHT_LANES\.find/);
 
-  assert.doesNotMatch(source, /this\.(?:distance|fuel|hull|checkpoints|nextCheckpoint|ammo|mode|obstacles|projectiles)\s*=/);
+  assert.doesNotMatch(source, /this\.(?:distance|fuel|hull|checkpoints|nextCheckpoint|ammo|mode|obstacles|projectiles)\s*=(?!=)/);
   assert.doesNotMatch(source, /requestAnimationFrame|cancelAnimationFrame|setTimeout|setInterval/);
   assert.doesNotMatch(source, /fetch\s*\(|XMLHttpRequest|localStorage|sessionStorage/);
   assert.doesNotMatch(source, /addEventListener|removeEventListener/);
