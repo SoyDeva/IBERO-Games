@@ -9,6 +9,7 @@ const FLIGHT_CONTROL_BINDINGS = Object.freeze({
 
 const CONTROL_IDS = Object.freeze(Object.keys(FLIGHT_CONTROL_BINDINGS));
 const SYNTHETIC_CLICK_WINDOW_MS = 800;
+const CONTROL_CLICK_CAPTURE = true;
 
 export function keyboardFlightCommand(event, mode) {
   const key = String(event?.key || '');
@@ -86,6 +87,9 @@ export function createFlightInputController({
   };
 
   const onPointer = (event) => {
+    if (event?.isPrimary === false) return;
+    if (Number.isFinite(event?.button) && event.button !== 0) return;
+    event.preventDefault?.();
     const rect = canvas.getBoundingClientRect();
     const lane = pointerFlightLane({
       clientX: event?.clientX,
@@ -126,7 +130,7 @@ export function createFlightInputController({
     button.addEventListener('pointerup', releaseControl);
     button.addEventListener('pointercancel', releaseControl);
     button.addEventListener('lostpointercapture', releaseControl);
-    button.addEventListener('click', onControlClick);
+    button.addEventListener('click', onControlClick, CONTROL_CLICK_CAPTURE);
   };
 
   const unbindControlButton = (button) => {
@@ -134,7 +138,7 @@ export function createFlightInputController({
     button.removeEventListener('pointerup', releaseControl);
     button.removeEventListener('pointercancel', releaseControl);
     button.removeEventListener('lostpointercapture', releaseControl);
-    button.removeEventListener('click', onControlClick);
+    button.removeEventListener('click', onControlClick, CONTROL_CLICK_CAPTURE);
     button.classList?.remove?.('is-pressed');
   };
 
@@ -142,7 +146,7 @@ export function createFlightInputController({
     bind() {
       if (bound) return false;
       windowRef.addEventListener('keydown', onKey);
-      canvas.addEventListener('pointerdown', onPointer);
+      canvas.addEventListener('pointerdown', onPointer, { passive: false });
       controlButtons = CONTROL_IDS
         .map((id) => documentRef?.getElementById?.(id))
         .filter(Boolean);

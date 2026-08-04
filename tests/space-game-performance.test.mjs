@@ -25,11 +25,13 @@ test('el HUD y las celebraciones reducen trabajo sin cambiar la simulación', ()
   assert.match(source, /isShipCollision\(/);
 });
 
-test('la claridad móvil sigue el perfil y no crea infraestructura paralela', () => {
+test('la claridad móvil sigue el perfil sin oscurecer ni redibujar la nave', () => {
   assert.match(excitementRenderer, /this\.flight\.performanceProfile\?\.detailRatio/);
   assert.match(excitementRenderer, /drawMobileClarity/);
-  assert.match(excitementRenderer, /drawCrispShip/);
   assert.match(excitementRenderer, /compact \? 12 : 18/);
+  assert.doesNotMatch(excitementRenderer, /drawCrispShip|shipHullPath/);
+  assert.doesNotMatch(excitementRenderer, /rgba\(4,3,18,\.09\)|rgba\(5,5,18,\.96\)/);
+  assert.doesNotMatch(excitementRenderer, /SHIP_SKINS|SHIP_TRAILS/);
   assert.doesNotMatch(excitementRenderer, /requestAnimationFrame|setInterval|fetch\(/);
   assert.match(serviceWorker, /mision-nebula-mobile-controls-visible-v31/);
   assert.match(serviceWorker, /flight-performance\.js/);

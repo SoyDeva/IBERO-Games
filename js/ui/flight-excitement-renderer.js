@@ -1,6 +1,5 @@
 import { clamp, projectFlightPoint } from '../core/flight-geometry.js?v=23';
 import { NEBULA_RUSH_MAX } from '../core/flight-excitement.js?v=23';
-import { SHIP_SKINS, SHIP_TRAILS } from '../config/ship-catalog.js?v=23';
 
 class FlightExcitementRenderer {
   constructor(flight) {
@@ -43,11 +42,8 @@ class FlightExcitementRenderer {
     const horizonY = height * .235;
     ctx.save();
 
-    // Reduce el halo acumulado del render base sin apagar colores ni obstáculos.
-    ctx.fillStyle = 'rgba(4,3,18,.09)';
-    ctx.fillRect(0, 0, width, height);
-
-    // Guías sólidas y sin desenfoque para que la ruta conserve lectura en Retina.
+    // Mantiene guías nítidas sin volver a oscurecer la escena ni redibujar la nave.
+    // La nave tiene un único renderizador para que su color nunca cambie entre cuadros.
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.shadowBlur = 0;
@@ -69,130 +65,7 @@ class FlightExcitementRenderer {
       ctx.stroke();
     });
 
-    this.drawCrispShip(ctx);
     ctx.restore();
-  }
-
-  drawCrispShip(ctx) {
-    const nearObstacle = (this.flight.obstacles || []).some((obstacle) => (
-      !obstacle.hit
-      && obstacle.depth > .9
-      && Math.abs(obstacle.lane - this.flight.lanePosition) < .55
-    ));
-    if (nearObstacle) return;
-
-    const skin = SHIP_SKINS[this.flight.shipSkin] || SHIP_SKINS.nebula;
-    const trail = SHIP_TRAILS[this.flight.shipTrail] || SHIP_TRAILS.pulse;
-    const width = this.flight.width;
-    const height = this.flight.height;
-    const x = width / 2 + this.flight.lanePosition * width * .27;
-    const shipHeight = height < 520 ? .66 : .72;
-    const y = height * shipHeight;
-    const size = clamp(width / 12.4, 60, 82);
-    const bank = (this.flight.lane - this.flight.lanePosition) * .13;
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(bank);
-    ctx.lineJoin = 'round';
-
-    // Máscara oscura: tapa el halo del modelo anterior y separa la silueta del fondo.
-    ctx.fillStyle = 'rgba(5,5,18,.96)';
-    this.shipHullPath(ctx, size * 1.09);
-    ctx.fill();
-
-    // Motores definidos, sin una nube de desenfoque alrededor de toda la nave.
-    [-.2, .2].forEach((side) => {
-      const flame = ctx.createLinearGradient(0, size * .38, 0, size * .94);
-      flame.addColorStop(0, '#ffffff');
-      flame.addColorStop(.28, trail.primary);
-      flame.addColorStop(1, 'rgba(86,231,255,0)');
-      ctx.fillStyle = flame;
-      ctx.beginPath();
-      ctx.moveTo(size * (side - .075), size * .38);
-      ctx.lineTo(size * side, size * .94);
-      ctx.lineTo(size * (side + .075), size * .38);
-      ctx.closePath();
-      ctx.fill();
-    });
-
-    const hull = ctx.createLinearGradient(-size * .5, -size * .72, size * .48, size * .54);
-    hull.addColorStop(0, '#ffffff');
-    hull.addColorStop(.2, skin.body);
-    hull.addColorStop(.66, skin.wing);
-    hull.addColorStop(1, '#4a315f');
-    ctx.fillStyle = hull;
-    this.shipHullPath(ctx, size);
-    ctx.fill();
-    ctx.strokeStyle = '#f7f8ff';
-    ctx.lineWidth = 1.6;
-    ctx.stroke();
-
-    // Alas y paneles con contornos definidos.
-    ctx.fillStyle = skin.wing;
-    ctx.strokeStyle = 'rgba(7,6,24,.85)';
-    ctx.lineWidth = 2;
-    [-1, 1].forEach((side) => {
-      ctx.beginPath();
-      ctx.moveTo(side * size * .24, -size * .02);
-      ctx.lineTo(side * size * .82, size * .43);
-      ctx.lineTo(side * size * .34, size * .39);
-      ctx.lineTo(side * size * .18, size * .18);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    });
-
-    ctx.strokeStyle = 'rgba(255,255,255,.58)';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(0, -size * .65);
-    ctx.lineTo(0, size * .32);
-    ctx.moveTo(-size * .31, size * .17);
-    ctx.lineTo(-size * .11, size * .34);
-    ctx.moveTo(size * .31, size * .17);
-    ctx.lineTo(size * .11, size * .34);
-    ctx.stroke();
-
-    const canopy = ctx.createLinearGradient(-size * .12, -size * .42, size * .16, size * .04);
-    canopy.addColorStop(0, '#ecfeff');
-    canopy.addColorStop(.28, skin.glass);
-    canopy.addColorStop(1, '#28466f');
-    ctx.fillStyle = canopy;
-    ctx.beginPath();
-    ctx.ellipse(0, -size * .22, size * .18, size * .28, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(5,8,28,.78)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(255,255,255,.86)';
-    ctx.beginPath();
-    ctx.ellipse(-size * .055, -size * .33, size * .045, size * .09, -.35, 0, Math.PI * 2);
-    ctx.fill();
-
-    [-.2, .2].forEach((side) => {
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(size * side, size * .39, size * .045, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = trail.primary;
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-    });
-    ctx.restore();
-  }
-
-  shipHullPath(ctx, size) {
-    ctx.beginPath();
-    ctx.moveTo(0, -size * .76);
-    ctx.quadraticCurveTo(size * .34, -size * .42, size * .39, size * .12);
-    ctx.lineTo(size * .29, size * .49);
-    ctx.lineTo(0, size * .36);
-    ctx.lineTo(-size * .29, size * .49);
-    ctx.lineTo(-size * .39, size * .12);
-    ctx.quadraticCurveTo(-size * .34, -size * .42, 0, -size * .76);
-    ctx.closePath();
   }
 
   drawEnergyCore(ctx, core) {
