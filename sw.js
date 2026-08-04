@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mision-nebula-mobile-controls-visible-v31';
+const CACHE_NAME = 'mision-nebula-system-audit-v32';
 
 const APP_SHELL = [
   './',
@@ -22,12 +22,14 @@ const APP_SHELL = [
   './css/hangar-polish.css',
   './css/hangar-gameplay.css',
   './css/ranking-polish.css',
+  './css/system-fixes.css',
   './css/accessibility.css',
   './css/print.css',
 
   './js/accessibility.js',
   './js/app.js',
   './js/canvas.js',
+  './js/compatibility.js',
   './js/config/ship-catalog.js',
   './js/config/storage-keys.js',
   './js/config/supabase.js',
