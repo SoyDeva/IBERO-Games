@@ -11,6 +11,7 @@ test('la vista de vuelo queda anclada al viewport y no conserva desplazamiento p
   assert.match(css, /width: var\(--flight-viewport-width\)/);
   assert.match(css, /height: var\(--flight-viewport-height\)/);
   assert.match(css, /overscroll-behavior: none/);
+  assert.match(css, /touch-action: none/);
 });
 
 test('la composición móvil elimina superposiciones y reserva una fila para controles', () => {
@@ -22,6 +23,15 @@ test('la composición móvil elimina superposiciones y reserva una fila para con
   assert.match(css, /body\.flight-route \.mobile-flight-controls[\s\S]*grid-row: 2;/);
   assert.match(css, /body\.flight-route \.mobile-flight-controls button[\s\S]*min-height: 52px;/);
   assert.match(css, /env\(safe-area-inset-bottom\)/);
+});
+
+test('los botones móviles reciben el gesto sin que Canvas o sus hijos lo intercepten', () => {
+  assert.match(css, /body\.flight-route \.flight-stage[\s\S]*isolation: isolate;/);
+  assert.match(css, /body\.flight-route \.mobile-flight-controls[\s\S]*pointer-events: auto;/);
+  assert.match(css, /body\.flight-route \.mobile-flight-controls button[\s\S]*pointer-events: auto;[\s\S]*touch-action: none;/);
+  assert.match(css, /body\.flight-route \.mobile-flight-controls button > \*[\s\S]*pointer-events: none;/);
+  assert.match(css, /body\.flight-route \.mobile-flight-controls button\.is-pressed/);
+  assert.match(css, /-webkit-touch-callout: none;/);
 });
 
 test('el HUD móvil usa dos columnas compactas y mantiene los cuatro datos esenciales', () => {
@@ -38,7 +48,7 @@ test('la capa correctiva conserva orden, caché local y ausencia de dependencias
   const accessibility = indexHtml.indexOf('css/accessibility.css?v=23');
 
   assert.ok(polish >= 0 && cleanup > polish && accessibility > cleanup);
-  assert.match(serviceWorker, /mision-nebula-mobile-overhaul-v29/);
+  assert.match(serviceWorker, /mision-nebula-mobile-controls-v30/);
   assert.match(serviceWorker, /\.\/css\/flight-mobile-cleanup\.css/);
   assert.doesNotMatch(css, /@import|https?:\/\/|url\s*\(/i);
 });
