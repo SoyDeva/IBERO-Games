@@ -65,8 +65,10 @@ export function detectFlightQuality({
 }
 
 export function createFlightPerformanceState(capabilities = {}) {
+  const quality = detectFlightQuality(capabilities);
   return {
-    quality: detectFlightQuality(capabilities),
+    quality,
+    maximumQuality: quality,
     averageFrameMs: 16.7,
     slowFrames: 0,
     fastFrames: 0,
@@ -76,6 +78,7 @@ export function createFlightPerformanceState(capabilities = {}) {
 
 export function updateFlightPerformance(state = {}, frameMs = 16.7) {
   const currentQuality = getFlightQualityProfile(state.quality).id;
+  const maximumQuality = getFlightQualityProfile(state.maximumQuality || currentQuality).id;
   const sample = clamp(finite(frameMs, 16.7), 4, 80);
   const averageFrameMs = finite(state.averageFrameMs, 16.7) * .92 + sample * .08;
   let slowFrames = averageFrameMs > 23.5 ? Math.max(0, finite(state.slowFrames)) + 1 : Math.max(0, finite(state.slowFrames) - 2);
@@ -84,12 +87,13 @@ export function updateFlightPerformance(state = {}, frameMs = 16.7) {
   let quality = currentQuality;
 
   const currentIndex = QUALITY_ORDER.indexOf(currentQuality);
+  const maximumIndex = QUALITY_ORDER.indexOf(maximumQuality);
   if (cooldownFrames === 0 && slowFrames >= 42 && currentIndex > 0) {
     quality = QUALITY_ORDER[currentIndex - 1];
     slowFrames = 0;
     fastFrames = 0;
     cooldownFrames = 240;
-  } else if (cooldownFrames === 0 && fastFrames >= 360 && currentIndex < QUALITY_ORDER.length - 1) {
+  } else if (cooldownFrames === 0 && fastFrames >= 360 && currentIndex < maximumIndex) {
     quality = QUALITY_ORDER[currentIndex + 1];
     slowFrames = 0;
     fastFrames = 0;
@@ -97,7 +101,7 @@ export function updateFlightPerformance(state = {}, frameMs = 16.7) {
   }
 
   return {
-    state: { quality, averageFrameMs, slowFrames, fastFrames, cooldownFrames },
+    state: { quality, maximumQuality, averageFrameMs, slowFrames, fastFrames, cooldownFrames },
     changed: quality !== currentQuality
   };
 }
