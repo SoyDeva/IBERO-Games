@@ -1,0 +1,117 @@
+/* Capa funcional del Hangar: habilidades de nave y sistemas de propulsión. */
+
+.active-loadout {
+  display: grid;
+  gap: 5px;
+  margin: 18px 0 28px;
+  padding: 18px 20px;
+  border: 1px solid rgba(86, 231, 255, .34);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% 20%, rgba(216, 108, 255, .16), transparent 34%),
+    linear-gradient(135deg, rgba(82, 103, 255, .15), rgba(10, 7, 30, .72));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .24), inset 0 1px rgba(255, 255, 255, .07);
+}
+
+.active-loadout > span {
+  color: #56e7ff;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.active-loadout > strong {
+  color: #f7f8ff;
+  font-size: clamp(1rem, 2.6vw, 1.22rem);
+}
+
+.active-loadout > small {
+  color: #bdc5e1;
+  line-height: 1.45;
+}
+
+.hangar-perk {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 11px;
+  align-items: start;
+  margin-top: 4px;
+  padding: 12px 13px;
+  border: 1px solid rgba(255, 200, 87, .24);
+  border-radius: 14px;
+  background: rgba(255, 200, 87, .07);
+}
+
+.hangar-perk > span {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .08);
+  font-size: 1.1rem;
+}
+
+.hangar-perk div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hangar-perk small {
+  color: #ffc857;
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.hangar-perk strong {
+  color: #f7f8ff;
+  font-size: .94rem;
+}
+
+.hangar-perk p {
+  margin: 0;
+  color: #bdc5e1;
+  font-size: .84rem;
+  line-height: 1.4;
+}
+
+.skin-card.active .hangar-perk,
+.trail-card.active .hangar-perk {
+  border-color: rgba(86, 231, 255, .36);
+  background: rgba(86, 231, 255, .08);
+}
+
+.skin-card.active .hangar-perk small,
+.trail-card.active .hangar-perk small {
+  color: #56e7ff;
+}
+
+.trail-card-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.trail-card-copy > p {
+  margin: 0;
+}
+
+@media (max-width: 620px) {
+  .active-loadout {
+    margin-bottom: 22px;
+    padding: 15px 16px;
+  }
+
+  .hangar-perk {
+    padding: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .active-loadout,
+  .hangar-perk {
+    transition: none !important;
+  }
+}

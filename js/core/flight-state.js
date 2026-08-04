@@ -1,3 +1,5 @@
+import { resolveFlightLoadout } from './flight-loadout.js?v=23';
+
 export const FLIGHT_SECTORS = Object.freeze([
   Object.freeze({ name: 'Nebulosa Violeta', icon: '🌌', top: '#09041f', middle: '#21125b', bottom: '#08051b', glow: '124,78,255', route: '94,232,239' }),
   Object.freeze({ name: 'Cinturón Helado', icon: '❄️', top: '#031a32', middle: '#0d4c6f', bottom: '#071524', glow: '94,232,239', route: '151,225,255' }),
@@ -18,16 +20,18 @@ export function createFlightState({
   shipTrail = 'pulse'
 } = {}) {
   const running = mode === 'running';
+  const loadout = resolveFlightLoadout({ shipSkin, shipTrail });
+  const baseFuel = practice && running ? 78 : 62;
   return {
     mode,
     lane: 0,
     lanePosition: 0,
-    fuel: practice && running ? 78 : 62,
+    fuel: clamp(baseFuel + (running ? loadout.startingFuelBonus : 0), 0, 100),
     hull: 3,
     distance: 0,
     checkpoints: 0,
     nextCheckpoint: tutorial && running ? 99999 : 280,
-    ammo: 3,
+    ammo: 3 + (running ? loadout.startingAmmoBonus : 0),
     obstacles: [],
     projectiles: [],
     explosions: [],
@@ -48,8 +52,15 @@ export function createFlightState({
     totalCollisions: 0,
     collisionsThisLeg: 0,
     celebrationParticles: [],
-    shipSkin,
-    shipTrail,
+    shipSkin: loadout.shipSkin,
+    shipTrail: loadout.shipTrail,
+    shipPerk: loadout.skinPerk,
+    trailPerk: loadout.trailPerk,
+    fuelDrainMultiplier: loadout.fuelDrainMultiplier,
+    collisionFuelLossMultiplier: loadout.collisionFuelLossMultiplier,
+    obstacleSpeedMultiplier: loadout.obstacleSpeedMultiplier,
+    spawnIntervalMultiplier: loadout.spawnIntervalMultiplier,
+    pairChanceModifier: loadout.pairChanceModifier,
     stationSlowdown: 0
   };
 }
@@ -60,15 +71,21 @@ export function flightDifficulty(state = {}) {
   const adaptiveAssist = Math.max(0, Number(state.adaptiveAssist) || 0);
   const stationSlowdown = Math.max(0, Number(state.stationSlowdown) || 0);
   const correctStreak = Math.max(0, Number(state.correctStreak) || 0);
+  const obstacleSpeedMultiplier = clamp(Number(state.obstacleSpeedMultiplier) || 1, .78, 1.2);
+  const spawnIntervalMultiplier = clamp(Number(state.spawnIntervalMultiplier) || 1, .8, 1.3);
+  const pairChanceModifier = clamp(Number(state.pairChanceModifier) || 0, -.3, .15);
   const introEase = checkpoints < 2 ? (2 - checkpoints) * .045 : 0;
   const hullAssist = Math.max(0, 3 - hull) * .018;
   const practiceEase = state.practice ? .075 : 0;
   const streakPressure = Math.min(.045, correctStreak * .009);
+  const obstacleSpeed = .36 + checkpoints * .042 - introEase - adaptiveAssist - hullAssist - practiceEase - stationSlowdown + streakPressure;
+  const spawnInterval = 1.42 - checkpoints * .085 + introEase * 1.8 + adaptiveAssist + practiceEase + stationSlowdown * 1.6 - streakPressure;
+  const pairChance = .12 + checkpoints * .115 - adaptiveAssist * .8 - practiceEase - stationSlowdown * 1.2 + pairChanceModifier;
   return {
     level: checkpoints + 1,
-    obstacleSpeed: clamp(.36 + checkpoints * .042 - introEase - adaptiveAssist - hullAssist - practiceEase - stationSlowdown + streakPressure, .26, .7),
-    spawnInterval: clamp(1.42 - checkpoints * .085 + introEase * 1.8 + adaptiveAssist + practiceEase + stationSlowdown * 1.6 - streakPressure, .62, 1.75),
-    pairChance: clamp(.12 + checkpoints * .115 - adaptiveAssist * .8 - practiceEase - stationSlowdown * 1.2, .08, .82)
+    obstacleSpeed: clamp(obstacleSpeed * obstacleSpeedMultiplier, .26, .7),
+    spawnInterval: clamp(spawnInterval * spawnIntervalMultiplier, .62, 1.75),
+    pairChance: clamp(pairChance, .08, .82)
   };
 }
 

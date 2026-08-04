@@ -20,9 +20,11 @@ test('crea estados independientes para reposo, misión, práctica y tutorial', (
 
   assert.equal(idle.mode, 'idle');
   assert.equal(idle.spawnTimer, 1.8);
-  assert.equal(mission.fuel, 62);
+  assert.equal(mission.fuel, 74);
   assert.equal(mission.shipSkin, 'solar');
   assert.equal(mission.shipTrail, 'comet');
+  assert.equal(mission.shipPerk.name, 'Sensores solares');
+  assert.equal(mission.trailPerk.name, 'Reserva térmica');
   assert.equal(practice.fuel, 78);
   assert.equal(tutorial.nextCheckpoint, 99999);
   assert.equal(tutorial.tutorialStep, 'left');
