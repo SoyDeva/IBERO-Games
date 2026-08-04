@@ -12,6 +12,10 @@ const SYNTHETIC_CLICK_WINDOW_MS = 800;
 const CONTROL_CLICK_CAPTURE = true;
 
 export function keyboardFlightCommand(event, mode) {
+  if (mode !== 'running') {
+    return { handled: false, preventDefault: false, action: 'none' };
+  }
+
   const key = String(event?.key || '');
   if (['ArrowLeft', 'a', 'A'].includes(key)) {
     return { handled: true, preventDefault: true, action: 'move', direction: -1 };
@@ -20,7 +24,7 @@ export function keyboardFlightCommand(event, mode) {
     return { handled: true, preventDefault: true, action: 'move', direction: 1 };
   }
   const space = event?.code === 'Space' || key === ' ';
-  if (space && mode === 'running') {
+  if (space) {
     return {
       handled: true,
       preventDefault: true,
