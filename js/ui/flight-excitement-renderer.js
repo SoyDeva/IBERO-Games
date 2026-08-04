@@ -25,6 +25,7 @@ class FlightExcitementRenderer {
       .forEach((core) => this.drawEnergyCore(ctx, core));
     if (this.flight.rushTime > 0) this.drawRushField(ctx);
     this.drawRushMeter(ctx);
+    this.drawChallengeCard(ctx);
     if (this.flight.rushMessageTime > 0) this.drawRushMessage(ctx);
     ctx.restore();
   }
@@ -115,6 +116,69 @@ class FlightExcitementRenderer {
       ? `⚡ MODO IMPULSO · ${this.flight.rushTime.toFixed(1)} s`
       : `✦ IMPULSO NÉBULA · ${Math.round(this.flight.rushCharge)}%`;
     ctx.fillText(label, this.flight.width / 2, y - 4);
+    ctx.restore();
+  }
+
+  drawChallengeCard(ctx) {
+    const challenge = this.flight.sectorChallenge;
+    if (!challenge || this.flight.tutorial || this.flight.mode === 'idle') return;
+
+    const compact = this.flight.width < 620;
+    const width = compact ? Math.min(this.flight.width - 24, 248) : 270;
+    const height = compact ? 70 : 78;
+    const x = 14;
+    const y = compact ? 48 : 54;
+    const complete = challenge.status === 'completed';
+    const failed = challenge.status === 'failed';
+    const accent = complete ? '#5ce5a2' : failed ? '#ff7285' : '#56e7ff';
+    const pulse = this.flight.challengeMessageTime > 0 ? 1 + Math.sin(this.flight.elapsed * 9) * .015 : 1;
+
+    ctx.save();
+    ctx.translate(x + width / 2, y + height / 2);
+    ctx.scale(pulse, pulse);
+    ctx.translate(-width / 2, -height / 2);
+    ctx.fillStyle = 'rgba(8,5,28,.84)';
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = complete || failed ? 2.4 : 1.5;
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = complete ? 18 : failed ? 10 : 8;
+    this.roundedRect(ctx, 0, 0, width, height, 14);
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = accent;
+    ctx.font = `900 ${compact ? 10 : 11}px system-ui, sans-serif`;
+    const eyebrow = complete ? '✓ DESAFÍO COMPLETADO' : failed ? 'DESAFÍO NO COMPLETADO' : 'DESAFÍO DE RUTA';
+    ctx.fillText(eyebrow, 13, 9);
+
+    ctx.fillStyle = '#f7f8ff';
+    ctx.font = `800 ${compact ? 13 : 14}px system-ui, sans-serif`;
+    ctx.fillText(`${challenge.icon} ${challenge.title}`, 13, 25);
+
+    ctx.fillStyle = complete ? '#5ce5a2' : failed ? '#ffb2bd' : '#bdc5e1';
+    ctx.font = `700 ${compact ? 10 : 11}px system-ui, sans-serif`;
+    const detail = complete
+      ? `Recompensa: ${challenge.reward.label}`
+      : failed
+        ? 'Sin penalización · nuevo reto tras el portal'
+        : challenge.instruction;
+    ctx.fillText(detail, 13, 44);
+
+    if (!complete && !failed) {
+      const ratio = clamp(challenge.progress / Math.max(1, challenge.target), 0, 1);
+      const barY = height - 10;
+      ctx.fillStyle = 'rgba(255,255,255,.12)';
+      this.roundedRect(ctx, 13, barY, width - 26, 4, 2);
+      ctx.fill();
+      if (ratio > 0) {
+        ctx.fillStyle = accent;
+        this.roundedRect(ctx, 13, barY, (width - 26) * ratio, 4, 2);
+        ctx.fill();
+      }
+    }
     ctx.restore();
   }
 
