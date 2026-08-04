@@ -1,5 +1,6 @@
 import { resolveFlightLoadout } from './flight-loadout.js?v=23';
 import { createFlightExcitementState } from './flight-excitement.js?v=23';
+import { createFlightChallengeState } from './flight-challenges.js?v=23';
 
 export const FLIGHT_SECTORS = Object.freeze([
   Object.freeze({ name: 'Nebulosa Violeta', icon: '🌌', top: '#09041f', middle: '#21125b', bottom: '#08051b', glow: '124,78,255', route: '94,232,239' }),
@@ -63,7 +64,8 @@ export function createFlightState({
     spawnIntervalMultiplier: loadout.spawnIntervalMultiplier,
     pairChanceModifier: loadout.pairChanceModifier,
     stationSlowdown: 0,
-    ...createFlightExcitementState({ running, tutorial })
+    ...createFlightExcitementState({ running, tutorial }),
+    ...createFlightChallengeState()
   };
 }
 
@@ -120,6 +122,7 @@ export function flightSummary(state = {}) {
     collisions: Math.max(0, Number(state.totalCollisions) || 0),
     coresCollected: Math.max(0, Number(state.coresCollected) || 0),
     rushes: Math.max(0, Number(state.rushes) || 0),
+    challengesCompleted: Math.max(0, Number(state.challengesCompleted) || 0),
     sector: flightSector(state.checkpoints).name,
     practice: Boolean(state.practice)
   };
@@ -142,6 +145,8 @@ export function flightHud(state = {}) {
     rushActive: (Number(state.rushTime) || 0) > 0,
     rushTime: Math.max(0, Number(state.rushTime) || 0),
     coresCollected: Math.max(0, Number(state.coresCollected) || 0),
+    challenge: state.sectorChallenge ? { ...state.sectorChallenge, reward: { ...state.sectorChallenge.reward } } : null,
+    challengesCompleted: Math.max(0, Number(state.challengesCompleted) || 0),
     sector: flightSector(checkpoints),
     practice: Boolean(state.practice)
   };
