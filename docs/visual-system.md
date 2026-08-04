@@ -76,6 +76,18 @@ La bitácora conserva exactamente los valores, textos, identificadores y eventos
 
 La capa no modifica precios, saldos, identificadores del catálogo ni eventos de compra o equipamiento. Los estados visuales proceden de clases y atributos ya generados por `hangar-screen.js`.
 
+`css/ranking-polish.css` aplica el quinto paquete visual a la Liga Galáctica:
+
+- cabecera de temporada con núcleo orbital y estado de conexión visible;
+- podio con jerarquía diferenciada para oro, plata y bronce;
+- identificación clara del piloto actual tanto en el podio como en la clasificación;
+- filas comparables para distancia, portales y aciertos;
+- estados específicos para conexión, tabla vacía y pérdida de señal;
+- acción principal para mejorar la posición y accesos secundarios a actualización, Hangar e Inicio;
+- adaptación a escritorio, tableta, móvil y reducción de movimiento.
+
+La capa usa exclusivamente las clases, posiciones y textos que genera `ranking-screen.js`. No ordena resultados, no cambia puntuaciones y no realiza consultas a Supabase.
+
 ## Reglas
 
 1. No cambiar selectores de navegación ni atributos `data-*` por una mejora visual.

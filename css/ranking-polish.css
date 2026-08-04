@@ -1,0 +1,804 @@
+/* Liga Galáctica · paquete visual Nébula brillante
+   Capa exclusivamente presentacional: no altera posiciones, datos ni sincronización. */
+
+.galaxy-ranking.screen-narrow {
+  width: min(1120px, calc(100% - 32px));
+  padding-top: clamp(1.5rem, 5vw, 4rem);
+  padding-bottom: 4rem;
+}
+
+.galaxy-ranking {
+  --league-surface: rgba(18, 12, 49, 0.92);
+  --league-surface-soft: rgba(38, 27, 83, 0.72);
+  --league-border: rgba(135, 151, 255, 0.22);
+  --league-gold: #ffc857;
+  --league-silver: #d8e7f4;
+  --league-bronze: #e29a68;
+  --league-cyan: #56e7ff;
+  position: relative;
+  isolation: isolate;
+}
+
+.galaxy-ranking::before,
+.galaxy-ranking::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(20px);
+  opacity: 0.42;
+}
+
+.galaxy-ranking::before {
+  width: min(410px, 44vw);
+  aspect-ratio: 1;
+  top: 4rem;
+  left: -12rem;
+  background: radial-gradient(circle, rgba(82, 103, 255, 0.36), transparent 68%);
+}
+
+.galaxy-ranking::after {
+  width: min(360px, 38vw);
+  aspect-ratio: 1;
+  top: 22rem;
+  right: -10rem;
+  background: radial-gradient(circle, rgba(216, 108, 255, 0.3), transparent 70%);
+}
+
+.galaxy-ranking .ranking-hero {
+  min-height: 270px;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid rgba(216, 108, 255, 0.46);
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 84% 24%, rgba(255, 200, 87, 0.15), transparent 21%),
+    radial-gradient(circle at 11% 2%, rgba(86, 231, 255, 0.2), transparent 38%),
+    linear-gradient(145deg, rgba(32, 20, 78, 0.98), rgba(12, 8, 34, 0.98));
+  box-shadow:
+    0 30px 80px rgba(3, 1, 18, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.galaxy-ranking .ranking-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 18% 28%, rgba(255, 255, 255, 0.72) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 68% 68%, rgba(255, 255, 255, 0.5) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 42% 82%, rgba(86, 231, 255, 0.55) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 92% 16%, rgba(255, 200, 87, 0.7) 0 1.2px, transparent 1.7px);
+  background-size: 105px 105px, 137px 137px, 173px 173px, 211px 211px;
+  opacity: 0.5;
+}
+
+.galaxy-ranking .ranking-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.galaxy-ranking .ranking-hero .eyebrow {
+  margin-bottom: 0.65rem;
+  color: #aef4ff;
+}
+
+.galaxy-ranking .ranking-hero h1 {
+  margin-bottom: 0.65rem;
+  font-size: clamp(2.8rem, 7vw, 5.2rem);
+  letter-spacing: -0.055em;
+  text-shadow:
+    0 0 28px rgba(82, 103, 255, 0.32),
+    0 8px 22px rgba(0, 0, 0, 0.38);
+}
+
+.galaxy-ranking .ranking-hero .lead {
+  max-width: 650px;
+  margin: 0;
+  color: #cbd2ef;
+}
+
+.galaxy-ranking .league-online-status {
+  min-height: 34px;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1.1rem;
+  padding: 0.48rem 0.8rem;
+  border: 1px solid rgba(86, 231, 255, 0.44);
+  border-radius: 999px;
+  background: rgba(7, 5, 24, 0.64);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+  color: #ddfbff;
+  letter-spacing: 0.08em;
+}
+
+.galaxy-ranking .season-core {
+  width: 190px;
+  border: 2px solid rgba(255, 200, 87, 0.84);
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.26), transparent 14%),
+    radial-gradient(circle, rgba(255, 200, 87, 0.22), rgba(42, 25, 91, 0.88) 56%, rgba(8, 5, 27, 0.98));
+  box-shadow:
+    inset 0 0 55px rgba(255, 200, 87, 0.22),
+    0 0 0 10px rgba(255, 200, 87, 0.04),
+    0 0 46px rgba(216, 108, 255, 0.3);
+}
+
+.galaxy-ranking .season-core::before,
+.galaxy-ranking .season-core::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.galaxy-ranking .season-core::before {
+  inset: 22px;
+  border: 1px dashed rgba(86, 231, 255, 0.58);
+  animation: league-orbit 8s linear infinite;
+}
+
+.galaxy-ranking .season-core::after {
+  width: 10px;
+  aspect-ratio: 1;
+  top: 14px;
+  left: 50%;
+  border: 2px solid #fff7d6;
+  background: var(--league-gold);
+  box-shadow: 0 0 16px rgba(255, 200, 87, 0.95);
+  transform: translateX(-50%);
+}
+
+.galaxy-ranking .season-core span {
+  font-size: 4.7rem;
+  filter: drop-shadow(0 0 18px rgba(255, 200, 87, 0.75));
+}
+
+.galaxy-ranking .season-core i {
+  border-color: rgba(86, 231, 255, 0.45);
+}
+
+.galaxy-ranking .season-core i:last-child {
+  border-color: rgba(216, 108, 255, 0.6);
+}
+
+@keyframes league-orbit {
+  to { transform: rotate(360deg); }
+}
+
+.galaxy-ranking .season-rule {
+  position: relative;
+  max-width: none;
+  margin: 1.15rem 0 1.8rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(92, 229, 162, 0.3);
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(92, 229, 162, 0.1), rgba(92, 229, 162, 0.035));
+  box-shadow: inset 4px 0 0 rgba(92, 229, 162, 0.72);
+  color: #d7f8e9;
+}
+
+.galaxy-ranking .season-rule > span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 13px;
+  background: rgba(92, 229, 162, 0.1);
+}
+
+.galaxy-ranking .season-rule strong {
+  color: #77efb4;
+}
+
+.galaxy-ranking .space-podium {
+  position: relative;
+  min-height: 360px;
+  gap: 1rem;
+  margin: 1.8rem auto 2.2rem;
+  padding: 1.2rem 1.2rem 0;
+  border: 1px solid rgba(135, 151, 255, 0.14);
+  border-radius: 30px;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(82, 103, 255, 0.2), transparent 48%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(12, 8, 34, 0.46));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.galaxy-ranking .space-podium::before {
+  content: "PODIO DE LA TEMPORADA";
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid rgba(135, 151, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(8, 5, 27, 0.72);
+  color: #9ba8d2;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  transform: translateX(-50%);
+}
+
+.galaxy-ranking .podium-place {
+  min-height: 0;
+  padding: 1.15rem 0.8rem 4.35rem;
+  border-width: 1px;
+  border-radius: 28px 28px 14px 14px;
+  background:
+    radial-gradient(circle at 50% 16%, rgba(141, 115, 255, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(54, 42, 111, 0.92), rgba(20, 12, 55, 0.98));
+  box-shadow:
+    0 18px 36px rgba(4, 1, 22, 0.28),
+    inset 0 1px rgba(255, 255, 255, 0.08);
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.galaxy-ranking .podium-place:hover {
+  transform: translateY(-5px);
+}
+
+.galaxy-ranking .podium-place.place-1 {
+  height: 315px;
+  border-color: rgba(255, 200, 87, 0.8);
+  background:
+    radial-gradient(circle at 50% 16%, rgba(255, 200, 87, 0.34), transparent 35%),
+    linear-gradient(180deg, rgba(91, 69, 132, 0.98), rgba(32, 18, 72, 0.98));
+  box-shadow:
+    0 24px 52px rgba(255, 200, 87, 0.13),
+    inset 0 1px rgba(255, 255, 255, 0.13);
+}
+
+.galaxy-ranking .podium-place.place-2 {
+  height: 265px;
+  border-color: rgba(216, 231, 244, 0.58);
+}
+
+.galaxy-ranking .podium-place.place-3 {
+  height: 225px;
+  border-color: rgba(226, 154, 104, 0.64);
+}
+
+.galaxy-ranking .podium-place > span {
+  font-size: clamp(2rem, 4vw, 3rem);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
+}
+
+.galaxy-ranking .podium-place > b {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 19px;
+  background: rgba(8, 5, 27, 0.46);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+  font-size: 2.35rem;
+}
+
+.galaxy-ranking .podium-place > strong {
+  max-width: 100%;
+  margin-top: 0.3rem;
+  color: #fff;
+  font-size: clamp(0.95rem, 2vw, 1.2rem);
+}
+
+.galaxy-ranking .podium-place > small {
+  max-width: 100%;
+  color: #bfc7e4;
+  font-size: 0.74rem;
+}
+
+.galaxy-ranking .podium-place > i {
+  height: 54px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.055);
+  color: #dfe5ff;
+  font-size: 1.65rem;
+}
+
+.galaxy-ranking .podium-place.place-1 > i {
+  color: var(--league-gold);
+  background: linear-gradient(90deg, rgba(255, 200, 87, 0.05), rgba(255, 200, 87, 0.15), rgba(255, 200, 87, 0.05));
+}
+
+.galaxy-ranking .podium-place.place-2 > i {
+  color: var(--league-silver);
+}
+
+.galaxy-ranking .podium-place.place-3 > i {
+  color: var(--league-bronze);
+}
+
+.galaxy-ranking .podium-place.current {
+  outline: 0;
+  border-color: var(--league-cyan);
+  box-shadow:
+    0 0 0 3px rgba(86, 231, 255, 0.12),
+    0 20px 48px rgba(86, 231, 255, 0.15),
+    inset 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.galaxy-ranking .podium-place.current::after {
+  content: "TU POSICIÓN";
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid rgba(86, 231, 255, 0.38);
+  border-radius: 999px;
+  background: rgba(5, 30, 42, 0.76);
+  color: #bff7ff;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.galaxy-ranking .podium-place.empty {
+  opacity: 0.68;
+  filter: saturate(0.62);
+  border-style: dashed;
+}
+
+.galaxy-ranking .ranking-list {
+  gap: 0.55rem;
+  margin: 1.2rem 0 1.7rem;
+}
+
+.galaxy-ranking .ranking-list::before {
+  content: "PUESTO     PILOTO                                DISTANCIA       PORTALES       ACIERTOS";
+  display: block;
+  padding: 0 1rem 0.35rem;
+  color: #7f8bb2;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  white-space: pre;
+}
+
+.galaxy-ranking .ranking-row {
+  position: relative;
+  min-height: 72px;
+  grid-template-columns: 62px minmax(210px, 1fr) repeat(3, minmax(92px, 0.5fr));
+  gap: 0.75rem;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid var(--league-border);
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.018));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.035);
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.galaxy-ranking .ranking-row:hover {
+  z-index: 1;
+  transform: translateX(4px);
+  border-color: rgba(86, 231, 255, 0.34);
+  background: rgba(86, 231, 255, 0.055);
+}
+
+.galaxy-ranking .ranking-row:nth-child(-n + 3) {
+  border-color: rgba(255, 200, 87, 0.18);
+}
+
+.galaxy-ranking .ranking-row.current {
+  padding-right: 4.3rem;
+  border-color: rgba(86, 231, 255, 0.72);
+  background: linear-gradient(90deg, rgba(86, 231, 255, 0.15), rgba(82, 103, 255, 0.055));
+  box-shadow:
+    inset 4px 0 0 var(--league-cyan),
+    0 0 30px rgba(86, 231, 255, 0.09);
+}
+
+.galaxy-ranking .ranking-row.current::after {
+  content: "TÚ";
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  padding: 0.32rem 0.55rem;
+  border: 1px solid rgba(86, 231, 255, 0.42);
+  border-radius: 999px;
+  background: rgba(5, 30, 42, 0.72);
+  color: #c7f8ff;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  transform: translateY(-50%);
+}
+
+.galaxy-ranking .ranking-position {
+  min-height: 46px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  color: #eaf0ff;
+  font-size: 1.45rem;
+}
+
+.galaxy-ranking .ranking-pilot > b {
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(135, 151, 255, 0.22);
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.13), transparent 32%),
+    rgba(82, 103, 255, 0.13);
+}
+
+.galaxy-ranking .ranking-pilot strong,
+.galaxy-ranking .ranking-row > span:not(.ranking-position):not(.ranking-pilot) > strong {
+  color: #f8f9ff;
+  font-size: 0.95rem;
+}
+
+.galaxy-ranking .ranking-row small {
+  margin-top: 0.1rem;
+  color: #8e99bd;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.045em;
+}
+
+.galaxy-ranking .ranking-empty {
+  min-height: 300px;
+  align-content: center;
+  gap: 0.4rem;
+  padding: clamp(2rem, 7vw, 4rem);
+  border: 1px dashed rgba(135, 151, 255, 0.3);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(82, 103, 255, 0.12), transparent 34%),
+    rgba(12, 8, 34, 0.52);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.galaxy-ranking .ranking-empty > span {
+  font-size: clamp(4rem, 9vw, 6rem);
+  filter: drop-shadow(0 0 22px rgba(86, 231, 255, 0.22));
+}
+
+.galaxy-ranking .ranking-empty h2 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.45rem, 4vw, 2.2rem);
+}
+
+.galaxy-ranking .ranking-empty p {
+  margin: 0;
+  color: #aeb7d6;
+}
+
+.galaxy-ranking .ranking-loading {
+  border-color: rgba(86, 231, 255, 0.42);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(86, 231, 255, 0.16), transparent 36%),
+    rgba(8, 23, 39, 0.56);
+}
+
+.galaxy-ranking .ranking-loading::after {
+  content: "";
+  width: min(250px, 70%);
+  height: 5px;
+  margin-top: 1rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, transparent, var(--league-cyan), transparent) 0 0 / 45% 100% no-repeat,
+    rgba(255, 255, 255, 0.08);
+  animation: league-scan 1.45s ease-in-out infinite;
+}
+
+@keyframes league-scan {
+  50% { background-position: 100% 0, 0 0; }
+}
+
+.galaxy-ranking .ranking-error {
+  border-color: rgba(255, 114, 133, 0.48);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 114, 133, 0.14), transparent 36%),
+    rgba(45, 9, 25, 0.48);
+}
+
+.galaxy-ranking .ranking-error .button {
+  margin-top: 1rem;
+  border-color: rgba(255, 114, 133, 0.5);
+  background: rgba(255, 114, 133, 0.1);
+}
+
+.galaxy-ranking > .button-row {
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 1.4rem;
+  padding: 1rem;
+  border: 1px solid rgba(135, 151, 255, 0.12);
+  border-radius: 22px;
+  background: rgba(12, 8, 34, 0.46);
+}
+
+.galaxy-ranking > .button-row .button {
+  min-height: 48px;
+}
+
+.galaxy-ranking > .button-row .launch-button {
+  min-width: 220px;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, #5267ff, #815fff);
+  box-shadow:
+    0 12px 30px rgba(82, 103, 255, 0.3),
+    0 0 22px rgba(86, 231, 255, 0.1);
+}
+
+.galaxy-ranking > .button-row .shop-button {
+  border: 1px solid rgba(255, 200, 87, 0.34);
+  background: rgba(255, 200, 87, 0.09);
+  color: #ffe6a5;
+}
+
+.galaxy-ranking .button:focus-visible,
+.galaxy-ranking .podium-place:focus-within {
+  outline: 3px solid var(--league-cyan);
+  outline-offset: 3px;
+}
+
+@media (max-width: 860px) {
+  .galaxy-ranking.screen-narrow {
+    width: min(100% - 22px, 1120px);
+  }
+
+  .galaxy-ranking .ranking-hero {
+    grid-template-columns: minmax(0, 1fr) 150px;
+    min-height: 230px;
+  }
+
+  .galaxy-ranking .season-core {
+    width: 135px;
+  }
+
+  .galaxy-ranking .season-core span {
+    font-size: 3.5rem;
+  }
+
+  .galaxy-ranking .space-podium {
+    min-height: 300px;
+    padding-inline: 0.65rem;
+  }
+
+  .galaxy-ranking .podium-place.place-1 { height: 270px; }
+  .galaxy-ranking .podium-place.place-2 { height: 230px; }
+  .galaxy-ranking .podium-place.place-3 { height: 205px; }
+
+  .galaxy-ranking .ranking-list::before {
+    display: none;
+  }
+
+  .galaxy-ranking .ranking-row {
+    grid-template-columns: 54px minmax(170px, 1fr) repeat(3, minmax(72px, 0.45fr));
+    gap: 0.45rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .galaxy-ranking.screen-narrow {
+    width: min(100% - 16px, 1120px);
+    padding-top: 1rem;
+  }
+
+  .galaxy-ranking .ranking-hero {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    min-height: 0;
+    padding: 1.25rem;
+    text-align: center;
+    border-radius: 24px;
+  }
+
+  .galaxy-ranking .ranking-hero .lead {
+    margin-inline: auto;
+  }
+
+  .galaxy-ranking .league-online-status {
+    justify-content: center;
+  }
+
+  .galaxy-ranking .season-core {
+    width: 112px;
+    margin-top: 0.3rem;
+  }
+
+  .galaxy-ranking .season-core span {
+    font-size: 2.8rem;
+  }
+
+  .galaxy-ranking .season-rule {
+    align-items: flex-start;
+    padding: 0.85rem;
+    font-size: 0.78rem;
+  }
+
+  .galaxy-ranking .space-podium {
+    min-height: 236px;
+    gap: 0.35rem;
+    margin-block: 1rem 1.4rem;
+    padding: 2.9rem 0.35rem 0;
+    border-radius: 22px;
+  }
+
+  .galaxy-ranking .space-podium::before {
+    top: 0.7rem;
+    font-size: 0.55rem;
+  }
+
+  .galaxy-ranking .podium-place {
+    gap: 0.15rem;
+    padding: 0.65rem 0.25rem 3.1rem;
+    border-radius: 18px 18px 10px 10px;
+  }
+
+  .galaxy-ranking .podium-place.place-1 { height: 220px; }
+  .galaxy-ranking .podium-place.place-2 { height: 186px; }
+  .galaxy-ranking .podium-place.place-3 { height: 164px; }
+
+  .galaxy-ranking .podium-place > span {
+    font-size: 1.65rem;
+  }
+
+  .galaxy-ranking .podium-place > b {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    font-size: 1.55rem;
+  }
+
+  .galaxy-ranking .podium-place > strong {
+    font-size: 0.72rem;
+  }
+
+  .galaxy-ranking .podium-place > small {
+    max-width: 90px;
+    font-size: 0.58rem;
+    line-height: 1.25;
+  }
+
+  .galaxy-ranking .podium-place > i {
+    height: 42px;
+    font-size: 1.2rem;
+  }
+
+  .galaxy-ranking .podium-place.current::after {
+    content: "TÚ";
+    top: 0.35rem;
+    right: 0.35rem;
+    padding: 0.2rem 0.32rem;
+    font-size: 0.48rem;
+  }
+
+  .galaxy-ranking .ranking-list {
+    gap: 0.65rem;
+  }
+
+  .galaxy-ranking .ranking-row,
+  .galaxy-ranking .ranking-row.current {
+    grid-template-columns: 48px minmax(0, 1fr) repeat(3, minmax(0, 0.38fr));
+    gap: 0.32rem;
+    min-height: 68px;
+    padding: 0.58rem 0.5rem;
+  }
+
+  .galaxy-ranking .ranking-row.current {
+    padding-top: 1.65rem;
+  }
+
+  .galaxy-ranking .ranking-row.current::after {
+    top: 0.35rem;
+    right: 0.45rem;
+    padding: 0.2rem 0.38rem;
+    transform: none;
+  }
+
+  .galaxy-ranking .ranking-position {
+    min-height: 40px;
+    font-size: 1.12rem;
+  }
+
+  .galaxy-ranking .ranking-pilot {
+    gap: 0.4rem;
+  }
+
+  .galaxy-ranking .ranking-pilot > b {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    font-size: 1.25rem;
+  }
+
+  .galaxy-ranking .ranking-pilot strong,
+  .galaxy-ranking .ranking-row > span:not(.ranking-position):not(.ranking-pilot) > strong {
+    font-size: 0.75rem;
+  }
+
+  .galaxy-ranking .ranking-row small {
+    font-size: 0.52rem;
+    letter-spacing: 0.025em;
+  }
+
+  .galaxy-ranking .ranking-empty {
+    min-height: 260px;
+    padding: 1.5rem 1rem;
+    border-radius: 22px;
+  }
+
+  .galaxy-ranking > .button-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0.75rem;
+  }
+
+  .galaxy-ranking > .button-row .launch-button {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 430px) {
+  .galaxy-ranking .ranking-hero h1 {
+    font-size: 2.55rem;
+  }
+
+  .galaxy-ranking .space-podium {
+    min-height: 210px;
+  }
+
+  .galaxy-ranking .podium-place.place-1 { height: 198px; }
+  .galaxy-ranking .podium-place.place-2 { height: 170px; }
+  .galaxy-ranking .podium-place.place-3 { height: 150px; }
+
+  .galaxy-ranking .podium-place > small {
+    display: none;
+  }
+
+  .galaxy-ranking .ranking-row,
+  .galaxy-ranking .ranking-row.current {
+    grid-template-columns: 40px minmax(0, 1fr) repeat(3, 42px);
+  }
+
+  .galaxy-ranking .ranking-pilot > b,
+  .galaxy-ranking .ranking-row small {
+    display: none;
+  }
+
+  .galaxy-ranking > .button-row {
+    grid-template-columns: 1fr;
+  }
+
+  .galaxy-ranking > .button-row .launch-button {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .galaxy-ranking .season-core::before,
+  .galaxy-ranking .season-core span,
+  .galaxy-ranking .ranking-loading::after,
+  .galaxy-ranking .ranking-empty > span {
+    animation: none;
+  }
+
+  .galaxy-ranking .podium-place,
+  .galaxy-ranking .ranking-row {
+    transition: none;
+  }
+
+  .galaxy-ranking .podium-place:hover,
+  .galaxy-ranking .ranking-row:hover {
+    transform: none;
+  }
+}

@@ -10,13 +10,15 @@ test('la portada carga las capas visuales antes de accesibilidad', async () => {
   const flightIndex = html.indexOf('css/flight-polish.css?v=23');
   const resultsIndex = html.indexOf('css/mission-results.css?v=23');
   const hangarIndex = html.indexOf('css/hangar-polish.css?v=23');
+  const rankingIndex = html.indexOf('css/ranking-polish.css?v=23');
   const accessibilityIndex = html.indexOf('css/accessibility.css?v=23');
 
   assert.ok(visualIndex > 0);
   assert.ok(flightIndex > visualIndex);
   assert.ok(resultsIndex > flightIndex);
   assert.ok(hangarIndex > resultsIndex);
-  assert.ok(accessibilityIndex > hangarIndex);
+  assert.ok(rankingIndex > hangarIndex);
+  assert.ok(accessibilityIndex > rankingIndex);
   assert.match(html, /meta name="theme-color" content="#0b071b"/);
 });
 
@@ -76,6 +78,23 @@ test('el Hangar Estelar diferencia colección, equipamiento y respuesta móvil s
   assert.match(css, /content: "EN USO"/);
   assert.match(css, /@supports selector\(:has\(\*\)\)/);
   assert.match(css, /@media \(max-width: 560px\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.doesNotMatch(css, /@import|https?:\/\/|url\s*\(/i);
+});
+
+test('la Liga Galáctica destaca podio, piloto y estados sin dependencias remotas', async () => {
+  const css = await read('css/ranking-polish.css');
+
+  assert.match(css, /\.galaxy-ranking\.screen-narrow\s*\{/);
+  assert.match(css, /\.ranking-hero\s*\{/);
+  assert.match(css, /\.space-podium::before\s*\{/);
+  assert.match(css, /content: "PODIO DE LA TEMPORADA"/);
+  assert.match(css, /\.podium-place\.current::after\s*\{/);
+  assert.match(css, /content: "TU POSICIÓN"/);
+  assert.match(css, /\.ranking-row\.current::after\s*\{/);
+  assert.match(css, /\.ranking-loading::after\s*\{/);
+  assert.match(css, /\.ranking-error\s*\{/);
+  assert.match(css, /@media \(max-width: 430px\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.doesNotMatch(css, /@import|https?:\/\/|url\s*\(/i);
 });
@@ -166,5 +185,25 @@ test('el Hangar conserva catálogo, compras, equipamiento y navegación funciona
   assert.match(source, /data-nav="flight" data-mode="mission"/);
   assert.match(source, /data-nav="ranking"/);
   assert.match(source, /data-nav="home"/);
+  assert.doesNotMatch(source, /fetch\s*\(|setTimeout|localStorage/);
+});
+
+test('la Liga conserva posiciones, métricas, actualización y navegación funcionales', async () => {
+  const source = await read('js/ui/ranking-screen.js');
+
+  assert.match(source, /const medals = \['🥇', '🥈', '🥉'\]/);
+  assert.match(source, /const podium = \[1, 0, 2\]\.map/);
+  assert.match(source, /ranking\.map\(\(entry, index\)/);
+  assert.match(source, /isCurrentPilot\(entry\.name\)/);
+  assert.match(source, /entry\.distance/);
+  assert.match(source, /entry\.checkpoints/);
+  assert.match(source, /entry\.correct/);
+  assert.match(source, /rankingStatus === 'loading'/);
+  assert.match(source, /rankingStatus === 'error'/);
+  assert.match(source, /data-refresh-ranking/);
+  assert.match(source, /data-nav="flight" data-mode="mission"/);
+  assert.match(source, /data-nav="shop"/);
+  assert.match(source, /data-nav="home"/);
+  assert.match(source, /escapeHtml\(entry\.name\)/);
   assert.doesNotMatch(source, /fetch\s*\(|setTimeout|localStorage/);
 });
