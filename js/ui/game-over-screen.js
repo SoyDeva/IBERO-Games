@@ -5,6 +5,14 @@ function metric(value, label, suffix = '') {
   return '<span><b>' + escapeHtml(value) + '</b>' + suffix + '<small>' + escapeHtml(label) + '</small></span>';
 }
 
+function resolveFlightStage(overlay) {
+  return overlay?.closest?.('.flight-stage') || overlay?.parentElement || null;
+}
+
+function clearGameOverState(stage) {
+  stage?.classList?.remove?.('game-over-active');
+}
+
 export function renderGameOverScreen({ documentRef = document, summary, actions = {} }) {
   const overlay = documentRef.getElementById('flight-overlay');
   if (!overlay || !summary) return false;
@@ -30,13 +38,24 @@ export function renderGameOverScreen({ documentRef = document, summary, actions 
     + metric('+' + summary.crystals + ' 💎', 'Cristales ganados')
     + '</div>' + rankingNote + learned + achievementNote
     + '<div class="summary-actions"><button class="button primary launch-button" id="restart-flight">🚀 Intentar otra vez</button><button class="button ranking-button" id="ranking-after-game">🏆 Clasificación</button><button class="button ghost" id="shop-after-game">🛸 Hangar</button><button class="button ghost" id="practice-after-game">🧪 Practicar</button><button class="button text-button" data-nav="home">Salir</button></div></div>';
-  overlay.hidden = false;
 
-  overlay.querySelector('#restart-flight')?.addEventListener('click', actions.restart || (() => {}));
-  overlay.querySelector('#practice-after-game')?.addEventListener('click', actions.practice || (() => {}));
-  overlay.querySelector('#shop-after-game')?.addEventListener('click', actions.shop || (() => {}));
-  overlay.querySelector('#ranking-after-game')?.addEventListener('click', actions.ranking || (() => {}));
-  overlay.querySelector('[data-nav]')?.addEventListener('click', actions.exit || (() => {}));
+  const stage = resolveFlightStage(overlay);
+  stage?.classList?.add?.('game-over-active');
+  overlay.hidden = false;
+  overlay.scrollTop = 0;
+
+  const bindAction = (selector, action) => {
+    overlay.querySelector(selector)?.addEventListener('click', (event) => {
+      clearGameOverState(stage);
+      (action || (() => {}))(event);
+    });
+  };
+
+  bindAction('#restart-flight', actions.restart);
+  bindAction('#practice-after-game', actions.practice);
+  bindAction('#shop-after-game', actions.shop);
+  bindAction('#ranking-after-game', actions.ranking);
+  bindAction('[data-nav]', actions.exit);
   return true;
 }
 

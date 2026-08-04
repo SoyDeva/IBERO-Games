@@ -8,8 +8,8 @@ import {
   pointerFlightLane
 } from '../js/services/flight-input-controller.js';
 
-test('interpreta flechas y teclas A/D como movimiento', () => {
-  assert.deepEqual(keyboardFlightCommand({ key: 'ArrowLeft' }, 'paused'), {
+test('interpreta flechas y teclas A/D únicamente durante el vuelo activo', () => {
+  assert.deepEqual(keyboardFlightCommand({ key: 'ArrowLeft' }, 'running'), {
     handled: true,
     preventDefault: true,
     action: 'move',
@@ -17,7 +17,15 @@ test('interpreta flechas y teclas A/D como movimiento', () => {
   });
   assert.equal(keyboardFlightCommand({ key: 'A' }, 'running').direction, -1);
   assert.equal(keyboardFlightCommand({ key: 'ArrowRight' }, 'running').direction, 1);
-  assert.equal(keyboardFlightCommand({ key: 'd' }, 'quiz').direction, 1);
+  assert.equal(keyboardFlightCommand({ key: 'd' }, 'running').direction, 1);
+
+  for (const mode of ['idle', 'paused', 'quiz', 'station', 'gameover']) {
+    assert.deepEqual(keyboardFlightCommand({ key: 'ArrowLeft' }, mode), {
+      handled: false,
+      preventDefault: false,
+      action: 'none'
+    });
+  }
 });
 
 test('la barra dispara únicamente durante el vuelo y bloquea repetición automática', () => {
@@ -168,6 +176,11 @@ test('enlaza puntero, teclado y controles táctiles sin disparos duplicados', ()
   assert.equal(stopped, 3);
 
   mode = 'paused';
+  let pausedPrevented = 0;
+  windowListeners.get('keydown')({ key: 'ArrowRight', preventDefault() { pausedPrevented += 1; } });
+  assert.equal(pausedPrevented, 0, 'las flechas siguen disponibles para navegar o desplazar paneles fuera del vuelo');
+  assert.deepEqual(movements, [-1, -1]);
+
   controls.get('mobile-steer-right').listeners.get('pointerdown')({
     currentTarget: controls.get('mobile-steer-right'),
     pointerId: 9,

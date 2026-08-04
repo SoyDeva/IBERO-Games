@@ -28,7 +28,8 @@ test('el disparo central conserva mayor presencia y un objetivo táctil seguro',
   assert.match(css, /\.mobile-flight-controls button\s*\{[\s\S]*min-height: 54px;/);
 });
 
-test('la corrección fuerza una caché nueva para reemplazar el CSS anterior', () => {
-  assert.match(serviceWorker, /mision-nebula-mobile-controls-visible-v31/);
+test('la corrección fuerza una caché nueva para reemplazar recursos anteriores', () => {
+  assert.match(serviceWorker, /mision-nebula-system-audit-v32/);
   assert.match(serviceWorker, /\.\/css\/flight-mobile-cleanup\.css/);
+  assert.match(serviceWorker, /\.\/css\/system-fixes\.css/);
 });
