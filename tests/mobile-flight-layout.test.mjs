@@ -44,11 +44,13 @@ test('el HUD móvil usa dos columnas compactas y mantiene los cuatro datos esenc
 
 test('la capa correctiva conserva orden, caché local y ausencia de dependencias remotas', () => {
   const polish = indexHtml.indexOf('css/flight-polish.css?v=23');
-  const cleanup = indexHtml.indexOf('css/flight-mobile-cleanup.css?v=23');
+  const cleanup = indexHtml.indexOf('css/flight-mobile-cleanup.css?v=24');
+  const systemFixes = indexHtml.indexOf('css/system-fixes.css?v=24');
   const accessibility = indexHtml.indexOf('css/accessibility.css?v=23');
 
-  assert.ok(polish >= 0 && cleanup > polish && accessibility > cleanup);
-  assert.match(serviceWorker, /mision-nebula-mobile-controls-visible-v31/);
+  assert.ok(polish >= 0 && cleanup > polish && systemFixes > cleanup && accessibility > systemFixes);
+  assert.match(serviceWorker, /mision-nebula-system-audit-v32/);
   assert.match(serviceWorker, /\.\/css\/flight-mobile-cleanup\.css/);
+  assert.match(serviceWorker, /\.\/css\/system-fixes\.css/);
   assert.doesNotMatch(css, /@import|https?:\/\/|url\s*\(/i);
 });
