@@ -19,7 +19,7 @@ export function resizeFlightCanvas({ canvas, context, devicePixelRatio = 1, maxP
     throw new TypeError('Se requiere un canvas y un contexto compatibles.');
   }
   const rect = canvas.getBoundingClientRect();
-  const ratioLimit = Math.min(2.5, Math.max(1, finite(maxPixelRatio, 2)));
+  const ratioLimit = Math.min(3, Math.max(1, finite(maxPixelRatio, 2)));
   const ratio = Math.min(Math.max(1, finite(devicePixelRatio, 1)), ratioLimit);
   const width = Math.max(320, finite(rect?.width, 960) || 960);
   const height = Math.max(420, finite(rect?.height, 600) || 600);
